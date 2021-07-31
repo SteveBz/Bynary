@@ -11,8 +11,8 @@ Firstly we need a vitual environment so that any exiting python programs aren't 
 We want pip3 and gh (github)
 
 ```
-sudo apt-get -y install python3-pip
-sudo apt-get -y install gh
+sudo snap install python3-pip
+sudo snap install gh
 ```
 ## Then install virtualenv using pip3
 ```
@@ -20,7 +20,7 @@ pip3 install virtualenv
 ```
 Next download the source files from git and run insstall:
 ```
-gh repo clone https://github.com/SteveBz/Bynary.git
+gh repo clone github.com/SteveBz/Bynary
 cd Bynary
 ```
 ## Now create a virtual environment
