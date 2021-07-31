@@ -17,15 +17,18 @@ sudo apt-get install python3-pip
 ```
 pip3 install virtualenv
 ```
+Next download the source files from git and run insstall:
+```
+gh repo clone https://github.com/SteveBz/Bynary.git
+cd Bynary
+```
 ## Now create a virtual environment
 ```
 virtualenv python3 venv
+install.sh
 ```
-## Activate your virtual environment:
-```
-. venv/bin/activate
-```
-### To deactivate:
+
+### NB to deactivate:
 ```
 deactivate
 ```
