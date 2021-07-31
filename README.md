@@ -8,10 +8,11 @@ Firstly we need a vitual environment so that any exiting python programs aren't 
 
 ## Install pip3 first
 
-We want pip3.
+We want pip3 and gh (github)
 
 ```
-sudo apt-get install python3-pip
+sudo apt-get -y install python3-pip
+sudo apt-get -y install gh
 ```
 ## Then install virtualenv using pip3
 ```
