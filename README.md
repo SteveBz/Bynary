@@ -22,7 +22,8 @@ cd Bynary
 ## Now create a virtual environment
 ```
 python3 -m venv venv
-install.sh
+. venv/bin/activate
+. install.sh
 ```
 
 ### NB to deactivate:
