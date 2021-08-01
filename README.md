@@ -30,7 +30,7 @@ Next download the source files from git and run install (enter user name and pas
 git clone https://github.com/SteveBz/Bynary.git
 cd Bynary
 ```
-## Now create a virtual environment
+## Now create a virtual environment, enter it and run install.
 ```
 python3 -m venv venv
 . venv/bin/activate
