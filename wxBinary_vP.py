@@ -53,7 +53,10 @@ CANCEL=False
 import SQLLib
 import db              # For star/observing database.
 dbiStro=db.db()
-iStro=dbiStro.conFbdb('Localhost:/home/image/x-Stronomy/binary.fdb', 'sysdba', 'masterkey')  # chmod +777 Binaries-DB-30.fdb 
+database = gl_cfg.getItem('database','SETTINGS')
+databaseid = gl_cfg.getItem('databaseuserid','SETTINGS')
+databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
+iStro=dbiStro.conFbdb(database, databaseid, databasepwd)  # chmod +777 Binaries-DB-30.fdb 
         
 class MainPanel(wx.Panel):
     def __init__(self, mainFrame):
