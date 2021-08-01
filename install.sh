@@ -13,3 +13,8 @@ pip3 install pandas
 pip3 install astroquery
 pip3 install dask
 pip3 install fdb
+mkdir bindata
+cd bindata
+mkdir eDR3
+cd eDR3
+cd ../..
