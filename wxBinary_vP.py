@@ -4,7 +4,7 @@ import os
 import time
 #import  wx.lib.scrolledpanel as scrolled
 
-import wx.html2
+import wx.html2 # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
 import pandas as pd
 import ashla.data_access as da
 import sys, inspect, math
@@ -1436,7 +1436,12 @@ class dataFilter(wx.Panel):
         
         # Total
         
-        populateOut=self.parent.status['populateOut'].sum()
+        populateOut=0
+        try:
+            populateOut=self.parent.status['populateOut'].sum()
+        except Exception:
+            pass
+        
         self.dataInTotal = StaticText(self, id=wx.ID_ANY, label=f'{populateOut:,}')
         fgsizer.Add(self.dataInTotal, 0, wx.ALL, 5)
         
@@ -1463,11 +1468,6 @@ class dataFilter(wx.Panel):
 
         self.sizer_v.Add(hsizer2, 0, wx.ALIGN_CENTER_HORIZONTAL)
         
-        #try:
-        #    self.parent.status=pd.read_pickle('bindata/status.saved')
-        #    print(f'len status = {len(self.parent.status)}, sum status = {self.parent.status["include"].sum()}')
-        #except Exception:
-        #    self.parent.status=pd.DataFrame()
         self.restoreListCtrl()
         
         self.Layout()
