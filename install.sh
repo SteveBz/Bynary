@@ -12,3 +12,4 @@ pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubunt
 pip3 install pandas
 pip3 install astroquery
 pip3 install dask
+pip3 install fdb
