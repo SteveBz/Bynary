@@ -1,0 +1,34 @@
+{% set data = load_setup_py_data() %}
+
+
+package:
+  name: ashla
+  version: {{ data['version'] }}
+
+source:
+  path: ..
+
+build:
+  script: python -m pip install --no-deps --ignore-installed -vv .
+  noarch: python
+
+requirements:
+  host:
+    - python
+    - pip
+  run:
+    - python
+    # dependencies are defined in setup.py
+    {% for dep in data['install_requires'] %}
+    - {{ dep.lower() }}
+    {% endfor %}
+    {# raw is for ignoring templating with cookiecutter, leaving it for use with conda-build #}
+
+test:
+  # Python imports
+  imports:
+    - ashla
+
+about:
+  home:
+  summary: A package for researching Wide Binary stars.

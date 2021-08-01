@@ -1,0 +1,7 @@
+README.md
+setup.py
+ashla.egg-info/PKG-INFO
+ashla.egg-info/SOURCES.txt
+ashla.egg-info/dependency_links.txt
+ashla.egg-info/requires.txt
+ashla.egg-info/top_level.txt
