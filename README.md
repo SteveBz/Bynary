@@ -4,6 +4,8 @@ Bynary is a python-based suitre of modules that will allow you yo connect and do
 
 Firstly we need a vitual environment so that any exiting python programs aren't disrupted by the module for this program.  Eg Bynary makes heavy use of `Matplotlib`, if you use an earlier or later version in another module, that could create issues.  By installing  `Matplotlibin` out own virtual environment we avoid that issue.
 
+You will need a subscription to the gaia website if you want to download new data from esa.
+
 # How to install virtualenv:
 
 ## Install pip3 first
@@ -14,7 +16,7 @@ We want pip3 for python3 modules and git to access github files
 sudo apt-get install python3-pip
 sudo apt-get install git
 ```
-Next download the source files from git and run insstall:
+Next download the source files from git and run install (enter user name and password from git if requested):
 ```
 git clone https://github.com/SteveBz/Bynary.git
 cd Bynary
