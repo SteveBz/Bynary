@@ -37,7 +37,7 @@ python3 -m venv venv
 . install.sh
 ```
 
-### NB to deactivate:
+### (NB to deactivate the virtual environment, if necessary):
 ```
 deactivate
 ```
