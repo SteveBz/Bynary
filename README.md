@@ -8,15 +8,11 @@ Firstly we need a vitual environment so that any exiting python programs aren't 
 
 ## Install pip3 first
 
-We want pip3 and gh (github)
+We want pip3 for python3 modules and git to access github files
 
 ```
-sudo snap install python3-pip
+sudo apt-get install python3-pip
 sudo apt-get install git
-```
-## Then install virtualenv using pip3
-```
-pip3 install virtualenv
 ```
 Next download the source files from git and run insstall:
 ```
@@ -25,7 +21,7 @@ cd Bynary
 ```
 ## Now create a virtual environment
 ```
-virtualenv python3 venv
+python3 -m venv venv
 install.sh
 ```
 
