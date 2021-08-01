@@ -4,7 +4,7 @@ import os
 import time
 #import  wx.lib.scrolledpanel as scrolled
 
-import wx.html2
+import wx.html2 # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
 import pandas as pd
 import ashla.data_access as da
 import sys, inspect, math
@@ -453,6 +453,8 @@ class dataRetrieval(wx.Panel):
         CATALOG=self.catalogue.GetValue()
         RELEASE=self.release.GetValue()
         
+        if not os.path.isdir(f'bindata'):
+            os.mkdir (f'bindata')
         if not os.path.isdir(f'bindata/{RELEASE}'):
             os.mkdir (f'bindata/{RELEASE}')
         if not os.path.isdir(f'bindata/{RELEASE}/{CATALOG}'):
@@ -462,49 +464,13 @@ class dataRetrieval(wx.Panel):
         files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','star_rows','X','Y','status','export']
         for file in files:
             try:
-                #x = getattr(t, 'attr1')
                 x = getattr(self.parent,file)
                 x=pd.DataFrame(x)
                 x.to_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.saved')
             except Exception:
                 print('Error directory failed to save:')
                 print (f'bindata/{RELEASE}/{CATALOG}/{file}.saved')
-                
-        #try:
-        #    self.parent.selectedStarIDs.to_pickle(f'bindata/{RELEASE}/{CATALOG}/selectedStarIDs.saved')
-        #except Exception:
-        #    print('Error directory failed to save:')
-        #    print (self.parent.selectedStarIDs)
-        #try:
-        #    self.parent.selectedStarBinaryMappings.to_pickle(f'bindata/{RELEASE}/{CATALOG}/selectedStarBinaryMappings.saved')
-        #except Exception:
-        #    print('Error directory failed to save:')
-        #    print (self.parent.selectedStarBinaryMappings)
-        #try:
-        #    self.parent.star_rows.to_pickle(f'bindata/{RELEASE}/{CATALOG}/star_rows.saved')
-        #except Exception:
-        #    print('Error directory failed to save:')
-        #    print (self.parent.star_rows)
-        #try:
-        #    self.parent.X.to_pickle(f'bindata/{RELEASE}/{CATALOG}/X.saved')
-        #except Exception:
-        #    print('Error:')
-        #    print (self.parent.X)
-        #try:
-        #    self.parent.Y.to_pickle(f'bindata/{RELEASE}/{CATALOG}/Y.saved')
-        #except Exception:
-        #    print('Error directory failed to save:')
-        #    print (self.parent.Y)
-        #try:
-        #    self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
-        #except Exception:
-        #    print('Error directory failed to save:')
-        #    print (self.parent.status)
-        #try:
-        #    self.parent.binaryDetail.to_pickle(f'bindata/{RELEASE}/{CATALOG}/binaryDetail.saved')
-        #except Exception:
-        #    print('Error directory failed to save:')
-        #    print (self.parent.binaryDetail)
+             
         
     def catalogRestore(self, event=0):
         
@@ -1034,14 +1000,14 @@ class dataRetrieval(wx.Panel):
         self.parent.X=pd.DataFrame.from_dict(self.parent.X, orient='index') #, columns=['ra','dec','BminusR', 'mag']pd.DataFrame.from_dict(data, orient='index')
         self.parent.Y=pd.DataFrame.from_dict(self.parent.Y, orient='index') #, columns=['ra','dec','BminusR', 'mag'])
         
-        #column_names = ["SOURCE_ID", "RA_", "RA_ERROR", "DEC_", "DEC_ERROR",
-        #        "PARALLAX", "PARALLAX_ERROR", "PHOT_G_MEAN_MAG", "BP_RP", "RADIAL_VELOCITY",
-        #        "RADIAL_VELOCITY_ERROR", "PHOT_VARIABLE_FLAG", "TEFF_VAL", "A_G_VAL",
-        #        "PMRA", "PMRA_ERROR", "PMDEC", "PMDEC_ERROR", "RUWE","RELEASE_", "DIST", "PAIRING", "INDEX"]
         self.parent.star_rows=pd.DataFrame.from_dict(self.parent.starSystemList.getStar_rows(), orient='index') #, columns=column_names)
         
-        #Try to find existing files, if not, create blank one
+        # Save pandas files as pickle files for next time.
         files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','star_rows','X','Y','status','export']
+        
+        #Check directory exists and create if not.
+        if not os.path.isdir(f'bindata'):
+            os.mkdir (f'bindata')
         for file in files:
             try:
                 x = getattr(self.parent,file)
@@ -1436,7 +1402,12 @@ class dataFilter(wx.Panel):
         
         # Total
         
-        populateOut=self.parent.status['populateOut'].sum()
+        populateOut=0
+        try:
+            populateOut=self.parent.status['populateOut'].sum()
+        except Exception:
+            pass
+        
         self.dataInTotal = StaticText(self, id=wx.ID_ANY, label=f'{populateOut:,}')
         fgsizer.Add(self.dataInTotal, 0, wx.ALL, 5)
         
@@ -1463,11 +1434,6 @@ class dataFilter(wx.Panel):
 
         self.sizer_v.Add(hsizer2, 0, wx.ALIGN_CENTER_HORIZONTAL)
         
-        #try:
-        #    self.parent.status=pd.read_pickle('bindata/status.saved')
-        #    print(f'len status = {len(self.parent.status)}, sum status = {self.parent.status["include"].sum()}')
-        #except Exception:
-        #    self.parent.status=pd.DataFrame()
         self.restoreListCtrl()
         
         self.Layout()
