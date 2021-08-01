@@ -12,7 +12,7 @@ We want pip3 and gh (github)
 
 ```
 sudo snap install python3-pip
-sudo snap install gh
+sudo apt-get install git
 ```
 ## Then install virtualenv using pip3
 ```
