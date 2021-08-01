@@ -20,7 +20,7 @@ pip3 install virtualenv
 ```
 Next download the source files from git and run insstall:
 ```
-gh repo clone github.com/SteveBz/Bynary
+git clone https://github.com/SteveBz/Bynary.git
 cd Bynary
 ```
 ## Now create a virtual environment
