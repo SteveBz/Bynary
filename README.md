@@ -36,8 +36,16 @@ python3 -m venv venv
 . venv/bin/activate
 . install.sh
 ```
-
 ### (NB to deactivate the virtual environment, if necessary):
 ```
 deactivate
 ```
+# Download data
+Then to download some data you'll need a star list.  The one provided is eDR3 out to 333 pc.
+```
+cd bindata
+cd eDR3
+git clone https://github.com/SteveBz/stars.git
+git clone https://github.com/SteveBz/KEB-0.50pc.git
+```
+And load the data:
