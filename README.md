@@ -13,13 +13,16 @@ You will need a subscription to the gaia website if you want to download new dat
 We want pip3 for python3 modules and git to access github files
 
 ```
-sudo apt-get install  -y python3-venv
-sudo apt-get install  -y python3-pip
+sudo apt-get install -y python3-venv
+sudo apt-get install -y python3-pip
 sudo apt-get install -y git
 sudo apt-get install -y libwebkit2gtk-4.0-dev
+sudo apt-get install -y unixodbc
 ```
 Install firebird database and flamerobin to update it (if you need to).
 ```
+sudo apt update
+sudo apt install software-properties-common
 sudo add-apt-repository ppa:mapopa/firebird3.0
 sudo apt update
 sudo apt install -y firebird3.0-server
