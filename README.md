@@ -22,7 +22,7 @@ sudo apt-get install -y unixodbc
 Install firebird database and flamerobin to update it (if you need to).
 ```
 sudo apt update
-sudo apt install software-properties-common
+sudo apt install -y software-properties-common
 sudo add-apt-repository ppa:mapopa/firebird3.0
 sudo apt update
 sudo apt install -y firebird3.0-server
