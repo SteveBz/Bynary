@@ -25,8 +25,8 @@ Install firebird database and flamerobin to update it (if you need to).
 This next bit between the asterisks is only required if the add-apt-repository fails:
 *****************************************************
 ```
-#sudo apt update
-#sudo apt install -y software-properties-common
+# sudo apt update
+# sudo apt install -y software-properties-common
 ```
 *****************************************************
 ```
