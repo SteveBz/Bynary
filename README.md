@@ -1,10 +1,12 @@
 # How to install Bynary
 
-Bynary is a python-based suitre of modules that will allow you yo connect and download binary stars from Gaia based on an algorithm from Kareem El Badry at Berkley.  We have modified it slightly to make it more general, however you can add parameters as you like, or you can download the pre-processed catalogues.
+Bynary is a python-based suitre of modules that will allow you to connect and download binary stars from Gaia based on an algorithm from Kareem El Badry at Berkley.  We have modified it slightly to make it more general, however you can add parameters as you like, or you can download the pre-processed catalogues.
 
 Firstly we need a vitual environment so that any exiting python programs aren't disrupted by the module for this program.  Eg Bynary makes heavy use of `Matplotlib`, if you use an earlier or later version in another module, that could create issues.  By installing  `Matplotlibin` out own virtual environment we avoid that issue.
 
 You will need a subscription to the gaia website if you want to download new data from esa.
+
+You will also need a Linux-based computer running a currently supported version of Linux.
 
 # How to install virtualenv:
 
@@ -20,6 +22,13 @@ sudo apt-get install -y libwebkit2gtk-4.0-dev
 sudo apt-get install -y unixodbc
 ```
 Install firebird database and flamerobin to update it (if you need to).
+This next bit between the astesks is ontly required if the add-apt-repository fails:
+*****************************************************
+```
+sudo apt update
+sudo apt install -y software-properties-common
+```
+*****************************************************
 ```
 sudo apt update
 sudo apt install -y software-properties-common
