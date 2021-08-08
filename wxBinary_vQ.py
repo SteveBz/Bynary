@@ -873,7 +873,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(610,500), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"Catalogue", wx.LIST_FORMAT_CENTER, width=100)
-        self.listctrl.InsertColumn(2, u"separation", wx.LIST_FORMAT_RIGHT, width=100)
+        self.listctrl.InsertColumn(2, u"separation", wx.LIST_FORMAT_CENTER, width=100)
         self.listctrl.InsertColumn(3, u"Healpix from", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(4, u"Healpix to", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(5, u"Binary count", wx.LIST_FORMAT_RIGHT,  width=100)
