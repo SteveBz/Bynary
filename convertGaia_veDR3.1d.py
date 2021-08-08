@@ -56,7 +56,7 @@ upperRA=360
 forceIt=False
 release='bDR3'
 TotalCount=0
-countOnly=1
+countOnly=True
 
 TBL_GAIA_eDR3  = SQLLib.sql(iStro, "TBL_objects ")
 #ALTER INDEX IDX_TBL_OBJECTS1 INACTIVE
