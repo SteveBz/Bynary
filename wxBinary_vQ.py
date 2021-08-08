@@ -512,6 +512,8 @@ class gaiaStarRetrieval(wx.Panel):
             print (downloadOnly)
             lenArray=len(data)
             self.listctrl.Append([release,i, i+step, lenArray])
+            self.listctrl.SetItemState(i,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+            self.listctrl.EnsureVisible(i)
             self.Layout()
             wx.Yield()
             if downloadOnly:
@@ -1206,6 +1208,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             countMe=countMe+dataLen
             print(f'Running total countMe={countMe:,}')
             self.listctrl.Append([release,catalogue, separation, i, i+step, len(data)])
+            self.listctrl.SetItemState(i,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+            self.listctrl.EnsureVisible(i)
             self.Layout()
             wx.Yield()
             if downloadOnly:
@@ -3684,6 +3688,7 @@ class HRDataPlotting(wx.Panel):
         # Draw velocity map
         xdata1=pd.concat([self.parent.X.BminusR * self.parent.status['include'], self.parent.Y.BminusR * self.parent.status['include']])
         ydata1=pd.concat([self.parent.X.mag * self.parent.status['include'], self.parent.Y.mag * self.parent.status['include']])
+        xdata2=pd.concat([self.parent.X.BminusR, self.parent.Y.BminusR])
         xdata2=xdata2.tolist()
         ydata2=pd.concat([self.parent.X.mag, self.parent.Y.mag])
         ydata2=ydata2.tolist()
