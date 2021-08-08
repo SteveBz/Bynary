@@ -509,11 +509,12 @@ class gaiaStarRetrieval(wx.Panel):
             #gaia_cnxn = da.GaiaDataAccess()
             #data = gaia_cnxn.gaia_query_to_pandas(query[0])
             #data.set_option('display.max_colwidth', None)
-            print (downloadOnly)
+            #print (downloadOnly)
             lenArray=len(data)
             self.listctrl.Append([release,i, i+step, lenArray])
-            self.listctrl.SetItemState(i,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
-            self.listctrl.EnsureVisible(i)
+            #print(i-lowerRA)
+            self.listctrl.SetItemState(i-lowerRA,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+            self.listctrl.EnsureVisible(i-lowerRA)
             self.Layout()
             wx.Yield()
             if downloadOnly:
@@ -1208,8 +1209,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             countMe=countMe+dataLen
             print(f'Running total countMe={countMe:,}')
             self.listctrl.Append([release,catalogue, separation, i, i+step, len(data)])
-            self.listctrl.SetItemState(i,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
-            self.listctrl.EnsureVisible(i)
+            self.listctrl.SetItemState(i-HPSlower,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+            self.listctrl.EnsureVisible(i-HPSlower)
             self.Layout()
             wx.Yield()
             if downloadOnly:
