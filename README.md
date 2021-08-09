@@ -38,7 +38,6 @@ sudo apt install -y firebird3.0-server
 sudo apt-get install -y flamerobin
 ```
 Let's make sure we have rust installed for astroquery
-
 ```
 sudo apt-get curl
 curl https://sh.rustup.rs -sSf | sh
