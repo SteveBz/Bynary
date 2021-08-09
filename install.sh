@@ -17,6 +17,7 @@ pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/debian
 pip3 install numpy
 pip3 install matplotlib
 pip3 install pandas
+#Next line needs rust
 pip3 install astroquery
 pip3 install dask
 pip3 install fdb

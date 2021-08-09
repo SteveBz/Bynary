@@ -37,6 +37,12 @@ sudo apt update
 sudo apt install -y firebird3.0-server
 sudo apt-get install -y flamerobin
 ```
+Let's make sure we have rust installed for astroquery
+
+```
+sudo apt-get curl
+curl https://sh.rustup.rs -sSf | sh
+```
 Next download the source files from git and run install (enter user name and password from git if requested):
 ```
 git clone https://github.com/SteveBz/Bynary.git
