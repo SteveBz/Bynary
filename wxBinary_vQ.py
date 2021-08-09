@@ -327,11 +327,12 @@ class gaiaStarRetrieval(wx.Panel):
         
         self.SetSizer(self.sizer_main_divider)
                         
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(400,600), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(565,600), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"RA from", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(2, u"RA to", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(3, u"Star count", wx.LIST_FORMAT_CENTER,  width=100)
+        self.listctrl.InsertColumn(4, u"Date time", wx.LIST_FORMAT_CENTER,  width=160)
         #
         #self.restoreListCtrl()
         
@@ -511,9 +512,7 @@ class gaiaStarRetrieval(wx.Panel):
             #data.set_option('display.max_colwidth', None)
             #print (downloadOnly)
             lenArray=len(data)
-            self.listctrl.Append([release,i, i+step, lenArray])
-            #print(i-lowerRA)
-            self.listctrl.SetItemState(i-lowerRA,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+            self.listctrl.Append([release,i, i+step, lenArray, date_time])
             self.listctrl.EnsureVisible(i-lowerRA)
             self.Layout()
             wx.Yield()
@@ -582,7 +581,8 @@ class gaiaStarRetrieval(wx.Panel):
                     TBL_GAIA_eDR3 .executeIAD(bulkSQL)
                     
                     label=float(100 * index /lenArray)
-                    self.button1.SetLabel(f'{i+1}th {label:,.1f}%')
+                    #self.button1.SetLabel(f'{i+1}th {label:,.1f}%')
+                    self.button1.SetLabel(f'{i}/{upperRA-1}-{label}%')
                     global CANCEL
                     if CANCEL:
                         CANCEL = False
@@ -727,13 +727,13 @@ class gaiaBinaryRetrieval(wx.Panel):
         #******************************  Primary star **************************************
         
         # Select Px from (mas)
-        static_PXfrom1 = StaticText(self, id=wx.ID_ANY, label="Px1 from (mas):")
+        static_PXfrom1 = StaticText(self, id=wx.ID_ANY, label="Px1=Px2 + n%:")
         self.sizer_h.Add(static_PXfrom1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXfrom1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxfrom1', 'GAIABINARY')))  
-        self.sizer_h.Add(self.spin_PXfrom1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.spin_PXfrom1.SetToolTip("Primary lower parallax to download - 0 to 1000 (expectation is '3')")
+        self.spin_PXfrom1per = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom1per','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxfrom1', 'GAIABINARY')))  
+        self.sizer_h.Add(self.spin_PXfrom1per, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.spin_PXfrom1per.SetToolTip("Primary lower parallax to download - 0% to 500% (calculated as a percentage of companion lower parallax.)")
         
         # Select Px to (degrees)
         static_PXto1 = StaticText(self, id=wx.ID_ANY, label="Px1 to (mas):")
@@ -870,13 +870,14 @@ class gaiaBinaryRetrieval(wx.Panel):
                 
         self.SetSizer(self.sizer_main_divider)
                         
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(610,500), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(765,500), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"Catalogue", wx.LIST_FORMAT_CENTER, width=100)
         self.listctrl.InsertColumn(2, u"separation", wx.LIST_FORMAT_CENTER, width=100)
         self.listctrl.InsertColumn(3, u"Healpix from", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(4, u"Healpix to", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(5, u"Binary count", wx.LIST_FORMAT_RIGHT,  width=100)
+        self.listctrl.InsertColumn(6, u"Date time", wx.LIST_FORMAT_CENTER,  width=160)
         #
         
         self.sizer_v.Add(self.listctrl, 0, wx.TOP | wx.BOTTOM , 10)
@@ -887,7 +888,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_v2.Add(static_DataLoad, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         self.button1 = Button(self, wx.ID_ANY, u"Binary Load")
-        self.button1.SetToolTip("Downlad selected binaries from Gaia.")
+        self.button1.SetToolTip("Download selected binaries from Gaia.")
         self.button1.Bind(wx.EVT_LEFT_DOWN, self.read_GaiaBinaries)
         self.sizer_v2.Add(self.button1, 0,wx.ALIGN_LEFT|wx.ALL , 5)
                 
@@ -1040,7 +1041,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         
         gl_cfg.setItem('pxto1',self.spin_PXto1.GetValue(), 'GAIABINARY') # save setting in config file
-        gl_cfg.setItem('pxfrom1',self.spin_PXfrom1.GetValue(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('pxfrom1per',self.spin_PXfrom1per.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('rp_err1',self.spin_Rp_err1.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('bp_err1',self.spin_Bp_err1.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('px_err1',self.spin_Px_err1.GetValue(), 'GAIABINARY') # save setting in config file
@@ -1159,7 +1160,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             where
                 {fromHealpixClause}
                 -- outside solar system and within 333 pcs
-                parallax between {self.spin_PXfrom1.GetValue()} and {self.spin_PXto1.GetValue()} and
+                parallax between {self.spin_PXfrom2.GetValue() * (1 + int(self.spin_PXfrom1per.GetValue())/100)} and {self.spin_PXto1.GetValue()} and
                 parallax_over_error > {self.spin_Px_err1.GetValue()} and
                 -- Many dim stars don't have photometric data on Gaia
                 -- so deselecting on this basis introduces 'hidden' or unidentified multiple star systems.
@@ -1208,8 +1209,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             dataLen=len(data)
             countMe=countMe+dataLen
             print(f'Running total countMe={countMe:,}')
-            self.listctrl.Append([release,catalogue, separation, i, i+step, len(data)])
-            self.listctrl.SetItemState(i-HPSlower,wx.LIST_STATE_SELECTED, wx.LIST_STATE_SELECTED)
+            self.listctrl.Append([release,catalogue, separation, i, i+step, len(data), date_time])
             self.listctrl.EnsureVisible(i-HPSlower)
             self.Layout()
             wx.Yield()
@@ -1247,7 +1247,7 @@ class gaiaBinaryRetrieval(wx.Panel):
                     
                     #Refresh button with progress and check for 'cancel'
                     label=int(100 * index /dataLen)
-                    self.button1.SetLabel(f'{i+1}/{HPSupper}-{label}%')
+                    self.button1.SetLabel(f'{i}/{HPSupper-1}-{label}%')
                     global CANCEL
                     if CANCEL:
                         CANCEL = False
