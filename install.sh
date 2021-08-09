@@ -3,7 +3,12 @@
 ## Activate your virtual environment:
 
 . venv/bin/activate
-
+## Create data directories.
+mkdir bindata
+cd bindata
+mkdir eDR3
+cd eDR3
+cd ../..
 ## Install python modules:
 
 pip3 install numpy
@@ -13,8 +18,3 @@ pip3 install pandas
 pip3 install astroquery
 pip3 install dask
 pip3 install fdb
-mkdir bindata
-cd bindata
-mkdir eDR3
-cd eDR3
-cd ../..
