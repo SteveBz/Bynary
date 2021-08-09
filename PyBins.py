@@ -95,8 +95,8 @@ class bin():
                 # rms of the data
                 if len(self.yBins[i])>=self.lowerBinContentCount:
                     newlist = [x for x in self.yBinSquares[i] if math.isnan(x) == False]
-                    if i==0:
-                        print('yBinSquares[0]=',newlist)
+                    #if i==0:
+                    #    print('yBinSquares[0]=',newlist)
                     try:
                         rms = math.sqrt(sum(newlist)/len(newlist))
                     except Exception:

@@ -37,7 +37,17 @@ class configVar:
         try:
             retValue=str(self.parser.get(section, configItem))
         except:
-            retValue=str(self.parser.get('SETTINGS', configItem))
+            retValue=''
+        
+        return retValue
+
+    def getBoolean(self, configItem, section='SETTINGS'):
+        
+        retValue = ""
+        try:
+            retValue=bool(self.parser.getboolean(section, configItem))
+        except:
+            retValue=False
         
         return retValue
 

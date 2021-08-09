@@ -22,7 +22,7 @@ global iStro
 iStro=dbiStro.conFbdb('Localhost:/home/image/x-Stronomy/binary.fdb', 'sysdba', 'masterkey')  # chmod +777 Binaries-DB-30.fdb 
 global curiStro
 curiStro=iStro.cursor()
-    
+
 query=[0]
 #
     
