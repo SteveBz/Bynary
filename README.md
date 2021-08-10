@@ -7,6 +7,7 @@ Firstly we need a vitual environment so that any exiting python programs aren't 
 You will need a subscription to the gaia website if you want to download new data from esa.
 
 You will also need a Linux-based computer running a currently supported version of Linux.
+It needs a solid state hard disk with about 20GB free and at least 16GB of memory, 32GB is better.
 
 # How to install virtualenv:
 
@@ -59,7 +60,7 @@ python3 -m venv venv
 ```
 deactivate
 ```
-# Download data
+# Download & import some data
 Then to download some data you'll need a star list.  The one provided is eDR3 out to 333 pc.
 ```
 cd bindata
@@ -67,8 +68,21 @@ cd eDR3
 git clone https://github.com/SteveBz/stars.git
 git clone https://github.com/SteveBz/KEB-0.50pc.git
 ```
-And load the data:
-Go ito flamerobin and register binarydb.fdb with details user = SYSDBA
-password = matserkey
-utf8
-SA
+And load the database:
+- Go into flamerobin and register binarydb.fdb with details:
+- user name = SYSDBA
+- password = masterkey
+- role = SA
+- charset = utf8
+Now doubleclick and make sure you can read the details.
+## Import stars
+This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2020 laptop may take a few days!
+```
+. venv/bin/activate
+python3 -convertGaiav2_8.py
+```
+## Import binaries
+```
+. venv/bin/activate
+python3 -convertGaia_veDR3.1d.py
+```
