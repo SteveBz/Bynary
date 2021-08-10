@@ -47,15 +47,15 @@ SELECT g2.source_id as source_id2, t1.source_id, t1.dr2_radial_velocity as radia
 #So if you wanted e.g. 1 pc, you would replace 1.4e-2 with 0.0573. '
 #"""
 #"""
-separation=0.75
+separation=0.50
 pc=float(0.0573*separation)
 print(pc)
 nsigma=8
-releaseIn='fDR3'
-releaseOut='fDR3'
-catalogue="KEB-0.75pc"
+releaseIn='eDR3'
+releaseOut='eDR3'
+catalogue="KEB-0.50pc"
 HPS=[]
-HPS.extend(range(115,192))
+HPS.extend(range(0,192))
 print (HPS)
 #Count records only
 countOnly=False

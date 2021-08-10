@@ -51,12 +51,12 @@ selectFrom = """SELECT
 
 count=0
 step = 1
-lowerRA=70
+lowerRA=0
 upperRA=360
 forceIt=False
-release='bDR3'
+release='eDR3'
 TotalCount=0
-countOnly=True
+countOnly=False
 
 TBL_GAIA_eDR3  = SQLLib.sql(iStro, "TBL_objects ")
 #ALTER INDEX IDX_TBL_OBJECTS1 INACTIVE
