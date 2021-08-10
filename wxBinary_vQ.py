@@ -343,6 +343,11 @@ class gaiaStarRetrieval(wx.Panel):
         static_Total = StaticText(self, id=wx.ID_ANY, label="Total stars:")
         self.sizer_h2.Add(static_Total, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
+        # Total
+        
+        self.static_Total = StaticText(self, id=wx.ID_ANY, label='n/a')
+        self.sizer_h2.Add(self.static_Total, 0, wx.ALL, 5)
+        
         # Loading data
         
         static_DataLoad = StaticText(self, id=wx.ID_ANY, label="Data save/load:")
@@ -516,6 +521,8 @@ class gaiaStarRetrieval(wx.Panel):
             self.listctrl.EnsureVisible(i-lowerRA)
             self.Layout()
             wx.Yield()
+            TotalCount=TotalCount+lenArray
+            self.static_Total.SetLabel(f'{TotalCount:,}')
             if downloadOnly:
                 continue
             print(f'delete old records for RA {i} to {i+1} degrees')
@@ -532,7 +539,6 @@ class gaiaStarRetrieval(wx.Panel):
             source_id_array=[]
             data2=data.to_dict()
             #print(data)
-            TotalCount=TotalCount+len(data)
             print(f'Number of stars: {len(data)} in {TotalCount}')
             
             #for record in data2:  #.iterrows():
@@ -882,6 +888,16 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         self.sizer_v.Add(self.listctrl, 0, wx.TOP | wx.BOTTOM , 10)
                 
+        # Import Total prompt
+        
+        static_Total = StaticText(self, id=wx.ID_ANY, label="Total stars:")
+        self.sizer_h2.Add(static_Total, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
+        # Total
+        
+        self.static_Total = StaticText(self, id=wx.ID_ANY, label='n/a')
+        self.sizer_h2.Add(self.static_Total, 0, wx.ALL, 5)
+        
         # Loading data
         
         static_DataLoad = StaticText(self, id=wx.ID_ANY, label="Data load:")
@@ -1208,8 +1224,9 @@ class gaiaBinaryRetrieval(wx.Panel):
             
             dataLen=len(data)
             countMe=countMe+dataLen
-            print(f'Running total countMe={countMe:,}')
-            self.listctrl.Append([release,catalogue, separation, i, i+step, len(data), date_time])
+            #print(f'Running total countMe={countMe:,}')
+            self.static_Total.SetLabel(f'{countMe:,}')
+            self.listctrl.Append([release,catalogue, separation, i, i+step, f'{dataLen:,}', date_time])
             self.listctrl.EnsureVisible(i-HPSlower)
             self.Layout()
             wx.Yield()
@@ -2137,7 +2154,8 @@ class dataRetrieval(wx.Panel):
                 label=float(100 * index /lenArray)
                 self.button1.SetLabel(f'{label:,.1f}%')
                 self.static_Total.SetLabel(f'{index:,} of {lenArray:,}')
-                
+                if not math.log10(index) % 1:
+                    self.layout()
                 global CANCEL
                 if CANCEL:
                     CANCEL = False

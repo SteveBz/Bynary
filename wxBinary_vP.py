@@ -32,7 +32,7 @@ import configVar
 
 from matplotlib.ticker import (MultipleLocator, NullFormatter, ScalarFormatter, AutoMinorLocator, FormatStrFormatter)
 
-gl_cfg=configVar.configVar("/home/image/x-Stronomy/binClient.conf")
+gl_cfg=configVar.configVar("./binClient.conf")
 ROWCOUNTMATRIX={
     'ADQL':0,
     'UN':0,
