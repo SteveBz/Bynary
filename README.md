@@ -75,7 +75,7 @@ And load the database:
 - charset = utf8
 Now doubleclick and make sure you can read the details.
 ## Import stars
-This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2020 laptop may take a few days!
+This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days!
 ```
 . venv/bin/activate
 python3 -convertGaiav2_8.py
