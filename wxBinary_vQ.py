@@ -32,7 +32,7 @@ import configVar
 
 from matplotlib.ticker import (MultipleLocator, NullFormatter, ScalarFormatter, AutoMinorLocator, FormatStrFormatter)
 
-gl_cfg=configVar.configVar("/home/image/x-Stronomy/binClient.conf")
+gl_cfg=configVar.configVar("./binClient.conf")
 ROWCOUNTMATRIX={
     'ADQL':0,
     'UN':0,
@@ -586,9 +586,9 @@ class gaiaStarRetrieval(wx.Panel):
                     #print("1) SQL = ", bulkSQL)
                     TBL_GAIA_eDR3 .executeIAD(bulkSQL)
                     
-                    label=float(100 * index /lenArray)
+                    label=int(100 * index /lenArray)
                     #self.button1.SetLabel(f'{i+1}th {label:,.1f}%')
-                    self.button1.SetLabel(f'{i}/{upperRA-1}-{label}%')
+                    self.button1.SetLabel(f'{i+1}/{upperRA-lowerRA}-{label}%')
                     global CANCEL
                     if CANCEL:
                         CANCEL = False
@@ -597,6 +597,7 @@ class gaiaStarRetrieval(wx.Panel):
                         return
                     wx.Yield()
                     
+                    #print (count)
                     TBL_GAIA_eDR3  = SQLLib.sqlInsert(iStro, "TBL_objects ")
                     bulkSQL='execute block as begin'
             
@@ -611,7 +612,8 @@ class gaiaStarRetrieval(wx.Panel):
             bulkSQL=''
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
-            #print("RA_ = ", data2['ra'][index], index, 'update', date_time)
+            print('end query', date_time)
+            # output_data = gaia_cnxn.gaia_get_pairs_o
         
         print(2)
 
@@ -1217,7 +1219,7 @@ class gaiaBinaryRetrieval(wx.Panel):
                 gaia_cnxn = da.GaiaDataAccess()
                 data = gaia_cnxn.gaia_query_to_pandas(query[0])
                 print(data)
-                data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}', protocol=gl_cfg.getItem('pickle_protocol', 'SETTINGS'))
+                data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}', protocol=int(gl_cfg.getItem('pickle_protocol', 'SETTINGS')))
             
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
