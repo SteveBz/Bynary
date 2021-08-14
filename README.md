@@ -40,8 +40,8 @@ sudo apt-get install -y flamerobin
 ```
 Let's make sure we have rust installed for astroquery
 ```
-sudo apt-get install -y curl
-curl https://sh.rustup.rs -sSf | sh
+# sudo apt-get install -y curl
+# curl https://sh.rustup.rs -sSf | sh
 ```
 Next download the source files from git and run install (enter user name and password from git if requested):
 ```
