@@ -25,8 +25,6 @@ for file in files:
 dirTo='/home/image/x-Stronomy/bindata/eDR3/KEB-0.50pc/'
 files = [f for f in os.listdir(dirTo) if os.path.isfile(os.path.join(dirTo, f))]
 for file in files:
-    #if file[-3:]=='csv' or file[-3:]=='pdf' or file[-3:]=='png' or file[-4:]=='json' :
-    #    continue
     print(file)
     picklefile=pd.read_csv(dirTo+file)
     fileOut=file.replace('.csv','')

@@ -510,7 +510,7 @@ class gaiaStarRetrieval(wx.Panel):
                 gaia_cnxn = da.GaiaDataAccess()
                 data = gaia_cnxn.gaia_query_to_pandas(query[0])
                 print(f'Download from Gaia')
-                data.to_pickle(f'bindata/{release}/stars/gaia_{release}_RA{i}')
+                data.to_pickle(f'bindata/{release}/stars/gaia_{release}_RA{i}', protocol=gl_cfg.getItem('pickle_protocol', 'SETTINGS')) # save setting in config file)
                 
             #gaia_cnxn = da.GaiaDataAccess()
             #data = gaia_cnxn.gaia_query_to_pandas(query[0])
@@ -1217,14 +1217,13 @@ class gaiaBinaryRetrieval(wx.Panel):
                 gaia_cnxn = da.GaiaDataAccess()
                 data = gaia_cnxn.gaia_query_to_pandas(query[0])
                 print(data)
-                data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}')
+                data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}', protocol=gl_cfg.getItem('pickle_protocol', 'SETTINGS'))
             
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
             
             dataLen=len(data)
             countMe=countMe+dataLen
-            #print(f'Running total countMe={countMe:,}')
             self.static_Total.SetLabel(f'{countMe:,}')
             self.listctrl.Append([release,catalogue, separation, i, i+step, f'{dataLen:,}', date_time])
             self.listctrl.EnsureVisible(i-HPSlower)
@@ -2154,8 +2153,8 @@ class dataRetrieval(wx.Panel):
                 label=float(100 * index /lenArray)
                 self.button1.SetLabel(f'{label:,.1f}%')
                 self.static_Total.SetLabel(f'{index:,} of {lenArray:,}')
-                if not math.log10(index) % 1:
-                    self.layout()
+                if index > 0 and not math.log10(index) % 1:
+                    self.Layout()
                 global CANCEL
                 if CANCEL:
                     CANCEL = False
