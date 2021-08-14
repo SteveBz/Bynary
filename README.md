@@ -69,11 +69,12 @@ git clone https://github.com/SteveBz/KEB-0.50pc.git
 ```
 And load the database:
 Go into flamerobin (press enter at error message) and register binarydb.fdb (right-click on 'localhost') with details:
-- user name = SYSDBA
-- password = masterkey
-- role = SA
-- charset = utf8
-SAVE
+* user name = SYSDBA
+* password = masterkey
+* role = SA
+* charset = utf8
+
+- SAVE
 Now doubleclick and make sure you can read the details.
 ## Import stars
 This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days!
