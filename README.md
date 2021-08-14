@@ -79,10 +79,10 @@ Now doubleclick and make sure you can read the details.
 This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days!
 ```
 . venv/bin/activate
-python3 convertGaiav2_8.py
+python3 convertGaia_veDR3.1d.py
 ```
 ## Import binaries
 ```
 . venv/bin/activate
-python3 convertGaia_veDR3.1d.py
+python3 convertGaiav2_8.py
 ```
