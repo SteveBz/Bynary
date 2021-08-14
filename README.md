@@ -74,7 +74,7 @@ Go into flamerobin (press enter at error message) and register binarydb.fdb (rig
 * role = SA
 * charset = utf8
 
-- SAVE
+SAVE
 Now doubleclick and make sure you can read the details.
 ## Import stars
 This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days!
