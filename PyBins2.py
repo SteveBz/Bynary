@@ -2,7 +2,7 @@
 
 import math
 
-class bin():
+class binOrganiser():
     def __init__(self, binCount, lowerBinContentCount=10):
         self.binCount=binCount
         self.xBins=[] 
@@ -13,6 +13,7 @@ class bin():
         self.labels=[] 
         self.data1=[] 
         self.binLowerBounds=[] 
+        self.binMidPoints=[] 
         self.binUpperBounds=[] 
         self.dataCount=0
         self.lowerBinContentCount=lowerBinContentCount
@@ -25,6 +26,7 @@ class bin():
         self.errors.append([] )
         self.binLowerBounds.append(binLowerBound)
         self.binUpperBounds.append(binUpperBound)
+        self.binMidPoints.append(math.sqrt(binLowerBound*binUpperBound))
         
     def binAddDataPoint(self, x, y, dy='', value=1):
         y=abs(y)
@@ -45,7 +47,15 @@ class bin():
                 self.errors[i].append(dy)
                 return 0
         return 1
-    
+    def splitBin(self):
+        
+        #Filter out currently inluded rows only
+        indexStatus = self.parent.status.index
+        condition = self.parent.status.include == True
+        statusIndices = indexStatus[condition]
+        statusIndicesList = statusIndices.tolist()
+        
+        
     def getBinYLabelArray(self):
  
         labels=[] 

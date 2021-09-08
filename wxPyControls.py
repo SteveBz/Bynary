@@ -67,11 +67,65 @@ class SpinCtrl(wx.SpinCtrl):
         self.SetForegroundColour(Colour(128, 128, 128))
                
 class TextCtrl(wx.TextCtrl):
-    def __init__(self, parent, id, value, pos, size, style):
-        wx.TextCtrl.__init__(self, parent, id, value, pos, size, style)
+    def __init__(self, parent, id, value, pos, size, style, validator=''):
+        if validator:
+            wx.TextCtrl.__init__(self, parent, id, value, pos, size, style, validator)
+        else:
+            wx.TextCtrl.__init__(self, parent, id, value, pos, size, style)
         self.SetBackgroundColour(Colour(50, 50, 60))
         self.SetForegroundColour(Colour(128, 128, 128))
-       
+        self.ValidRoutine=self.Validate_Pass
+    
+    def Validate_Pass(self):
+        #Null validation routine.
+        return True
+    def setValidRoutine(self, routine):
+        #Set validation routine.  Must be Validate_Pass, Validate_Not_Empty or Validate_Float.
+        self.ValidRoutine=routine
+        
+    def runValidRoutine(self):
+        #Validate field.  Must be Validate_Pass, Validate_Not_Empty or Validate_Float.
+        return self.ValidRoutine()
+        
+    def Validate_Not_Empty(self):
+        """ Validate the contents of the given text control, must contain some text. Use setValidRoutine(Validate_Not_Empty)
+        """
+        text = self.GetValue()
+
+        if len(text) == 0:
+            wx.MessageBox("Must contain some text.", "Error")
+            self.SetBackgroundColour("White")
+            self.SetFocus()
+            self.Refresh()
+            return False
+        else:
+            self.SetBackgroundColour(Colour(50, 50, 60))
+            self.Refresh()
+            return True
+            
+    def Validate_Float ( self ):
+        """ Validate the contents of the given text control. Must be valid float. Use setValidRoutine(Validate_Float)
+        """ 
+        Text = self.GetValue ()
+        #print('here')
+        if self.isfloat(Text):
+            self.SetBackgroundColour (Colour(50, 50, 60))
+            self.Refresh()
+            return True
+        else :
+            wx.MessageBox("Invalid float object.", "Error")
+            self.SetBackgroundColour ("White")
+            self.SetFocus()
+            self.Refresh()
+            return False
+            
+    def isfloat(self, x): 
+        try: 
+            float(x) 
+            return True 
+        except: 
+            return False
+        
 class RadioBox(wx.RadioBox):
     def __init__(self, parent, id, label, pos, size, choices, majorDimension, style):
         wx.RadioBox.__init__(self, parent, id, label, pos, size, choices=choices, majorDimension=majorDimension, style=style )
