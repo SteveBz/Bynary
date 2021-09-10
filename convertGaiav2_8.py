@@ -51,11 +51,11 @@ separation=0.50
 pc=float(0.0573*separation)
 print(pc)
 nsigma=8
-releaseIn='eDR3'
-releaseOut='eDR3'
-catalogue="KEB-0.50pc"
+releaseIn='test'
+releaseOut='test'
+catalogue="testc"
 HPS=[]
-HPS.extend(range(0,192))
+HPS.extend(range(0,2))
 print (HPS)
 #Count records only
 countOnly=False

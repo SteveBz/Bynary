@@ -2,17 +2,19 @@
 
 import math
 
-class bin():
+class binOrganiser():
     def __init__(self, binCount, lowerBinContentCount=10):
         self.binCount=binCount
         self.xBins=[] 
         self.yBins=[] 
         self.yBinSquares=[] 
         self.vxerrvSquares=[] 
+        self.errvSquares=[] 
         self.errors=[] 
         self.labels=[] 
         self.data1=[] 
         self.binLowerBounds=[] 
+        self.binMidPoints=[] 
         self.binUpperBounds=[] 
         self.dataCount=0
         self.lowerBinContentCount=lowerBinContentCount
@@ -21,10 +23,12 @@ class bin():
         self.xBins.append([] )
         self.yBins.append([] )
         self.yBinSquares.append([] )
-        self.vxerrvSquares.append([] )
+        self.vxerrvSquares.append([])
+        self.errvSquares.append([])
         self.errors.append([] )
         self.binLowerBounds.append(binLowerBound)
         self.binUpperBounds.append(binUpperBound)
+        self.binMidPoints.append(math.sqrt(binLowerBound*binUpperBound))
         
     def binAddDataPoint(self, x, y, dy='', value=1):
         y=abs(y)
@@ -39,13 +43,23 @@ class bin():
                 self.xBins[i].append(x)
                 self.yBins[i].append(y)
                 vxverr2=(y*dy)**2
+                verr2=(dy)**2
                 y2=y**2
                 self.yBinSquares[i].append(y2)
                 self.vxerrvSquares[i].append(vxverr2)
+                self.errvSquares[i].append(verr2)
                 self.errors[i].append(dy)
                 return 0
         return 1
-    
+    def splitBin(self):
+        
+        #Filter out currently inluded rows only
+        indexStatus = self.parent.status.index
+        condition = self.parent.status.include == True
+        statusIndices = indexStatus[condition]
+        statusIndicesList = statusIndices.tolist()
+        
+        
     def getBinYLabelArray(self):
  
         labels=[] 
@@ -127,7 +141,20 @@ class bin():
         return [errbinM,errbinP]
         
     def getBinYVarArray(self, type='qrms'):
-        errbin=[] 
+        errbin=[]
+        print(f'type = {type}')
+        if type=='meanerror':
+            print(f'type = {type}')
+            for i in range(self.binCount):
+                # Square deviations
+                if len(self.errvSquares[i])>=self.lowerBinContentCount:
+                    #Remove nans so length of list (n) is correct
+                    errv2List = [errv2 for errv2 in self.errvSquares[i] if math.isnan(errv2) == False]
+                    # Variance
+                    meanerror = math.sqrt(sum(errv2List)) / len(errv2List)
+                    errbin.append(meanerror) 
+                else:
+                    errbin.append(math.nan)
         if type=='qrms':
             for i in range(self.binCount):
                 if len(self.yBins[i])>=self.lowerBinContentCount:

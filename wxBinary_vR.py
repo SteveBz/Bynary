@@ -24,7 +24,7 @@ import matplotlib.ticker as ticker
 import csv
 import pickle
 from wxPyControls import *
-from PyBins import *
+from PyBins2 import *
 from starSystems import *
 from newtonian_values import xdata2, ydata2, ydata2_1D
 
@@ -56,7 +56,7 @@ dbiStro=db.db()
 database = gl_cfg.getItem('database','SETTINGS')
 databaseid = gl_cfg.getItem('databaseuserid','SETTINGS')
 databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
-iStro=dbiStro.conFbdb(database, databaseid, databasepwd)  # chmod +777 Binaries-DB-30.fdb 
+iStro=dbiStro.conFbdb(database, databaseid, databasepwd)  # sudo chmod +777 Binaries-DB-30.fdb 
         
 class MainPanel(wx.Panel):
     def __init__(self, mainFrame):
@@ -214,6 +214,8 @@ class gaiaStarRetrieval(wx.Panel):
         self.textctrl_newRelease = TextCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         self.sizer_h.Add(self.textctrl_newRelease, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_newRelease.SetToolTip("Enter new release name.")
+        self.textctrl_newRelease.SetMaxLength(5)
+        self.textctrl_newRelease.setValidRoutine(self.textctrl_newRelease.Validate_Not_Empty)
         
         self.buttonRelease = Button(self, wx.ID_ANY, u"New release")
         self.buttonRelease.SetToolTip("Enter name of new release (5 chars).")
@@ -371,6 +373,7 @@ class gaiaStarRetrieval(wx.Panel):
     def OnCancel(self, event=0):
     
         global CANCEL
+        self.button1.Enable()
         CANCEL= True
     #    
     #    
@@ -396,6 +399,11 @@ class gaiaStarRetrieval(wx.Panel):
         return self.releases
     def addRelease(self, event=0):
         
+        attributes=[self.textctrl_newRelease]
+        for attribute in attributes:
+            if not attribute.runValidRoutine():
+                return
+            
         global RELEASE
         TBL_RELEASE = SQLLib.sqlInsert(iStro, "TBL_RELEASE")
         release=self.textctrl_newRelease.GetValue()
@@ -641,14 +649,26 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         #Try to find existing files, if not, create blank one
         files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','star_rows','X','Y','status','export']
+        if len (sys.argv)>1:
+            arg=sys.argv[1].strip()
+        else:
+            arg=''
+        if arg == 'new':
+            #Force exception if 'new' passed
+            fileSuffix='new'
+            fileSuffix2='new'
+        else:
+            fileSuffix='saved'
+            fileSuffix2='pickle'
+        
         for file in files:
             try:
-                setattr(self.parent,file, pd.read_pickle('bindata/'+file+'.saved'))
+                setattr(self.parent,file, pd.read_pickle('bindata/'+file+'.'+fileSuffix))
             except Exception:
                 setattr(self.parent,file, pd.DataFrame())
 
         try:
-            file_to_read = open('bindata/starSystemList.pickle', 'rb') #File containing example object
+            file_to_read = open('bindata/starSystemList.'+fileSuffix2, 'rb') #File containing example object
             self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
             file_to_read.close()
         except Exception:
@@ -695,9 +715,11 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.textctrl_newCatalog = TextCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         self.sizer_h.Add(self.textctrl_newCatalog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_newCatalog.SetToolTip("Enter new catalogue name.")
+        self.textctrl_newCatalog.SetMaxLength(10)
+        self.textctrl_newCatalog.setValidRoutine(self.textctrl_newCatalog.Validate_Not_Empty)
         
         self.buttonCatalogue = Button(self, wx.ID_ANY, u"New catalogue")
-        self.buttonCatalogue.SetToolTip("Enter name of new catalogue (10 chars).")
+        self.buttonCatalogue.SetToolTip("Enter name of new catalogue (1-10 chars).")
         self.buttonCatalogue.Bind(wx.EVT_LEFT_DOWN, self.addCatalogue)
         self.sizer_h.Add(self.buttonCatalogue, 0,wx.ALIGN_LEFT|wx.ALL , 5)
         # Load Catalogue
@@ -709,6 +731,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.textctrl_Separation = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('value', 'GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT) 
         self.sizer_h.Add(self.textctrl_Separation, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_Separation.SetToolTip("Enter separation in parsecs")
+        self.textctrl_Separation.setValidRoutine(self.textctrl_Separation.Validate_Float)
         
         # Select from Healpics
         static_HPSfrom = StaticText(self, id=wx.ID_ANY, label="HPS from:")
@@ -731,13 +754,13 @@ class gaiaBinaryRetrieval(wx.Panel):
         #******************************  Primary star **************************************
         
         # Select Px from (mas)
-        static_PXfrom1 = StaticText(self, id=wx.ID_ANY, label="Px1=Px2 + n%:")
+        static_PXfrom1 = StaticText(self, id=wx.ID_ANY, label="Px1 from (mas):")
         self.sizer_h.Add(static_PXfrom1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXfrom1per = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom1per','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxfrom1', 'GAIABINARY')))  
-        self.sizer_h.Add(self.spin_PXfrom1per, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.spin_PXfrom1per.SetToolTip("Primary lower parallax to download - 0% to 500% (calculated as a percentage of companion lower parallax.)")
+        self.textctrl_PXfrom1 = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, )  
+        self.sizer_h.Add(self.textctrl_PXfrom1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.textctrl_PXfrom1.SetToolTip("Primary lower parallax to download - 0 to 1000 (expectation is '3.3')")
         
         # Select Px to (degrees)
         static_PXto1 = StaticText(self, id=wx.ID_ANY, label="Px1 to (mas):")
@@ -795,9 +818,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXfrom2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXfrom2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxfrom2', 'GAIABINARY')))  
-        self.sizer_h.Add(self.spin_PXfrom2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.spin_PXfrom2.SetToolTip("Lower companion parallax to download - 0 to 1000 (expectation is '3')")
+        self.textctrl_PXfrom2 = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, )  
+        self.sizer_h.Add(self.textctrl_PXfrom2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.textctrl_PXfrom2.SetToolTip("Lower companion parallax to download - 0 to 1000 (expectation is '3')")
+        self.textctrl_PXfrom2.setValidRoutine(self.textctrl_PXfrom2.Validate_Float)
         
         # Select Px to (degrees)
         static_PXto2 = StaticText(self, id=wx.ID_ANY, label="Px2 to (mas):")
@@ -914,6 +938,10 @@ class gaiaBinaryRetrieval(wx.Panel):
 
     def addCatalogue(self, event=0):
         
+        attributes=[self.textctrl_newCatalog]
+        for attribute in attributes:
+            if not attribute.runValidRoutine():
+                return
         global RELEASE
         TBL_CATALOG = SQLLib.sqlInsert(iStro, "TBL_CATALOG")
         catalog=self.textctrl_newCatalog.GetValue()
@@ -925,50 +953,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.catRefresh()
      
             
-    #def restoreListCtrl(self, event=0, limit=1000):
-    #    
-    #    try:
-    #        self.parent.selectedStarBinaryMappings=self.parent.selectedStarBinaryMappings.convert_dtypes()
-    #    except Exception:
-    #        pass
-    #    
-    #    for index, row  in self.parent.selectedStarBinaryMappings.iterrows():
-    #        if index>limit:
-    #            break
-    #        try:
-    #            if str(row.STATUS) == '<NA>':
-    #                status=''
-    #            else:
-    #                status=str(row.STATUS)
-    #        except Exception:
-    #            status = ''
-    #        try:
-    #            if row.NOT_GROUPED == True:
-    #                notGrouped='True'
-    #            else:
-    #                notGrouped='False'
-    #        except Exception:
-    #            notGrouped = 'Not Avail.'
-    #        try:
-    #            if row.HAS_RADIAL_VELOCITY == True:
-    #                hasRadialVelocity='True'
-    #            else:
-    #                hasRadialVelocity='False'
-    #        except Exception:
-    #            hasRadialVelocity = 'Not Avail.'
-    #        try:
-    #            separation = str(float(row.SEPARATION))
-    #        except Exception:
-    #            separation = 'Not Avail.'
-    #        try:
-    #            healpix = str(int(row.HEALPIX))
-    #        except Exception:
-    #            healpix = 'Not Avail.'
-    #        self.listctrl.Append([row.SOURCE_ID_PRIMARY,row.SOURCE_ID_SECONDARY, index,separation, notGrouped, hasRadialVelocity, status, row.RELEASE_, row.CATALOG, healpix])
-
     def OnCancel(self, event=0):
 
         global CANCEL
+        self.button1.Enable()
         CANCEL= True
         
     def catRefresh(self, event=0):
@@ -1042,6 +1030,11 @@ class gaiaBinaryRetrieval(wx.Panel):
             return False
     def read_GaiaBinaries(self, event):
 
+        attributes=[self.textctrl_Separation, self.textctrl_PXfrom2, self.textctrl_PXfrom1]
+        for attribute in attributes:
+            if not attribute.runValidRoutine():
+                return
+            
         self.button1.Disable()
         
         self.listctrl.DeleteAllItems()
@@ -1057,14 +1050,14 @@ class gaiaBinaryRetrieval(wx.Panel):
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         
         gl_cfg.setItem('pxto1',self.spin_PXto1.GetValue(), 'GAIABINARY') # save setting in config file
-        gl_cfg.setItem('pxfrom1per',self.spin_PXfrom1per.GetValue(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('pxfrom1',self.textctrl_PXfrom1.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('rp_err1',self.spin_Rp_err1.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('bp_err1',self.spin_Bp_err1.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('px_err1',self.spin_Px_err1.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('g_err1',self.spin_G_err1.GetValue(), 'GAIABINARY') # save setting in config file
         
         gl_cfg.setItem('pxto2',self.spin_PXto2.GetValue(), 'GAIABINARY') # save setting in config file
-        gl_cfg.setItem('pxfrom2',self.spin_PXfrom2.GetValue(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('pxfrom2',self.textctrl_PXfrom2.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('rp_err2',self.spin_Rp_err2.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('bp_err2',self.spin_Bp_err2.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('px_err2',self.spin_Px_err2.GetValue(), 'GAIABINARY') # save setting in config file
@@ -1102,12 +1095,13 @@ class gaiaBinaryRetrieval(wx.Panel):
         #release='fDR3'
         catalogue=self.catalogue.GetValue()
         HPS=[]
-        HPSlower = int(self.spin_HPSfrom.GetValue())
-        HPSupper = int(self.spin_HPSto.GetValue())
-        HPS.extend(range(HPSlower,HPSupper))
+        HPSlower = float(self.spin_HPSfrom.GetValue())
+        HPSupper = float(self.spin_HPSto.GetValue())
+        step=0.25
+        HPS.extend(np.arange(HPSlower,HPSupper,step))
+        print (HPS)
         countMe=0
-        forceIt=False # Force download
-        step=1
+        #forceIt=False # Force download
         
         forceIt=self.forceDownloadCheckBox.GetValue() # Force download
         downloadOnly=self.downloadOnlyCheckBox.GetValue() # Download only, don't update
@@ -1157,10 +1151,30 @@ class gaiaBinaryRetrieval(wx.Panel):
                             /(power((t1.pmra - g2.pmra), 2) + power((t1.pmdec - g2.pmdec), 2)))
                                 < 1.5
         """
+        
+        commentG1='--'
+        commentRp1='--'
+        commentBp1='--'
+        commentG2='--'
+        commentRp2='--'
+        commentBp2='--'
+        
+        if int(self.spin_G_err1.GetValue()):
+            commentG1=''
+        if int(self.spin_Rp_err1.GetValue()):
+            commentRp1=''
+        if int(self.spin_Bp_err1.GetValue()):
+            commentBp1=''
+        if int(self.spin_G_err2.GetValue()):
+            commentG2=''
+        if int(self.spin_Rp_err2.GetValue()):
+            commentRp2=''
+        if int(self.spin_Bp_err2.GetValue()):
+            commentBp2=''
         for i in HPS:
             
-            healpixA=2**35*4**(12-2)*i
-            healpixB=2**35*4**(12-2)*(i+step) 
+            healpixA=int(2**35*4**(12-2)*i)
+            healpixB=int(2**35*4**(12-2)*(i+step))
         
             fromHealpixClause=f"""
             -- index file: {i}
@@ -1176,26 +1190,28 @@ class gaiaBinaryRetrieval(wx.Panel):
             where
                 {fromHealpixClause}
                 -- outside solar system and within 333 pcs
-                parallax between {self.spin_PXfrom2.GetValue() * (1 + int(self.spin_PXfrom1per.GetValue())/100)} and {self.spin_PXto1.GetValue()} and
-                parallax_over_error > {self.spin_Px_err1.GetValue()} and
+                parallax between {self.textctrl_PXfrom1.GetValue()} and {self.spin_PXto1.GetValue()}
+                 and parallax_over_error > {self.spin_Px_err1.GetValue()}
                 -- Many dim stars don't have photometric data on Gaia
                 -- so deselecting on this basis introduces 'hidden' or unidentified multiple star systems.
-                phot_g_mean_flux_over_error > {self.spin_G_err1.GetValue()} and
-                phot_rp_mean_flux_over_error > {self.spin_Rp_err1.GetValue()} and
-                phot_bp_mean_flux_over_error > {self.spin_Bp_err1.GetValue()})
+                {commentG1} and phot_g_mean_flux_over_error > {self.spin_G_err1.GetValue()}
+                {commentRp1} and phot_rp_mean_flux_over_error > {self.spin_Rp_err1.GetValue()} 
+                {commentBp1} and phot_bp_mean_flux_over_error > {self.spin_Bp_err1.GetValue()}
+                )
                 as t1,
             (select * from gaiaedr3.gaia_source
             where 
                 {fromHealpixClause}
-                bp_rp is not null and
+                {commentRp2} {commentBp2} bp_rp is not null and
                 -- outside solar system and within 333 pcs
-                parallax between {self.spin_PXfrom2.GetValue()} and {self.spin_PXto2.GetValue()} and
-                parallax_over_error > {self.spin_Px_err2.GetValue()} and
+                parallax between {self.textctrl_PXfrom2.GetValue()} and {self.spin_PXto2.GetValue()} 
+                and parallax_over_error > {self.spin_Px_err2.GetValue()} 
                 -- Many dim stars don't have photometric data on Gaia
                 -- so deselecting on this basis introduces 'hidden' or unidentified multiple star systems.
-                phot_g_mean_flux_over_error > {self.spin_Px_err2.GetValue()} and
-                phot_rp_mean_flux_over_error > {self.spin_Rp_err2.GetValue()} and
-                phot_bp_mean_flux_over_error > {self.spin_Bp_err2.GetValue()})
+                {commentG2} and phot_g_mean_flux_over_error > {self.spin_G_err2.GetValue()} 
+                {commentRp2} and phot_rp_mean_flux_over_error > {self.spin_Rp_err2.GetValue()}
+                {commentBp2} and phot_bp_mean_flux_over_error > {self.spin_Bp_err2.GetValue()}
+                )
                 as g2
             """
         
@@ -1263,7 +1279,7 @@ class gaiaBinaryRetrieval(wx.Panel):
                     
                     #Refresh button with progress and check for 'cancel'
                     label=int(100 * index /dataLen)
-                    self.button1.SetLabel(f'{i-HPSlower+1}/{HPSupper-HPSlower}-{label}%')
+                    self.button1.SetLabel(f'{int(i-HPSlower+1)}/{int((HPSupper-HPSlower)/step)}-{label}%')
                     global CANCEL
                     if CANCEL:
                         CANCEL = False
@@ -1636,20 +1652,20 @@ class dataRetrieval(wx.Panel):
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
         
-        #Try to find existing files, if not, create blank one
-        files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','star_rows','X','Y','status','export']
-        for file in files:
-            try:
-                setattr(self.parent,file, pd.read_pickle('bindata/'+file+'.saved'))
-            except Exception:
-                setattr(self.parent,file, pd.DataFrame())
-
-        try:
-            file_to_read = open('bindata/starSystemList.pickle', 'rb') #File containing example object
-            self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
-            file_to_read.close()
-        except Exception:
-            self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
+        ##Try to find existing files, if not, create blank one
+        #files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','star_rows','X','Y','status','export']
+        #for file in files:
+        #    try:
+        #        setattr(self.parent,file, pd.read_pickle('bindata/'+file+'.saved'))
+        #    except Exception:
+        #        setattr(self.parent,file, pd.DataFrame())
+        #
+        #try:
+        #    file_to_read = open('bindata/starSystemList.pickle', 'rb') #File containing example object
+        #    self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
+        #    file_to_read.close()
+        #except Exception:
+        #    self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
         
         self.sizer_main_divider=wx.BoxSizer(wx.HORIZONTAL)
         self.sizer_main=wx.BoxSizer(wx.VERTICAL)
@@ -1969,6 +1985,7 @@ class dataRetrieval(wx.Panel):
     def OnCancel(self, event=0):
 
         global CANCEL
+        self.ungroup.Enable()
         self.button1.Enable()
         
         CANCEL= True
@@ -2132,6 +2149,7 @@ class dataRetrieval(wx.Panel):
  
         --    and b.SOURCE_ID_PRIMARY < b.SOURCE_ID_SECONDARY
             
+            and o1.SOURCE_ID is not null
             and o2.SOURCE_ID is not null
         ORDER BY SOURCE_ID_PRIMARY asc
         
@@ -2376,7 +2394,7 @@ class dataRetrieval(wx.Panel):
                     self.button1.SetBackgroundColour(Colour(150,20,20))
                     self.button1.Enable()
                     return
-            self.parent.binaryDetail.append ([R, V[0], Verr[0], V[1], Verr[1], M])
+            self.parent.binaryDetail.append([abs(R), abs(V[0]), abs(Verr[0]), abs(V[1]), abs(Verr[1]), abs(M)])
             
             if include:
                 primaryPointer=self.parent.starSystemList.binaryList[str(index+1)].primary
@@ -2387,6 +2405,7 @@ class dataRetrieval(wx.Panel):
                     'mag1':primaryPointer.PHOT_G_MEAN_MAG,
                     'MAG1':self.parent.X[index]['mag'],
                     'PARALLAX1':float(primaryPointer.PARALLAX),
+                    'PARALLAX_ERROR1':float(primaryPointer.PARALLAX_ERROR),
                     'DIST1':float(primaryPointer.DIST),
                     'RUWE1':XRUWE,
                     'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
@@ -2395,10 +2414,13 @@ class dataRetrieval(wx.Panel):
                     'mag2':star2Pointer.PHOT_G_MEAN_MAG,
                     'MAG2':self.parent.Y[index]['mag'],
                     'PARALLAX2':float(star2Pointer.PARALLAX),
+                    'PARALLAX_ERROR2':float(star2Pointer.PARALLAX),
                     'DIST2':float(star2Pointer.DIST),
                     'RUWE2':YRUWE,
-                    'vRA':V[0],
-                    'vDEC':V[1],
+                    'vRA':abs(V[0]),
+                    'vRAerr':abs(Verr[0]),
+                    'vDEC':abs(V[1]),
+                    'vDECerr':abs(Verr[1]),
                     'V2D':math.sqrt(V[0]**2+V[1]**2),
                     'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
                     'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
@@ -2853,19 +2875,19 @@ class dataFilter(wx.Panel):
         self.listctrl.InsertColumn(0, u"Gaia %s Source ID" % RELEASE, width=180)
         self.listctrl.InsertColumn(1, u"pairing number", width=120)
         self.listctrl.InsertColumn(2, u"ra", width=100)
-        self.listctrl.InsertColumn(3, u"ra_error", width=100)
-        self.listctrl.InsertColumn(4, u"dec", width=100)
-        self.listctrl.InsertColumn(5, u"dec error", width=100)
-        self.listctrl.InsertColumn(6, u"parallax", width=100)
-        self.listctrl.InsertColumn(7, u"px err", width=100)
-        self.listctrl.InsertColumn(8, u"pmra", width=100)
-        self.listctrl.InsertColumn(9, u"pmra err", width=100)
-        self.listctrl.InsertColumn(10, u"pmdec", width=100)
-        self.listctrl.InsertColumn(11, u"pmdec err", width=100)
-        self.listctrl.InsertColumn(12, u"RUWE", width=100)
-        self.listctrl.InsertColumn(13, u"Rad. Vel", width=100)
-        self.listctrl.InsertColumn(14, u"Exclude", width=100)
-        self.listctrl.InsertColumn(15, u"Release", width=100)
+        #self.listctrl.InsertColumn(3, u"ra_error", width=100)
+        self.listctrl.InsertColumn(3, u"dec", width=100)
+        #self.listctrl.InsertColumn(5, u"dec error", width=100)
+        self.listctrl.InsertColumn(4, u"parallax", width=100)
+        self.listctrl.InsertColumn(5, u"px err", width=100)
+        self.listctrl.InsertColumn(6, u"pmra", width=100)
+        self.listctrl.InsertColumn(7, u"pmra err", width=100)
+        self.listctrl.InsertColumn(8, u"pmdec", width=100)
+        self.listctrl.InsertColumn(9, u"pmdec err", width=100)
+        self.listctrl.InsertColumn(10, u"RUWE", width=100)
+        self.listctrl.InsertColumn(11, u"Rad. Vel", width=100)
+        #self.listctrl.InsertColumn(12, u"Exclude", width=100)
+        self.listctrl.InsertColumn(12, u"Release", width=100)
 
         self.sizer_v.Add(self.listctrl, 0, wx.TOP | wx.BOTTOM , 10)
         self.sizer_v.Add(hsizer1, 0, wx.ALIGN_CENTER_HORIZONTAL)
@@ -2889,6 +2911,13 @@ class dataFilter(wx.Panel):
         self.parent.status['kineticOut']=self.parent.status['dataLoadOut']
         
     def populateListctrl(self, event):
+        
+        attributes=[self.text_ruwe]
+        for attribute in attributes:
+            attribute.setValidRoutine(attribute.Validate_Float)
+            if not attribute.runValidRoutine():
+                return
+            
         # This routine populates the StarList List Control and filters for Radial velocity and signal to
         # noise ratios for proper motion and paralax.
         gl_cfg.setItem('pxsn_gt',self.spin_parallax_SN.GetValue(),'FILTER')
@@ -3081,6 +3110,7 @@ class dataFilter(wx.Panel):
                     'mag1':primaryPointer.PHOT_G_MEAN_MAG,
                     'MAG1':self.parent.X.mag[idxBin],
                     'PARALLAX1':float(primaryPointer.PARALLAX),
+                    'PARALLAX_ERROR1':float(primaryPointer.PARALLAX_ERROR),
                     'DIST1':float(primaryPointer.DIST),
                     'RUWE1':primaryPointer.RUWE,
                     'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
@@ -3089,16 +3119,19 @@ class dataFilter(wx.Panel):
                     'mag2':star2Pointer.PHOT_G_MEAN_MAG,
                     'MAG2':self.parent.Y.mag[idxBin],
                     'PARALLAX2':float(star2Pointer.PARALLAX),
+                    'PARALLAX_ERROR2':float(star2Pointer.PARALLAX),
                     'DIST2':float(star2Pointer.DIST),
                     'RUWE2':star2Pointer.RUWE,
-                    'vRA':self.parent.binaryDetail.vRA[idxBin],
-                    'vDEC':self.parent.binaryDetail.vDEC[idxBin],                    
+                    'vRA':abs(self.parent.binaryDetail.vRA[idxBin]),
+                    'vRAerr':abs(self.parent.binaryDetail.vRAerr[idxBin]),
+                    'vDEC':abs(self.parent.binaryDetail.vDEC[idxBin]),
+                    'vDECerr':abs(self.parent.binaryDetail.vDECerr[idxBin]),                  
                     'V2D':math.sqrt(self.parent.binaryDetail.vRA[idxBin]**2+self.parent.binaryDetail.vDEC[idxBin]**2),
                     'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
                     'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
                     'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                    'Log10vRA':np.log10(abs(self.parent.binaryDetail.vRA[idxBin])),
-                    'Log10vDEC':np.log10(abs(self.parent.binaryDetail.vDEC[idxBin])),
+                    'Log10vRA':np.log10(self.parent.binaryDetail.vRA[idxBin]),
+                    'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[idxBin]),
                     'Log10r':np.log10(self.parent.binaryDetail.r[idxBin]),
                     #'M':M,
                     'r':self.parent.binaryDetail.r[idxBin]
@@ -3156,65 +3189,11 @@ class dataFilter(wx.Panel):
                      float(row.PMDEC),
                      float(row.PMDEC_ERROR),
                      ruwe,rv,
-                     '',
+                     #'',
                      row.RELEASE_])
             except Exception:
                 print(self.parent.star_rows)
                 print('"star_rows" Error')
-    
-    def OnQuery(self, event=0):
-                
-        query=[0]
-                       
-        selectFrom = """SELECT
-            gaia_source.source_id,
-            gaia_source.ra,
-            gaia_source.ra_error,
-            gaia_source.dec,
-            gaia_source.dec_error,
-            (1000/TO_REAL(gaia_source.parallax)) as dist,
-            gaia_source.parallax,
-            gaia_source.parallax_error,
-            gaia_source.phot_g_mean_mag,
-            gaia_source.bp_rp,
-            gaia_source.radial_velocity,
-            #gaia_source.radial_velocity_error,
-            #gaia_source.phot_variable_flag,
-            #gaia_source.teff_val,
-            #gaia_source.a_g_val, 
-            gaia_source.pmra,
-            gaia_source.PMRA_ERROR, 
-            gaia_source.pmdec,
-            gaia_source.PMDEC_ERROR,
-            hipp.ccdm, hipp.nsys,
-            hipp.n_ccdm, 
-            hipp.ncomp, hipparcos2_best_neighbour.angular_distance AS angular_distance_between_hipp_gaia
-        
-            FROM gaiadr2.gaia_source
-            LEFT JOIN gaiadr2.hipparcos2_best_neighbour ON gaia_source.source_id = hipparcos2_best_neighbour.source_id
-            LEFT JOIN public.hipparcos_newreduction AS hipp2 ON hipp2.hip = hipparcos2_best_neighbour.original_ext_source_id
-            LEFT JOIN public.hipparcos AS hipp ON hipp2.hip = hipp.hip
-            
-        """
-        
-        query[0] = selectFrom + f"""
-        
-        WHERE gaiadr2.gaia_source.source_id in ({self.parent.selectedStarIDs})
-        
-        """
-        
-        query[0] = query[0].replace("[", "")
-        query[0] = query[0].replace("]", "")
-        
-
-        gaia_cnxn = da.GaiaDataAccess()
-        data = gaia_cnxn.gaia_query_to_pandas(query[0])
-        
-        now = datetime.datetime.utcnow() # current date and time
-        date_time = now.strftime("%Y%m%d_%H%M%S")
-        self.filePrefix=self.csvFile.GetValue()[:-3] + date_time
-        gaia_cnxn.data_save_pickle(data, self.filePrefix)
-
 
 class skyDataPlotting(wx.Panel):
 
@@ -3366,10 +3345,12 @@ class skyDataPlotting(wx.Panel):
             c='white'
                 
         marker = ','
+        markersize=1
         if self.largePointsCheckBox.GetValue():
             marker = 'o'
+            markersize=1.5
         #Display graph
-        self.line, = self.skyGraph.axes.plot(xdata, ydata, color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+        self.line, = self.skyGraph.axes.plot(xdata, ydata, color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
     
         legend1.append(self.line)
         self.skyGraph.draw(self.line, xdata, ydata, False, [] )
@@ -3443,10 +3424,12 @@ class skyDataPlotting(wx.Panel):
             print(f'{xdata2.ra.sum()}')
             print(f'{ydata2.dec.sum()}')
             marker = ','
+            markersize=1
             if self.largePointsCheckBox.GetValue():
                 marker = 'o'
+                markersize=1.5
             try:
-                self.line2, = self.skyGraph.axes.plot(xdata2.ra.to_list(), ydata2.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+                self.line2, = self.skyGraph.axes.plot(xdata2.ra.to_list(), ydata2.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             except Exception as e:
                 print (f'self.skyGraph.axes.plot Crash 1) "{e}"')
                 print(xdata1)
@@ -3469,10 +3452,12 @@ class skyDataPlotting(wx.Panel):
             c='white'
             
         marker = ','
+        markersize=1
         if self.largePointsCheckBox.GetValue():
             marker = 'o'
+            markersize=1.5
         try:
-            self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+            self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
         except Exception as e:
             print (f'self.skyGraph.axes.plot Crash 2) "{e}"')
             print(xdata1)
@@ -3622,6 +3607,14 @@ class HRDataPlotting(wx.Panel):
         self.OnPlot()
         
     def OnFilter(self, event=0):
+        
+        attributes=[self.text_colourLower, self.text_colourUpper, self.text_magLower, self.text_magUpper,
+                    self.text_magRange]
+        for attribute in attributes:
+            attribute.setValidRoutine(attribute.Validate_Float)
+            if not attribute.runValidRoutine():
+                return
+            
         self.Filter_but.Disable()
         
         self.parent.export=[]
@@ -3686,6 +3679,7 @@ class HRDataPlotting(wx.Panel):
                     'mag1':primaryPointer.PHOT_G_MEAN_MAG,
                     'MAG1':self.parent.X.mag[index],
                     'PARALLAX1':float(primaryPointer.PARALLAX),
+                    'PARALLAX_ERROR1':float(primaryPointer.PARALLAX_ERROR),
                     'DIST1':float(primaryPointer.DIST),
                     'RUWE1':primaryPointer.RUWE,
                     'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
@@ -3694,17 +3688,20 @@ class HRDataPlotting(wx.Panel):
                     'mag2':star2Pointer.PHOT_G_MEAN_MAG,
                     'MAG2':self.parent.Y.mag[index],
                     'PARALLAX2':float(star2Pointer.PARALLAX),
+                    'PARALLAX_ERROR2':float(star2Pointer.PARALLAX),
                     'DIST2':float(star2Pointer.DIST),
                     'RUWE2':star2Pointer.RUWE,
-                    'vRA':self.parent.binaryDetail.vRA[index],
-                    'vDEC':self.parent.binaryDetail.vDEC[index],                     
+                    'vRA':abs(self.parent.binaryDetail.vRA[index]),
+                    'vRAerr':abs(self.parent.binaryDetail.vRAerr[index]),
+                    'vDEC':abs(self.parent.binaryDetail.vDEC[index]), 
+                    'vDECerr':abs(self.parent.binaryDetail.vDECerr[index]),                      
                     'V2D':math.sqrt(self.parent.binaryDetail.vRA[index]**2+self.parent.binaryDetail.vDEC[index]**2),
                     'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
                     'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
                     'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                    'Log10vRA':np.log10(abs(self.parent.binaryDetail.vRA[index])),
-                    'Log10vDEC':np.log10(abs(self.parent.binaryDetail.vDEC[index])),
-                    'Log10r':np.log10(abs(self.parent.binaryDetail.r[index])),
+                    'Log10vRA':np.log10(self.parent.binaryDetail.vRA[index]),
+                    'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[index]),
+                    'Log10r':np.log10(self.parent.binaryDetail.r[index]),
                     #'M':M,
                     'r':self.parent.binaryDetail.r[index]
                 }
@@ -3735,7 +3732,6 @@ class HRDataPlotting(wx.Panel):
         return [Y-self.Yerr,Y+self.Yerr]
     
     def OnPlot(self, event=0):
-
 
         self.plot_but.Disable()
         # Draw velocity map
@@ -3788,11 +3784,13 @@ class HRDataPlotting(wx.Panel):
                     c='silver'
                 
             marker = ','
+            markersize=1
             if self.largePointsCheckBox.GetValue():
                 marker = 'o'
+                markersize=1.5
             #Display graph
             try:
-                self.line2, = self.hrGraph.axes.plot(xdata2, ydata2, color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+                self.line2, = self.hrGraph.axes.plot(xdata2, ydata2, color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             except Exception:
                 print(xdata2)
                 print(ydata2)
@@ -3814,11 +3812,13 @@ class HRDataPlotting(wx.Panel):
             c='white'
     
         marker = ','
+        markersize=1
         if self.largePointsCheckBox.GetValue():
             marker = 'o'
+            markersize=1.5
         xdata1=xdata1.tolist()
         ydata1=ydata1.tolist()
-        self.line, = self.hrGraph.axes.plot(xdata1, ydata1, color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+        self.line, = self.hrGraph.axes.plot(xdata1, ydata1, color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
     
         legend1.append(self.line)
         legend2.append('Selected binaries')
@@ -3934,7 +3934,7 @@ class kineticDataPlotting(wx.Panel):
         fgsizer.Add(self.text_vxerrCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Lower bin cutoff textctrl
-        self.lowerBinCutoffTextCtrl = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('lower_bin_cutoff','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.lowerBinCutoffTextCtrl = SpinCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=99,initial=int(gl_cfg.getItem('lower_bin_cutoff','KINETIC')))   
         self.lowerBinCutoffTextCtrl.SetToolTip("Enter number below which occupancy not to display bins.")
         fgsizer.Add(self.lowerBinCutoffTextCtrl, 0, wx.ALL, 2)
         
@@ -3950,7 +3950,7 @@ class kineticDataPlotting(wx.Panel):
         fgsizer.Add(showRABinsStaticText, 0, wx.ALL, 2)
         self.showBinsCheckBox = CheckBox(self)
         self.showBinsCheckBox.SetValue(gl_cfg.getBoolean('showbins','KINETIC'))
-        self.showBinsCheckBox.SetToolTip("Display 1D RA & Dec data in separate bins.")
+        self.showBinsCheckBox.SetToolTip("Display 1D RA & Dec data in bins.")
         fgsizer.Add(self.showBinsCheckBox, 0, wx.ALL, 2)
         
         # Create show raw data check box
@@ -4039,6 +4039,13 @@ class kineticDataPlotting(wx.Panel):
 
     def OnPlot(self, event=0):
 
+        attributes=[self.textctrl_xLower, self.textctrl_xUpper, self.textctrl_yLower, self.textctrl_yUpper,
+                    self.text_x_TopLeft, self.text_y_TopLeft, self.text_x_BottomRight, self.text_y_BottomRight,
+                    self.text_upperCutoff, self.text_vxerrCutoff]
+        for attribute in attributes:
+            attribute.setValidRoutine(attribute.Validate_Float)
+            if not attribute.runValidRoutine():
+                return
         
         self.plot_but.Disable()
         
@@ -4133,7 +4140,7 @@ class kineticDataPlotting(wx.Panel):
             diff = math.log10(top)-math.log10(bottom)   #  Work out difference in log terms.
 ######################################################################
             numRABins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
-            dataRABins=bin(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            dataRABins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             upper=top
             factor=10**(diff/numRABins)
             lower=upper/factor
@@ -4143,7 +4150,7 @@ class kineticDataPlotting(wx.Panel):
                 lower=upper/factor
                 
             numDECBins=int(self.spin_bins.GetValue()-1)      #  Get number of DEC bins (It's 1 fewer than the number of RA bins).
-            dataDECBins=bin(numDECBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            dataDECBins=binOrganiser(numDECBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             
             # Need to offset upper bound of top bin by sqrt of a factor. TOTAL interval is the same with 1/2 a DEC bin at the top and half a DEC bin at the bottom.
             # Ignore these and reduce number of bins by 1.
@@ -4171,11 +4178,11 @@ class kineticDataPlotting(wx.Panel):
                 vDEC=0
                 excludeRA=0
                 excludeDec=0
-                vRA=abs(float(self.parent.binaryDetail.vRA[i]))
-                vDEC=abs(float(self.parent.binaryDetail.vDEC[i]))
-                r=abs(float(self.parent.binaryDetail.r[i]))
-                vRAerr=abs(float(self.parent.binaryDetail.vRAerr[i]))
-                vDECerr=abs(float(self.parent.binaryDetail.vDECerr[i]))
+                vRA=float(self.parent.binaryDetail.vRA[i])
+                vDEC=float(self.parent.binaryDetail.vDEC[i])
+                r=float(self.parent.binaryDetail.r[i])
+                vRAerr=float(self.parent.binaryDetail.vRAerr[i])
+                vDECerr=float(self.parent.binaryDetail.vDECerr[i])
                 # Go through and bin
                 label=float(100.0 * i /lenArray)
                 self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -4216,6 +4223,7 @@ class kineticDataPlotting(wx.Panel):
                             'mag1':primaryPointer.PHOT_G_MEAN_MAG,
                             'MAG1':self.parent.X.mag[i],
                             'PARALLAX1':float(primaryPointer.PARALLAX),
+                            'PARALLAX_ERROR1':float(primaryPointer.PARALLAX_ERROR),
                             'DIST1':float(primaryPointer.DIST),
                             'RUWE1':primaryPointer.RUWE,
                             'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
@@ -4224,17 +4232,20 @@ class kineticDataPlotting(wx.Panel):
                             'mag2':star2Pointer.PHOT_G_MEAN_MAG,
                             'MAG2':self.parent.Y.mag[i],
                             'PARALLAX2':float(star2Pointer.PARALLAX),
+                            'PARALLAX_ERROR2':float(star2Pointer.PARALLAX),
                             'DIST2':float(star2Pointer.DIST),
                             'RUWE2':star2Pointer.RUWE,
-                            'vRA':self.parent.binaryDetail.vRA[i],
-                            'vDEC':self.parent.binaryDetail.vDEC[i],                      
+                            'vRA':abs(self.parent.binaryDetail.vRA[i]),
+                            'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
+                            'vDEC':abs(self.parent.binaryDetail.vDEC[i]), 
+                            'vDECerr':abs(self.parent.binaryDetail.vDECerr[i]),                         
                             'V2D':math.sqrt(self.parent.binaryDetail.vRA[i]**2+self.parent.binaryDetail.vDEC[i]**2),
                             'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
                             'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
                             'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                            'Log10vRA':np.log10(abs(self.parent.binaryDetail.vRA[i])),
-                            'Log10vDEC':np.log10(abs(self.parent.binaryDetail.vDEC[i])),
-                            'Log10r':np.log10(abs(self.parent.binaryDetail.r[i])),
+                            'Log10vRA':np.log10(self.parent.binaryDetail.vRA[i]),
+                            'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[i]),
+                            'Log10r':np.log10(self.parent.binaryDetail.r[i]),
                             #'M':M,
                             'r':self.parent.binaryDetail.r[i]
                         }
@@ -4246,9 +4257,9 @@ class kineticDataPlotting(wx.Panel):
             rerrbin3ra=dataRABins.getBinXVarArray()
             verrbin3ra=dataRABins.getBinYVarArray()
                         
-            self.line3ra = self.velocityGraph.axes.errorbar(xdata3ra, ydata3ra, xerr=rerrbin3ra, yerr=verrbin3ra, fmt='o', ecolor='m', elinewidth=1, capsize=0, mfc='m', mec='m', ms=3) #,label='Gaia binned'
-            self.line3ra[-1][0].set_linestyle('--') #eb1[-1][0] is the LineCollection objects of the errorbar lines
-            self.line3ra[-1][1].set_linestyle('--') #eb1[-1][0] is the LineCollection objects of the errorbar lines
+            self.line3ra = self.velocityGraph.axes.errorbar(xdata3ra, ydata3ra, xerr=rerrbin3ra, yerr=verrbin3ra, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
+            self.line3ra[-1][0].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
+            self.line3ra[-1][1].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
             
             if not prntVersion:
                 legend1.append(self.line3ra)
@@ -4286,9 +4297,9 @@ class kineticDataPlotting(wx.Panel):
                 for x,y,label in zip(xdata3dec, ydata3dec, dataDECBins.getBinYLabelArray()):
                    self.velocityGraph.frames.append(self.velocityGraph.axes.text(float(x)*xScaleBy, float(y)*yScaleBy, f'{label}', ha='center', va='bottom', c=c, fontsize=FONTSIZE))
                
-            self.line3dec = self.velocityGraph.axes.errorbar(xdata3dec, ydata3dec, xerr=rerrbin3dec, yerr=verrbin3dec, fmt='o', ecolor='c', elinewidth=1, capsize=0, mfc='c', mec='c', ms=3) #,label='Gaia binned'
-            self.line3dec[-1][0].set_linestyle(':')
-            self.line3dec[-1][1].set_linestyle(':')
+            self.line3dec = self.velocityGraph.axes.errorbar(xdata3dec, ydata3dec, xerr=rerrbin3dec, yerr=verrbin3dec, fmt='o', ecolor='g', elinewidth=2, capsize=0, mfc='g', mec='g', ms=3) #,label='Gaia binned'
+            self.line3dec[-1][0].set_linestyle('--')
+            self.line3dec[-1][1].set_linestyle('--')
             if not prntVersion:
                 legend1.append(self.line3dec)
                 legend2.append('Gaia DEC binned data')
@@ -4310,11 +4321,13 @@ class kineticDataPlotting(wx.Panel):
             if prntVersion:
                 c='black'
             marker = ','
+            markersize=1
             if self.largePointsCheckBox.GetValue():
                 marker = 'o'
-            self.linera, = self.velocityGraph.axes.plot(xdata1, ydata1ra, color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+                markersize=1.5
+            self.linera, = self.velocityGraph.axes.plot(xdata1, ydata1ra, color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             self.velocityGraph.draw(self.linera, xdata1, ydata1ra, True, [] )
-            self.linedec, = self.velocityGraph.axes.plot(xdata1, ydata1dec, color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+            self.linedec, = self.velocityGraph.axes.plot(xdata1, ydata1dec, color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             self.velocityGraph.draw(self.linedec, xdata1, ydata1dec, True, [] )
                     
             if not prntVersion:
@@ -4345,7 +4358,7 @@ class kineticDataPlotting(wx.Panel):
             self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,} binary stars, Gaia {RELEASE}, velocity vs separation with Newtonian expectation", fontsize=FONTSIZE)
             self.velocityGraph.axes.patch.set_facecolor('0.25')  # Grey shade
             
-        self.line2, = self.velocityGraph.axes.plot(xdata2, ydata2_1D, 'r-', lw=1)#,label='Newtonian')
+        self.line2, = self.velocityGraph.axes.plot(xdata2, ydata2_1D, 'b-', lw=2)#,label='Newtonian')
         
         
         if not prntVersion:
@@ -4468,8 +4481,8 @@ class kineticDataPlotting(wx.Panel):
         
     def CalcVoverdv(self):
         
-        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA.abs()/self.parent.binaryDetail.vRAerr.abs()
-        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC.abs()/self.parent.binaryDetail.vDECerr.abs()
+        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
+        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
         
         totalSelected=self.parent.status['include'].sum()
         
@@ -4500,7 +4513,7 @@ class TFDataPlotting(wx.Panel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=12, hgap=0, rows=10, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=13, hgap=0, rows=10, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
         fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
@@ -4530,6 +4543,10 @@ class TFDataPlotting(wx.Panel):
         # Lower bin cutoff header
         lowerBinCutoff_StaticText = StaticText(self, id=wx.ID_ANY, label="Lower Bin cutoff")
         fgsizer.Add(lowerBinCutoff_StaticText, 0, wx.ALL, 2)
+        
+        # Upper bin Split header
+        UpperBinSplit_StaticText = StaticText(self, id=wx.ID_ANY, label="Upper Bin Split")
+        fgsizer.Add(UpperBinSplit_StaticText, 0, wx.ALL, 2)
        
         #Type of scale
         self.static_yLog = StaticText(self, label='y scale') 
@@ -4546,35 +4563,50 @@ class TFDataPlotting(wx.Panel):
         # Axis limits
         self.spin_bins = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=100,initial=int(gl_cfg.getItem('no_bins','TULLEYFISHER')))  
         fgsizer.Add(self.spin_bins, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.spin_bins.SetToolTip("Integer umber of bins to divide x-scale into.")
+        self.spin_bins.SetToolTip("Integer number of bins to divide x-scale into.")
         
         self.textctrl_xLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_lower','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_xLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_xLower.SetToolTip("Lower end of x-scale.")
+        self.textctrl_xLower.setValidRoutine(self.textctrl_xLower.Validate_Float)
+        
         self.textctrl_xUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_upper','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_xUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_xUpper.SetToolTip("Upper end of x-scale.")
+        self.textctrl_xUpper.setValidRoutine(self.textctrl_xUpper.Validate_Float)
+        
         self.textctrl_yLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_lower','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_yLower.SetToolTip("Lower end of y-scale.")
+        self.textctrl_yLower.setValidRoutine(self.textctrl_yLower.Validate_Float)
+        
         self.textctrl_yUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_upper','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_yUpper.SetToolTip("Upper end of y-scale.")
+        self.textctrl_yUpper.setValidRoutine(self.textctrl_yUpper.Validate_Float)
         
         # Upper R cutoff
         self.text_upperRCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('upper_rcutoff','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_upperRCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_upperRCutoff.SetToolTip("Value of r-scale (separation) above which values will be ignored.")
+        self.text_upperRCutoff.setValidRoutine(self.text_upperRCutoff.Validate_Float)
         
         # Upper Y cutoff
         self.text_upperYCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('upper_ycutoff','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_upperYCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_upperYCutoff.SetToolTip("Value of y-scale above which values will be ignored.")
+        self.text_upperYCutoff.setValidRoutine(self.text_upperYCutoff.Validate_Float)
         
         # Lower bin cutoff textctrl
-        self.lowerBinCutoffTextCtrl = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('lower_bin_cutoff','TULLEYFISHER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.lowerBinCutoffTextCtrl = SpinCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=100,initial=int(gl_cfg.getItem('lower_bin_cutoff','TULLEYFISHER')))  
         self.lowerBinCutoffTextCtrl.SetToolTip("Enter number below which not to display bins.")
+
         fgsizer.Add(self.lowerBinCutoffTextCtrl, 0, wx.ALL, 2)
+        
+        # Upper bin split spinctrl
+        self.upperBinSplitSpinCtrl = SpinCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=999,initial=int(gl_cfg.getItem('upper_bin_split','TULLEYFISHER')))  
+        self.upperBinSplitSpinCtrl.SetToolTip("Enter number above which to split each bin in two.")
+        fgsizer.Add(self.upperBinSplitSpinCtrl, 0, wx.ALL, 2)
         
         self.combo_yLog = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['log','normal'], value='')
         self.combo_yLog.SetSelection(int(gl_cfg.getItem('y_scale','TULLEYFISHER')))
@@ -4592,6 +4624,7 @@ class TFDataPlotting(wx.Panel):
         self.TextCtrl_sepnCutoff = TextCtrl(self, id=wx.ID_ANY, value=str(float(gl_cfg.getItem('cutoff','TULLEYFISHER'))), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.TextCtrl_sepnCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.TextCtrl_sepnCutoff.SetToolTip("(Newtonian) separation cutoff in pc.")
+        self.TextCtrl_sepnCutoff.setValidRoutine(self.TextCtrl_sepnCutoff.Validate_Float)
         
         # Create show raw data check box
         rawDataStaticText = StaticText(self, id=wx.ID_ANY, label="Show raw data")
@@ -4635,7 +4668,7 @@ class TFDataPlotting(wx.Panel):
         
         # Draw button
         
-        self.plot_but = Button(self, id=wx.ID_ANY, label="&Plot", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        self.plot_but = Button(self, id=wx.ID_OK, label="&Plot", pos=wx.DefaultPosition,size=wx.DefaultSize)
         self.plot_but.Bind(wx.EVT_BUTTON, self.OnPlot)
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
@@ -4677,7 +4710,10 @@ class TFDataPlotting(wx.Panel):
 
         #self.parent.export=pd.DataFrame(columns=['SOURCE_ID_PRIMARY','ra1','dec1','mag1','SOURCE_ID_SECONDARY','ra2','dec2','mag2', 'vRA', 'vDEC', 'V2D', 'M', 'r'])
         self.parent.export=[]
-        
+        attributes=[self.textctrl_xLower, self.textctrl_xUpper, self.textctrl_yLower, self.textctrl_yUpper, self.text_upperRCutoff, self.text_upperYCutoff, self.TextCtrl_sepnCutoff]
+        for attribute in attributes:
+            if not attribute.runValidRoutine():
+                return
         self.plot_but.Disable()
         
         gl_cfg.setItem('no_bins',self.spin_bins.GetValue(),'TULLEYFISHER')
@@ -4688,6 +4724,7 @@ class TFDataPlotting(wx.Panel):
         gl_cfg.setItem('upper_rcutoff',self.text_upperRCutoff.GetValue(),'TULLEYFISHER')
         gl_cfg.setItem('upper_ycutoff',self.text_upperYCutoff.GetValue(),'TULLEYFISHER')
         gl_cfg.setItem('lower_bin_cutoff',self.lowerBinCutoffTextCtrl.GetValue(),'TULLEYFISHER')
+        gl_cfg.setItem('upper_bin_split',self.lowerBinCutoffTextCtrl.GetValue(),'TULLEYFISHER')
         gl_cfg.setItem('y_scale',self.combo_yLog.GetSelection(),'TULLEYFISHER')
         gl_cfg.setItem('y_avg',self.combo_yAvg.GetSelection(),'TULLEYFISHER')
         gl_cfg.setItem('gtlt',self.combo_LtGt.GetSelection(),'TULLEYFISHER')
@@ -4742,11 +4779,12 @@ class TFDataPlotting(wx.Panel):
         diff = math.log10(top)-math.log10(bottom)   #  Work out difference in log terms.
 ######################################################################
         numTFBins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
-        dataTFBins=bin(numTFBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+        dataTFBins=binOrganiser(numTFBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
         upper=top
         factor=10**(diff/numTFBins)
         lower=upper/factor
         for i in range(numTFBins):
+            #if int(self.upperBinSplitSpinCtrl.GetValue())):
             dataTFBins.newBin(lower, upper)
             upper=lower
             lower=upper/factor
@@ -4762,22 +4800,22 @@ class TFDataPlotting(wx.Panel):
             
             if math.isnan(self.parent.status.include[i]) or not int(self.parent.status.include[i]):
                 continue
-            else:
-                include=int(self.parent.status.include[i])
-            #Set up local valriables to avoid repeated PD access and for clarity
+            #else:
+            #    include=int(self.parent.status.include[i])
+            #Set up local variables to avoid repeated PD access and for clarity
             if math.isnan(self.parent.binaryDetail.vRA[i]) :
                 print(f'i={i}, vRA = {self.parent.binaryDetail.vRA[i]}')
             if math.isnan(self.parent.binaryDetail.vDEC[i]) :
                 print(f'i={i}, vDEC = {self.parent.binaryDetail.vDEC[i]}')
-            vRA=abs(float(self.parent.binaryDetail.vRA[i]))
-            vDEC=abs(float(self.parent.binaryDetail.vDEC[i]))
+            vRA=float(self.parent.binaryDetail.vRA[i])
+            vDEC=float(self.parent.binaryDetail.vDEC[i])
             V2D=math.sqrt(vRA**2+vDEC**2)
             
-            r=abs(float(self.parent.binaryDetail.r[i]))
-            vRAerr=abs((float(self.parent.binaryDetail.vRAerr[i])))
-            vDECerr=abs(float(self.parent.binaryDetail.vDECerr[i]))
-            Verr=abs(math.sqrt((vRA*vRAerr)**2+(vDEC*vDECerr)**2))/V2D
-            M=abs(float(self.parent.binaryDetail.M[i]))
+            r=float(self.parent.binaryDetail.r[i])
+            vRAerr=float(self.parent.binaryDetail.vRAerr[i])
+            vDECerr=float(self.parent.binaryDetail.vDECerr[i])
+            Verr=math.sqrt((vRA*vRAerr)**2+(vDEC*vDECerr)**2)/V2D
+            M=float(self.parent.binaryDetail.M[i])
             # Go through and bin
             label=float(100.0 * i /lenArray)
             self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -4796,6 +4834,7 @@ class TFDataPlotting(wx.Panel):
                 'mag1':primaryPointer.PHOT_G_MEAN_MAG,
                 'MAG1':self.parent.X.mag[i],
                 'PARALLAX1':float(primaryPointer.PARALLAX),
+                'PARALLAX_ERROR1':float(primaryPointer.PARALLAX_ERROR),
                 'DIST1':float(primaryPointer.DIST),
                 'RUWE1':primaryPointer.RUWE,
                 'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
@@ -4804,17 +4843,21 @@ class TFDataPlotting(wx.Panel):
                 'mag2':star2Pointer.PHOT_G_MEAN_MAG,
                 'MAG2':self.parent.Y.mag[i],
                 'PARALLAX2':float(star2Pointer.PARALLAX),
+                'PARALLAX_ERROR2':float(star2Pointer.PARALLAX),
                 'DIST2':float(star2Pointer.DIST),
                 'RUWE2':star2Pointer.RUWE,
                 'vRA':self.parent.binaryDetail.vRA[i],
+                'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
                 'vDEC':self.parent.binaryDetail.vDEC[i],
+                'vDECerr':abs(self.parent.binaryDetail.vDECerr[i]),   
                 'V2D':math.sqrt(self.parent.binaryDetail.vRA[i]**2+self.parent.binaryDetail.vDEC[i]**2),
                 'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
                 'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
                 'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                'Log10vRA':np.log10(abs(self.parent.binaryDetail.vRA[i])),
-                'Log10vDEC':np.log10(abs(self.parent.binaryDetail.vDEC[i])),
+                'Log10vRA':np.log10(self.parent.binaryDetail.vRA[i]),
+                'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[i]),
                 'Log10r':np.log10(abs(self.parent.binaryDetail.r[i])),
+                #'rerr'(abs(self.parent.binaryDetail.r[i]),
                 'M':M,
                 'r':self.parent.binaryDetail.r[i]
             }
@@ -4856,9 +4899,10 @@ class TFDataPlotting(wx.Panel):
         xdata3TF=dataTFBins.getBinXArray(type='centre')
         ydata3TF=dataTFBins.getBinYArray(self.combo_yAvg.GetValue())
         rerrbin3TF=dataTFBins.getBinXVarArray()
-        verrbin3TF=dataTFBins.getBinXVarArray()
+        verrbin3TF=dataTFBins.getBinYVarArray(type='meanerror')
+        print(verrbin3TF)
     
-        self.line3TF = self.TulleyFPlot.axes.errorbar(x=xdata3TF, y=ydata3TF, xerr=rerrbin3TF, yerr=verrbin3TF, fmt='o', ecolor='m', elinewidth=1, capsize=0, mfc='m', mec='m', ms=3) #,label='Gaia binned'
+        self.line3TF = self.TulleyFPlot.axes.errorbar(x=xdata3TF, y=ydata3TF, xerr=rerrbin3TF, yerr=verrbin3TF, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
         self.line3TF[-1][0].set_linestyle('--') #eb1[-1][0] is the LineCollection objects of the errorbar lines
         self.line3TF[-1][1].set_linestyle('--') #eb1[-1][0] is the LineCollection objects of the errorbar lines
         
@@ -4890,11 +4934,19 @@ class TFDataPlotting(wx.Panel):
         self.TulleyFPlot.axes.set_xlabel('total binary mass ($M_{\odot}$)', fontsize=FONTSIZE)
                 
         self.TulleyFPlot.axes.set_ylabel(f'{ND}D relative velocity in plane of sky (km/s)', fontsize=FONTSIZE)
-        ####################################################################################################dec
-
-        xdata1 = self.parent.binaryDetail.M * self.parent.status['include']
-        ydata1 = self.parent.binaryDetail.vRA * self.parent.status['include']
-               
+        ####################################################################################################
+        self.parent.binaryDetail['include']=self.parent.status['include']
+        M=self.parent.binaryDetail.loc[(self.parent.binaryDetail['include'] > 0)]
+        if self.V1D_CheckBox.GetValue()==True:
+            xdata1 = M.M
+            xdata1 = xdata1.append(M.M)
+            ydata1 = M.vRA
+            ydata1 = ydata1.append(M.vDEC)
+        else:
+            xdata1=M.M
+            ydata1 = (M.vRA**2+ M.vDEC**2).apply(np.sqrt)
+        self.parent.binaryDetail.drop(columns=['include'])
+        
         c='white'
         if prntVersion:
             c='black'
@@ -4916,12 +4968,14 @@ class TFDataPlotting(wx.Panel):
         self.TulleyFPlot.axes.grid(b=1, which='both', axis='both')     
         
         marker = ','
+        markersize=1
         if self.largePointsCheckBox.GetValue():
             marker = 'o'
+            markersize=1.5
         #self.TulleyFPlot.axes.set_xticklabels(['1.0x','1.2x','1.4x','1.6x','1.8x','2.0x','2.2x','2.4x'])
         
         if self.rawDataCheckBox.GetValue():
-            self.line1, = self.TulleyFPlot.axes.plot(xdata1, ydata1, color=c, marker=marker, linestyle='none', linewidth=0, markersize=1)
+            self.line1, = self.TulleyFPlot.axes.plot(xdata1, ydata1, color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             if not prntVersion:
                 legend1.append(self.line1)
                 legend2.append('TF raw data')
@@ -5011,7 +5065,7 @@ class TFDataPlotting(wx.Panel):
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean individual stellar mass')        
         xdata1=pd.DataFrame(xdata1, columns=['M'])
-        avg=xdata1['M'].sum()/(self.parent.status['include'].sum()*2)
+        avg=xdata1['M'].sum()/(2*len(xdata1['M']))
         #avg=xdata1.M.mean() # Can't do this because of all the zeros.
         self.summaryList.SetItem(rowCnt, 1, f"{avg:,.2f}")
         
@@ -5019,7 +5073,7 @@ class TFDataPlotting(wx.Panel):
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean binary mass')        
         xdata1=pd.DataFrame(xdata1, columns=['M'])
-        avg=xdata1['M'].sum()/(self.parent.status['include'].sum())
+        avg=xdata1['M'].sum()/len(xdata1['M'])
         #avg=xdata1.M.mean() # Can't do this because of all the zeros.
         self.summaryList.SetItem(rowCnt, 1, f"{avg:,.2f}")
         
@@ -5095,7 +5149,7 @@ class TFDataPlotting(wx.Panel):
         xdataLMS=[dataTFBins.binUpperBounds[0],dataTFBins.binLowerBounds[numTFBins-1]]
         ydataLMS=[10**self.XreturnY(math.log10(dataTFBins.binUpperBounds[0])),10**self.XreturnY(math.log10(dataTFBins.binLowerBounds[numTFBins-1]))]
         
-        self.lineLMS, = self.TulleyFPlot.axes.plot(xdataLMS, ydataLMS, 'yo--', linewidth=1, markersize=1)
+        self.lineLMS, = self.TulleyFPlot.axes.plot(xdataLMS, ydataLMS, 'bo-', linewidth=2, markersize=1)
         
         if not prntVersion:
             legend1.append(self.lineLMS)
@@ -5121,8 +5175,8 @@ class TFDataPlotting(wx.Panel):
         return Y
     def CalcVoverdv(self):
         
-        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA.abs()/self.parent.binaryDetail.vRAerr.abs()
-        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC.abs()/self.parent.binaryDetail.vDECerr.abs()
+        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
+        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
         
         totalSelected=self.parent.status['include'].sum()
         
@@ -5131,13 +5185,13 @@ class TFDataPlotting(wx.Panel):
         
     def CalcMeanXoverDx(self, col, col_error):
         if col_error:
-            XoverDx=self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
-            XoverDx=XoverDx+self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
+            XoverDx=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
+            XoverDx=XoverDx+self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
 
             totalSelected=self.parent.status['include'].sum()
             totalSelected=totalSelected*2
         else:
-            XoverDx=self.parent.status['include']*self.parent.X[col].abs()
+            XoverDx=self.parent.status['include']*self.parent.X[col]
             totalSelected=self.parent.status['include'].sum()
         
         return round(XoverDx.sum()/totalSelected,2)
