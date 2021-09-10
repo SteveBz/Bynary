@@ -24,7 +24,7 @@ import matplotlib.ticker as ticker
 import csv
 import pickle
 from wxPyControls import *
-from PyBins import *
+from PyBins2 import *
 from starSystems import *
 from newtonian_values import xdata2, ydata2, ydata2_1D
 
@@ -56,7 +56,7 @@ dbiStro=db.db()
 database = gl_cfg.getItem('database','SETTINGS')
 databaseid = gl_cfg.getItem('databaseuserid','SETTINGS')
 databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
-iStro=dbiStro.conFbdb(database, databaseid, databasepwd)  # chmod +777 Binaries-DB-30.fdb 
+iStro=dbiStro.conFbdb(database, databaseid, databasepwd)  # sudo chmod +777 Binaries-DB-30.fdb 
         
 class MainPanel(wx.Panel):
     def __init__(self, mainFrame):
@@ -4140,7 +4140,7 @@ class kineticDataPlotting(wx.Panel):
             diff = math.log10(top)-math.log10(bottom)   #  Work out difference in log terms.
 ######################################################################
             numRABins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
-            dataRABins=bin(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            dataRABins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             upper=top
             factor=10**(diff/numRABins)
             lower=upper/factor
@@ -4150,7 +4150,7 @@ class kineticDataPlotting(wx.Panel):
                 lower=upper/factor
                 
             numDECBins=int(self.spin_bins.GetValue()-1)      #  Get number of DEC bins (It's 1 fewer than the number of RA bins).
-            dataDECBins=bin(numDECBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            dataDECBins=binOrganiser(numDECBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             
             # Need to offset upper bound of top bin by sqrt of a factor. TOTAL interval is the same with 1/2 a DEC bin at the top and half a DEC bin at the bottom.
             # Ignore these and reduce number of bins by 1.
@@ -4779,7 +4779,7 @@ class TFDataPlotting(wx.Panel):
         diff = math.log10(top)-math.log10(bottom)   #  Work out difference in log terms.
 ######################################################################
         numTFBins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
-        dataTFBins=bin(numTFBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+        dataTFBins=binOrganiser(numTFBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
         upper=top
         factor=10**(diff/numTFBins)
         lower=upper/factor
@@ -4899,7 +4899,8 @@ class TFDataPlotting(wx.Panel):
         xdata3TF=dataTFBins.getBinXArray(type='centre')
         ydata3TF=dataTFBins.getBinYArray(self.combo_yAvg.GetValue())
         rerrbin3TF=dataTFBins.getBinXVarArray()
-        verrbin3TF=dataTFBins.getBinXVarArray()
+        verrbin3TF=dataTFBins.getBinYVarArray(type='meanerror')
+        print(verrbin3TF)
     
         self.line3TF = self.TulleyFPlot.axes.errorbar(x=xdata3TF, y=ydata3TF, xerr=rerrbin3TF, yerr=verrbin3TF, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
         self.line3TF[-1][0].set_linestyle('--') #eb1[-1][0] is the LineCollection objects of the errorbar lines

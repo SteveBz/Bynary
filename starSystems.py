@@ -128,27 +128,25 @@ class starSystem():
         const474=4.74
         
         try:
-            # V Calculation
-            self.U1=-(const474*self.primary.PMRA/self.primary.PARALLAX)*math.sin(self.primary.RA_/360*2*math.pi)-(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.cos(self.primary.RA_/360*2*math.pi)*math.sin(self.primary.DEC_/360*2*math.pi)+self.primary.RADIAL_VELOCITY*math.cos(self.primary.RA_/360*2*math.pi)*math.cos(self.primary.DEC_/360*2*math.pi)
-            self.V1=(const474*self.primary.PMRA/self.primary.PARALLAX)*math.cos(self.primary.RA_/360*2*math.pi)-(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.sin(self.primary.RA_/360*2*math.pi)*math.sin(self.primary.DEC_/360*2*math.pi)+self.primary.RADIAL_VELOCITY*math.sin(self.primary.RA_/360*2*math.pi)*math.cos(self.primary.DEC_/360*2*math.pi)
-            self.W1=(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.cos(self.primary.DEC_/360*2*math.pi)+self.primary.RADIAL_VELOCITY*math.sin(self.primary.DEC_/360*2*math.pi)
+            # V Calculation (See WM Smart pp16-21)
+            self.U1=-(const474*self.primary.PMRA/self.primary.PARALLAX)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.RADIAL_VELOCITY*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+            self.V1=(const474*self.primary.PMRA/self.primary.PARALLAX)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.RADIAL_VELOCITY*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+            self.W1=(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.RADIAL_VELOCITY*math.sin((self.primary.DEC_/360)*2*math.pi)
             MuAlphaS=self.primary.PMRA-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*self.star2.PARALLAX/const474
             MuDeltaS=self.primary.PMDEC-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*self.star2.PARALLAX/const474
-            VelRA=abs(float(const474*(self.star2.PMRA/self.star2.PARALLAX-self.primary.PMRA/self.primary.PARALLAX+MuAlphaS/self.star2.PARALLAX)))
-            VelDec=abs(float(const474*(self.star2.PMDEC/self.star2.PARALLAX-self.primary.PMDEC/self.primary.PARALLAX+MuDeltaS/self.primary.PARALLAX)))
-            #V=math.sqrt(VelRA**2+VelDec**2)
+            
+            meanParallax=(self.star2.PARALLAX+self.primary.PARALLAX)/2
+            VelRA=abs(float(const474*(self.star2.PMRA/self.star2.PARALLAX-self.primary.PMRA/self.primary.PARALLAX+MuAlphaS/meanParallax)))
+            VelDec=abs(float(const474*(self.star2.PMDEC/self.star2.PARALLAX-self.primary.PMDEC/self.primary.PARALLAX+MuDeltaS/meanParallax)))
             # V Error calculation
-            VAlphaErr=abs(float(const474*(self.star2.PMRA_ERROR/self.star2.PARALLAX+self.primary.PMRA_ERROR/self.primary.PARALLAX+self.star2.RA_*self.star2.PARALLAX_ERROR/self.star2.PARALLAX**2+self.primary.RA_*self.primary.PARALLAX_ERROR/self.primary.PARALLAX**2)))
-            VDeltaErr=abs(float(const474*(self.star2.PMDEC_ERROR/self.star2.PARALLAX+self.primary.PMDEC_ERROR/self.primary.PARALLAX+self.star2.DEC_*self.star2.PARALLAX_ERROR/self.star2.PARALLAX**2+self.primary.DEC_*self.primary.PARALLAX_ERROR/self.primary.PARALLAX**2)))
-            #Verr = abs(2*(VelRA*VAlphaErr + VelDec*VDeltaErr))
+            VAlphaErr=float(const474*(self.star2.PMRA_ERROR/self.star2.PARALLAX+self.primary.PMRA_ERROR/self.primary.PARALLAX+abs(self.star2.PMRA)*self.star2.PARALLAX_ERROR/self.star2.PARALLAX**2+abs(self.primary.PMRA)*self.primary.PARALLAX_ERROR/self.primary.PARALLAX**2))
+            VDeltaErr=float(const474*(self.star2.PMDEC_ERROR/self.star2.PARALLAX+self.primary.PMDEC_ERROR/self.primary.PARALLAX+abs(self.star2.PMDEC)*self.star2.PARALLAX_ERROR/self.star2.PARALLAX**2+abs(self.primary.PMDEC)*self.primary.PARALLAX_ERROR/self.primary.PARALLAX**2))
         except Exception:
-            #V=0
-            #Verr=0
             VelRA=0
             VAlphaErr=0
             VelDec=0
             VDeltaErr=0
-        #print (f'VelRA = {float(VelRA)}')
+        #Return Velocity array and error array
         return ([VelRA,VelDec],[VAlphaErr,VDeltaErr])
     
     def deselect(self):
