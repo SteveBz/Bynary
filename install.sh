@@ -21,3 +21,4 @@ pip3 install pandas
 pip3 install astroquery
 pip3 install dask
 pip3 install fdb
+python3 -m pip install -r requirements.txt
