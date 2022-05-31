@@ -27,15 +27,21 @@ class sql:
         self.connect=connect
         
         
-    def setWhereList(self, key, valueClause):
+    def setWhereOrList(self, key, valueClause):
         # Must include = sign, or other comparative, Null, quotes etc.
         self.where[key] = valueClause
+        self.whereOp[key] = 'OR'
     
         
     def setWhereInList(self, key, valueClause):
         # Must include = sign, or other comparative, Null, quotes etc.
         self.where[key] = valueClause
         self.whereOp[key] = 'IN'
+        
+    def setWhereAndList(self, key, valueClause):
+        # Must include = sign, or other comparative, Null, quotes etc.
+        self.where[key] = valueClause
+        self.whereOp[key] = 'AND'
     
     def setWhereValueString(self, key, value):
         # Trim value to remove whitespace from the start and end of the string
@@ -187,8 +193,16 @@ class sql:
             if isinstance(v, list):
                 # List of alternate values
                 bracketed = ""
+                #print(self.whereOp)
                 if k in self.whereOp and self.whereOp[k]=='IN':
                     bracketed= str(k) + " IN " + " ( " + ', '.join([str(x) for x in v])  + " ) "
+                elif self.whereOp[k]=='AND':
+                    for item in v:
+                        if bracketed:
+                            bracketed = bracketed + " and " + str(k) + " " + str(item)
+                        else:
+                            bracketed = str(k) + " " + str(item)
+                    bracketed = " ( " + bracketed + " ) "
                 else:
                     for item in v:
                         if bracketed:
@@ -217,7 +231,7 @@ class sql:
             return ''
         
         loc_GROUPBY_txt = " GROUP BY " + loc_GROUPBY_txt 
-        print (loc_GROUPBY_txt)
+        #print (loc_GROUPBY_txt)
         return loc_GROUPBY_txt
         
     def getHavingClause(self):
@@ -249,12 +263,12 @@ class sql:
                         loc_HAVING_txt = loc_HAVING_txt + str(k) + " = " + str(v)
         except Exception:
             return ''
-        print (loc_HAVING_txt)
+        #print (loc_HAVING_txt)
         return loc_HAVING_txt
         
     def executeIAD(self, SQL):    
         dbCursor=self.connect.cursor()
-
+        #print(SQL)
         # Loop round in case of deadlocks
         for i in range(4):
             try:
@@ -316,7 +330,7 @@ class sqlSelect(sql):
             
         loc_SQL_string = loc_SELECT_txt + loc_TABLE_txt + loc_WHERE_txt + loc_GROUPBY_txt + loc_HAVING_txt + loc_ORDER_BY_txt
         
-        #print (loc_SQL_string)
+        print (loc_SQL_string)
         
         return loc_SQL_string
 
@@ -331,6 +345,7 @@ class sqlSelect(sql):
         #print(SQL)
         try:
             dbCursor.execute(SQL)
+            #self.connect.commit()
         except (fdb.Error) as e:
             
             frame = inspect.currentframe()
@@ -477,7 +492,7 @@ class sqlUpdate(sql):
 
         return loc_SQL_string
 
-    def updateRecord(self):
+    def updateRecord(self, loc_SQL_string=''):
         #loc_SET_txt=""	                                                        # SQL SET clause
         #for k, v in self.attribute.items():
         #    if loc_SET_txt:
@@ -495,7 +510,8 @@ class sqlUpdate(sql):
         ##   Removes leading and training whitespace from parameters.
         ##
         #loc_SQL_string = "UPDATE " + self.table + loc_SET_txt + loc_WHERE_txt 
-        loc_SQL_string=self.getUpdateSQL()
+        if not loc_SQL_string:
+            loc_SQL_string=self.getUpdateSQL()
         self.executeIAD(loc_SQL_string)
 
         return loc_SQL_string
@@ -503,14 +519,23 @@ class sqlUpdate(sql):
     
 class sqlDelete(sql):
     
-    def deleteRecordSet(self):
-
+    def getSQL(self):
+        
         loc_DELETE_txt = "DELETE FROM " + self.table + " "
         
         loc_WHERE_txt = self.getWhereClause()
 
-        loc_SQL_string = loc_DELETE_txt + loc_WHERE_txt
+        loc_SQL_string = loc_DELETE_txt + loc_WHERE_txt + "; "
         
+        return loc_SQL_string
+    def deleteRecordSet(self):
+
+        #loc_DELETE_txt = "DELETE FROM " + self.table + " "
+        #
+        #loc_WHERE_txt = self.getWhereClause()
+        #
+        #loc_SQL_string = loc_DELETE_txt + loc_WHERE_txt
+        loc_SQL_string=self.getSQL()
+        print(loc_SQL_string)
         self.executeIAD(loc_SQL_string)
-        #print loc_SQL_string
         

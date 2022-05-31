@@ -31,13 +31,13 @@ class configVar:
     def onItemChange(self, event, section='SETTINGS'):
         return self.parser.set(section, configItem, configValue)
 
-    def getItem(self, configItem, section='SETTINGS'):
+    def getItem(self, configItem, section='SETTINGS', default=''):
         
         retValue = ""
         try:
             retValue=str(self.parser.get(section, configItem))
         except:
-            retValue=''
+            retValue=default
         
         return retValue
 

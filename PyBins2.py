@@ -35,7 +35,10 @@ class binOrganiser():
         x=abs(x)
         dy=abs(dy)
         #print(y)
-        vOverErr=float(y/dy)
+        try:
+            vOverErr=float(y/dy)
+        except Exception:
+            return 1
         if abs(vOverErr)<value:
             return 1
         for i in range(self.binCount):
@@ -61,6 +64,7 @@ class binOrganiser():
         
         
     def getBinYLabelArray(self):
+        #return self.getBinYVarArray()
  
         labels=[] 
         for i in range(self.binCount):

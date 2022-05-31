@@ -36,30 +36,77 @@ class binaryStarSystems():
         # and equating it to the list
         idx=self.getIndex()
         self.star_rows[idx]={
-            'SOURCE_ID': row.SOURCE_ID,
+            'SOURCE_ID': row.source_id,
             'RA_': row.RA_,
             #'RA_ERROR': row.RA_ERROR,
             'DEC_': row.DEC_,
             #'DEC_ERROR': row.DEC_ERROR,
-            'PARALLAX': row.PARALLAX,
-            'PARALLAX_ERROR': row.PARALLAX_ERROR,
-            'PHOT_G_MEAN_MAG': row.PHOT_G_MEAN_MAG,
-            'BP_RP': row.BP_RP,
-            'RADIAL_VELOCITY': row.RADIAL_VELOCITY,
+            #'PARALLAX': row.parallax,
+            #'PARALLAX_ERROR': row.parallax_error,
+            #'PHOT_G_MEAN_MAG': row.phot_g_mean_mag,
+            #'PHOT_G_MEAN_FLUX_OVER_ERROR': row.phot_g_mean_flux_over_error,
+            #'PHOT_BP_MEAN_FLUX_OVER_ERROR': row.phot_bp_mean_flux_over_error,
+            #'PHOT_RP_MEAN_FLUX_OVER_ERROR': row.phot_rp_mean_flux_over_error,
+            #'BP_RP': row.bp_rp,
+            #'RADIAL_VELOCITY': row.radial_velocity,
             #'RADIAL_VELOCITY_ERROR':row.RADIAL_VELOCITY_ERROR,
             #'PHOT_VARIABLE_FLAG': row.PHOT_VARIABLE_FLAG,
-            #'TEFF_VAL': row.TEFF_VAL,
+            #'TEFF_VAL': row.TEFF_VAL,PHOT_G_MEAN_FLUX_OVER_ERROR
             #'A_G_VAL':row.A_G_VAL,
-            'PMRA': row.PMRA,
-            'PMRA_ERROR': row.PMRA_ERROR,
-            'PMDEC': row.PMDEC,
-            'PMDEC_ERROR': row.PMDEC_ERROR,
+            'PMRA': row.pmra,
+            'PMRA_ERROR': row.pmra_error,
+            'PMDEC': row.pmdec,
+            'PMDEC_ERROR': row.pmdec_error,
             'RELEASE_': row.RELEASE_,
-            'RUWE': row.RUWE,
+            'RUWE': row.ruwe,
             'DIST': row.DIST,
             'PAIRING': ccdm,
             'INDEX': idx}
-                
+        if not pd.isna(row.parallax):
+            self.star_rows[idx]['PARALLAX']=row.parallax
+        else:
+            self.star_rows[idx]['PARALLAX']=0
+        if not pd.isna(row.parallax_error):
+            self.star_rows[idx]['PARALLAX_ERROR']=row.parallax_error
+        else:
+            self.star_rows[idx]['PARALLAX_ERROR']=0
+            
+        if not pd.isna(row.phot_g_mean_mag):
+            self.star_rows[idx]['PHOT_G_MEAN_MAG']=row.phot_g_mean_mag
+        else:
+            self.star_rows[idx]['PHOT_G_MEAN_MAG']=0
+            
+        if not pd.isna(row.phot_g_mean_flux_over_error):
+            self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=row.phot_g_mean_flux_over_error
+        else:
+            self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=0
+            
+        if not pd.isna(row.phot_bp_mean_flux_over_error):
+            self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=row.phot_bp_mean_flux_over_error
+        else:
+            self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=0
+            
+        if not pd.isna(row.phot_rp_mean_flux_over_error):
+            self.star_rows[idx]['PHOT_RP_MEAN_FLUX_OVER_ERROR']=row.phot_rp_mean_flux_over_error
+        else:
+            self.star_rows[idx]['PHOT_RP_MEAN_FLUX_OVER_ERROR']=0
+            
+        if not pd.isna(row.bp_rp):
+            self.star_rows[idx]['BP_RP']=row.bp_rp
+        else:
+            self.star_rows[idx]['BP_RP']=0
+            
+        if not pd.isna(row.radial_velocity):
+            self.star_rows[idx]['RADIAL_VELOCITY']=row.radial_velocity
+        else:
+            self.star_rows[idx]['RADIAL_VELOCITY']=0
+        #self.star_rows[idx]['PHOT_G_MEAN_MAG']=row.phot_g_mean_mag,
+        #self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=row.phot_g_mean_flux_over_error
+        #self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=row.phot_bp_mean_flux_over_error
+        #self.star_rows[idx]['PHOT_RP_MEAN_FLUX_OVER_ERROR']=row.phot_rp_mean_flux_over_error
+        #self.star_rows[idx]['BP_RP']=row.bp_rp
+        #self.star_rows[idx]['RADIAL_VELOCITY']=row.radial_velocity
+        #print('self.star_rows[idx]',  self.star_rows[idx])   
         label=''
         if str(ccdm) in self.binaryList.keys():
             binary=self.binaryList[str(ccdm)]
@@ -84,9 +131,8 @@ class starSystem():
         self.rfactor=rfactor
         
     def binaryStarSystem(self, row, ccdm):
-        
         try:
-            if float(self.primary.PHOT_G_MEAN_MAG)>float(row.PHOT_G_MEAN_MAG):
+            if float(self.primary.phot_g_mean_mag)>float(row.phot_g_mean_mag):
                 self.star2=self.primary
                 self.primary=row
             else:
@@ -97,18 +143,15 @@ class starSystem():
         self.R=float(self.calcR())
         # V and Verr are 2 D vectors.
         (self.V,self.Verr)=self.calcV()
-        try:
-            self.M=self.calcM()
-        except Exception:
-            self.M=0
+        self.M=self.calcM()
         self.deselect()
         return (self.R, self.V, self.Verr, self.M)
     
     def calcM(self):
         
         #Calculate magnitudes of primary and secondary stars.
-        Mag1=float(self.primary.PHOT_G_MEAN_MAG-5*math.log10(self.primary.DIST/10))
-        Mag2=float(self.star2.PHOT_G_MEAN_MAG-5*math.log10(self.star2.DIST/10))
+        Mag1=float(self.primary.phot_g_mean_mag-5*math.log10(self.primary.DIST/10))
+        Mag2=float(self.star2.phot_g_mean_mag-5*math.log10(self.star2.DIST/10))
         #Solar mass = 1
         Mo=1
         #Calculate and return combined mass of binary
@@ -126,21 +169,21 @@ class starSystem():
     
     def calcV(self):
         const474=4.74
-        
+        #print(self.primary)
         try:
             # V Calculation (See WM Smart pp16-21)
-            self.U1=-(const474*self.primary.PMRA/self.primary.PARALLAX)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.RADIAL_VELOCITY*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
-            self.V1=(const474*self.primary.PMRA/self.primary.PARALLAX)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.RADIAL_VELOCITY*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
-            self.W1=(const474*self.primary.PMDEC/self.primary.PARALLAX)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.RADIAL_VELOCITY*math.sin((self.primary.DEC_/360)*2*math.pi)
-            MuAlphaS=self.primary.PMRA-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*self.star2.PARALLAX/const474
-            MuDeltaS=self.primary.PMDEC-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*self.star2.PARALLAX/const474
+            self.U1=-(const474*self.primary.pmra/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+            self.V1=(const474*self.primary.pmra/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+            self.W1=(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.DEC_/360)*2*math.pi)
+            MuAlphaS=self.primary.pmra-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*self.star2.parallax/const474
+            MuDeltaS=self.primary.pmdec-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*self.star2.parallax/const474
             
-            meanParallax=(self.star2.PARALLAX+self.primary.PARALLAX)/2
-            VelRA=abs(float(const474*(self.star2.PMRA/self.star2.PARALLAX-self.primary.PMRA/self.primary.PARALLAX+MuAlphaS/meanParallax)))
-            VelDec=abs(float(const474*(self.star2.PMDEC/self.star2.PARALLAX-self.primary.PMDEC/self.primary.PARALLAX+MuDeltaS/meanParallax)))
+            meanParallax=(self.star2.parallax+self.primary.parallax)/2
+            VelRA=abs(float(const474*(self.star2.pmra/self.star2.parallax-self.primary.pmra/self.primary.parallax+MuAlphaS/meanParallax)))
+            VelDec=abs(float(const474*(self.star2.pmdec/self.star2.parallax-self.primary.pmdec/self.primary.parallax+MuDeltaS/meanParallax)))
             # V Error calculation
-            VAlphaErr=float(const474*(self.star2.PMRA_ERROR/self.star2.PARALLAX+self.primary.PMRA_ERROR/self.primary.PARALLAX+abs(self.star2.PMRA)*self.star2.PARALLAX_ERROR/self.star2.PARALLAX**2+abs(self.primary.PMRA)*self.primary.PARALLAX_ERROR/self.primary.PARALLAX**2))
-            VDeltaErr=float(const474*(self.star2.PMDEC_ERROR/self.star2.PARALLAX+self.primary.PMDEC_ERROR/self.primary.PARALLAX+abs(self.star2.PMDEC)*self.star2.PARALLAX_ERROR/self.star2.PARALLAX**2+abs(self.primary.PMDEC)*self.primary.PARALLAX_ERROR/self.primary.PARALLAX**2))
+            VAlphaErr=float(const474*(self.star2.pmra_error/self.star2.parallax+self.primary.pmra_error/self.primary.parallax+abs(self.star2.pmra)*self.star2.parallax_error/self.star2.parallax**2+abs(self.primary.pmra)*self.primary.parallax_error/self.primary.parallax**2))
+            VDeltaErr=float(const474*(self.star2.pmdec_error/self.star2.parallax+self.primary.pmdec_error/self.primary.parallax+abs(self.star2.pmdec)*self.star2.parallax_error/self.star2.parallax**2+abs(self.primary.pmdec)*self.primary.parallax_error/self.primary.parallax**2))
         except Exception:
             VelRA=0
             VAlphaErr=0
