@@ -21,22 +21,7 @@ sudo apt-get install -y git
 sudo apt-get install -y libwebkit2gtk-4.0-dev
 sudo apt-get install -y unixodbc
 ```
-Install firebird database and flamerobin to update it (if you need to).
-This commented out bit between the lines is only required if the add-apt-repository fails:
-*****************************************************
-```
-# sudo apt update
-# sudo apt install -y software-properties-common
-# sudo add-apt-repository ppa:mapopa/firebird3.0
-```
-*****************************************************
-```
-sudo add-apt-repository ppa:mapopa/firebird3.0
-sudo apt update
-# Set up with password 'masterkey'
-sudo apt install -y firebird3.0-server
-sudo apt-get install -y flamerobin
-```
+
 Let's make sure we have rust installed for astroquery.  Only do this if you have problems.
 ```
 # sudo apt-get install -y curl
