@@ -19,7 +19,7 @@ sudo apt-get install -y python3-venv
 sudo apt-get install -y python3-pip
 sudo apt-get install -y git
 sudo apt-get install -y libwebkit2gtk-4.0-dev
-sudo apt-get install -y unixodbc
+#sudo apt-get install -y unixodbc
 ```
 
 Let's make sure we have rust installed for astroquery.  Only do this if you have problems.
@@ -46,6 +46,6 @@ Now doubleclick and make sure you can read the details.
 ## Import stars
 This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days, in fact after a week we gave up.
 
-Use tab 1 of ther application
+Use tab 1 of the application
 ## Import binaries
 Use tab 2 of the application
