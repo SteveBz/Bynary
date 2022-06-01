@@ -42,32 +42,10 @@ python3 -m venv venv
 ```
 deactivate
 ```
-# Download & import some data
-Then to download some data you'll need a star list.  The one provided is eDR3 out to 333 pc.
-```
-cd bindata
-cd eDR3
-git clone https://github.com/SteveBz/stars.git
-git clone https://github.com/SteveBz/KEB-0.50pc.git
-```
-And load the database:
-Go into flamerobin (press enter at error message) and register binarydb.fdb (right-click on 'localhost') with details:
-* user name = SYSDBA
-* password = masterkey
-* role = SA
-* charset = utf8
-
-SAVE
-
 Now doubleclick and make sure you can read the details.
 ## Import stars
 This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days, in fact after a week we gave up.
-```
-. venv/bin/activate
-python3 convertGaia_veDR3.1d.py
-```
+
+Use tab 1 of ther application
 ## Import binaries
-```
-. venv/bin/activate
-python3 convertGaiav2_8.py
-```
+Use tab 2 of the application
