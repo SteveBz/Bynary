@@ -31,7 +31,6 @@ Next download the source files from git and run install (enter user name and pas
 ```
 git clone https://github.com/SteveBz/Bynary.git
 cd Bynary
-sudo chmod +777 binarydb.fdb
 ```
 ## Now create a virtual environment, enter it and run install.
 ```
