@@ -29,8 +29,8 @@ Let's make sure we have rust installed for astroquery.  Only do this if you have
 ```
 Next download the source files from git and run install (enter user name and password from git if requested):
 ```
-git clone https://github.com/SteveBz/Bynary.git
-cd Bynary
+git clone https://github.com/SteveBz/Bynary.git <dir name>
+cd <dir name>
 ```
 ## Now create a virtual environment, enter it and run install.
 ```
