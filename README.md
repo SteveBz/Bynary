@@ -20,6 +20,7 @@ sudo apt-get install -y python3-pip
 sudo apt-get install -y git
 sudo apt-get install -y libwebkit2gtk-4.0-dev
 #sudo apt-get install -y unixodbc
+sudo apt-get install -y sqlite3
 ```
 
 Let's make sure we have rust installed for astroquery.  Only do this if you have problems.
