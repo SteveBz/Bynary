@@ -71,15 +71,11 @@ import SQLLib
 import db              # For star/observing database.
 dbiStro=db.db()
 database = gl_cfg.getItem('database','SETTINGS')
-databaseid = gl_cfg.getItem('databaseuserid','SETTINGS')
-databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
-iStro=dbiStro.conSQLite(database)  # sudo chmod +777 bynary_db.db 
+#databaseid = gl_cfg.getItem('databaseuserid','SETTINGS')
+#databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
+iStro=dbiStro.conSQLite(database) 
 
 from sqlalchemy import create_engine
-#database_driver='firebird+fdb'
-#database=f'//{databaseid}:{databasepwd}@Localhost:3050//home/image/x-Stronomy/binary.fdb'
-#database = Localhost:/home/image/x-Stronomy/binary.fdb
-#connection = ':'.join([database_driver, database]), fast_executemany=True
 encoding='UTF8'
 engine = create_engine('sqlite:///bynary_db_v2.db', echo=True, encoding=encoding)
 sqlite_connection = engine.connect()
@@ -789,7 +785,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             cp(f'bindata/{RELEASE}/{CATALOG}/binClient.conf', 'binClient.conf')
         except IOError as e:
             print("Unable to copy file. %s" % e)
-            exit(1)
+            #exit(1)
         except:
             print("Unexpected error:", sys.exc_info())
             exit(1)
@@ -1915,7 +1911,7 @@ class dataRetrieval(wx.Panel):
             cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
         except IOError as e:
             print("Unable to copy file. %s" % e)
-            exit(1)
+            #exit(1)
         except:
             print("Unexpected error:", sys.exc_info())
             exit(1)
@@ -1943,7 +1939,7 @@ class dataRetrieval(wx.Panel):
             cp(f'bindata/{RELEASE}/{CATALOG}/binClient.conf', 'binClient.conf')
         except IOError as e:
             print("Unable to copy file. %s" % e)
-            exit(1)
+            #exit(1)
         except:
             print("Unexpected error:", sys.exc_info())
             exit(1)
@@ -2525,7 +2521,7 @@ class dataRetrieval(wx.Panel):
             cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
         except IOError as e:
             print("Unable to copy file. %s" % e)
-            exit(1)
+            #exit(1)
         except:
             print("Unexpected error:", sys.exc_info())
             exit(1)
