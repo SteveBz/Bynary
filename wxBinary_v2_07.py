@@ -4319,7 +4319,10 @@ class kineticDataPlotting(wx.Panel):
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
         self.summaryList.SetColumnWidth(1, 120)
         self.SetSizer(self.sizer_v)
-        self.velocityGraph.Layout()
+        try:
+            self.velocityGraph.Layout()
+        except Exception:
+            pass
         self.Layout()
 
     def XreturnY(self, X):
