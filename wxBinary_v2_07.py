@@ -3532,8 +3532,12 @@ class skyDataPlotting(wx.Panel):
         fgsizer.Add(self.starsOnly_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Draw velocity map
-        self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750))
-        fg2sizer.Add(self.skyGraph)
+        
+        try:
+            self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750))
+            fg2sizer.Add(self.skyGraph)
+        except Exception:
+            pass
         
         self.Layout()
         
