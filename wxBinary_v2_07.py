@@ -3621,8 +3621,10 @@ class skyDataPlotting(wx.Panel):
         #Attach a text label above each bar displaying its height
         #"""
         self.skyGraph.frames=[] 
-        
-        self.skyGraph.Layout()
+        try:
+            self.skyGraph.Layout()
+        except Exception:
+            pass
         self.Layout()
 
     def OnPlot(self, event=0):
@@ -3769,8 +3771,10 @@ class skyDataPlotting(wx.Panel):
         
         self.skyGraph.draw(self.line, xdata1, ydata1, True,[] )
         #        
-            
-        self.skyGraph.Layout()
+        try:   
+            self.skyGraph.Layout()
+        except Exception:
+            pass
         self.Layout()
         self.parent.printArrays()
 
@@ -4133,8 +4137,10 @@ class HRDataPlotting(wx.Panel):
         #Attach a text label above each bar displaying its height
         #"""
         self.hrGraph.frames=[] 
-        
-        self.hrGraph.Layout()
+        try:
+            self.hrGraph.Layout()
+        except Exception:
+            pass
         self.Layout()
 
         self.parent.printArrays()
@@ -5005,7 +5011,10 @@ class TFDataPlotting(wx.Panel):
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
         self.summaryList.SetColumnWidth(1, 120)
         self.SetSizer(self.sizer_v)
-        self.TulleyFPlot.Layout()
+        try:
+            self.TulleyFPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
 
     def XreturnY(self, X):
@@ -5297,8 +5306,10 @@ class TFDataPlotting(wx.Panel):
                 
             self.TulleyFPlot.draw(self.line1, xdata1, ydata1, True, [] )
                 
-        
-        self.TulleyFPlot.Layout()
+        try:
+            self.TulleyFPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
 
         self.summaryList.DeleteAllItems()
@@ -5477,8 +5488,10 @@ class TFDataPlotting(wx.Panel):
         self.TulleyFPlot.axes.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
         
         self.TulleyFPlot.draw(self.lineLMS, xdataLMS, ydataLMS, True, [] )
-        
-        self.TulleyFPlot.Layout()
+        try:
+            self.TulleyFPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
         self.parent.printArrays()
 
@@ -5635,7 +5648,10 @@ class NumberDensityPlotting(wx.Panel):
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
         self.summaryList.SetColumnWidth(1, 120)
         self.SetSizer(self.sizer_v)
-        self.NumberDensityPlot.Layout()
+        try:
+            self.NumberDensityPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
 
     def XreturnY(self, X):
@@ -5987,7 +6003,10 @@ class NumberDensityPlotting(wx.Panel):
         self.NumberDensityPlot.axes.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
         
         self.NumberDensityPlot.drawLinear()
-        self.NumberDensityPlot.Layout()
+        try:
+            self.NumberDensityPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
 
         self.summaryList.DeleteAllItems()
@@ -6065,7 +6084,10 @@ class NumberDensityPlotting(wx.Panel):
         avgDIST=self.CalcMeanXoverDx('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
               
-        self.NumberDensityPlot.Layout()
+        try:
+            self.NumberDensityPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
         self.parent.printArrays()
 
