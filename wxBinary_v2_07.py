@@ -3888,8 +3888,11 @@ class HRDataPlotting(wx.Panel):
         fgsizer.Add(self.Reset_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Draw velocity map
-        self.hrGraph = matplotlibPanel(parent=self, size=(950, 750))
-        fg2sizer.Add(self.hrGraph)
+        try:
+            self.hrGraph = matplotlibPanel(parent=self, size=(950, 750))
+            fg2sizer.Add(self.hrGraph)
+        except Exception:
+            pass
         
         self.Layout()
         
@@ -4988,8 +4991,11 @@ class TFDataPlotting(wx.Panel):
         fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
-        self.TulleyFPlot = matplotlibPanel(parent=self, size=(1350, 750))
-        fg2sizer.Add(self.TulleyFPlot)
+        try:
+            self.TulleyFPlot = matplotlibPanel(parent=self, size=(1350, 750))
+            fg2sizer.Add(self.TulleyFPlot)
+        except Exception:
+            pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
@@ -5615,8 +5621,11 @@ class NumberDensityPlotting(wx.Panel):
         fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
-        self.NumberDensityPlot = matplotlibPanel(parent=self, size=(1350, 750))
-        fg2sizer.Add(self.NumberDensityPlot)
+        try:
+            self.NumberDensityPlot = matplotlibPanel(parent=self, size=(1350, 750))
+            fg2sizer.Add(self.NumberDensityPlot)
+        except Exception:
+            pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
