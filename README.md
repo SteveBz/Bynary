@@ -39,6 +39,13 @@ python3 -m venv venv
 . venv/bin/activate
 . install.sh
 ```
+
+## To execute the application:
+```
+cd <dir name>
+. venv/bin/activate
+python3 wxBinary_v2_07.py
+```
 ### (NB to deactivate the virtual environment, if necessary):
 ```
 deactivate
