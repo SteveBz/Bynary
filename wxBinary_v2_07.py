@@ -4305,8 +4305,11 @@ class kineticDataPlotting(wx.Panel):
         fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
-        self.velocityGraph = matplotlibPanel(parent=self, size=(1350, 750))
-        fg2sizer.Add(self.velocityGraph)
+        try:
+            self.velocityGraph = matplotlibPanel(parent=self, size=(1350, 750))
+            fg2sizer.Add(self.velocityGraph)
+        except Exception:
+            pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
