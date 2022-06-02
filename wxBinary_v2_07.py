@@ -1253,7 +1253,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         gl_cfg.setItem('mod_b_gt',self.spin_mod_b_gt.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('max_data',self.textCtrl_max_data.GetValue(), 'GAIABINARY') # save setting in config file
         
-        gl_cfg.setItem('hps_scale', int(self.HPScale_combo.SetValue()),'SETTINGS')
+        gl_cfg.setItem('hps_scale', int(self.HPScale_combo.GetValue()),'SETTINGS')
         
                         
         query=[0]
