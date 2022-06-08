@@ -75,7 +75,7 @@ database = gl_cfg.getItem('database','SETTINGS')
 #databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
 iStro=dbiStro.conSQLite(database) 
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine # pip3 install sqlalchemy
 encoding='UTF8'
 engine = create_engine('sqlite:///bynary_db_v2.db', echo=True, encoding=encoding)
 sqlite_connection = engine.connect()
