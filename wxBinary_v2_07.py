@@ -2979,22 +2979,22 @@ class dataFilter(wx.Panel):
         
         # Values (ie row 2)
         # Signal to noise ratio for Px
-        self.spin_parallax_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('rpsn_gt','FILTER')))  
+        self.spin_parallax_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxsn_gt','FILTER')))  
         fgsizer.Add(self.spin_parallax_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_parallax_SN.SetToolTip("Signal to noise ratio for Parallax (ie Px/error) in either star.")
         
         # Signal to noise ratio for Red Magnitude
-        self.spin_red_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('g_sn_gt','FILTER')))  
+        self.spin_red_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('rpsn_gt','FILTER')))  
         fgsizer.Add(self.spin_red_mag_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_red_mag_SN.SetToolTip("Signal to noise ratio for Red Magnitude (ie Rp/error) in either star.")
         
         # Signal to noise ratio for Green Magnitude
-        self.spin_green_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('bpsn_gt','FILTER')))  
+        self.spin_green_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('g_sn_gt','FILTER')))  
         fgsizer.Add(self.spin_green_mag_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_green_mag_SN.SetToolTip("Signal to noise ratio for Green Magnitude (ie G/error) in either star.")
         
         # Signal to noise ratio for Blue Magnitude
-        self.spin_blue_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxsn_gt','FILTER')))  
+        self.spin_blue_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('bpsn_gt','FILTER')))  
         fgsizer.Add(self.spin_blue_mag_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_blue_mag_SN.SetToolTip("Signal to noise ratio for Blue Magnitude (ie Bp/error) in either star.")
         
