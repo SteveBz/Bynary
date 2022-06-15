@@ -183,7 +183,11 @@ class Notebook(wx.Notebook):
         wx.Notebook.__init__(self, parent)
         self.SetBackgroundColour(Colour(50, 50, 60))
         self.SetForegroundColour(Colour(128, 128, 128))
+        #print (f'Notebook label is: "{self.GetLabel()}"')
+        #print (f'Notebook value is: "{self.GetValue()}"')
 
+    def GetValue(self):
+        return self.GetLabel()
 
 class AboutBox(wx.Dialog):
     def __init__(self):
@@ -358,11 +362,11 @@ class StaticBitmap(SB.GenStaticBitmap):
     def OnMouseOut(self, event):
         self.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
  
-class Notebook(wx.Notebook):
-    def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize):
-        wx.Notebook.__init__(self, parent, id, pos, size)
-        self.SetBackgroundColour(Colour(50, 50, 60))
-        self.SetForegroundColour(Colour(128, 128, 128)) 
+#class Notebook(wx.Notebook):
+#    def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize):
+#        wx.Notebook.__init__(self, parent, id, pos, size)
+#        self.SetBackgroundColour(Colour(50, 50, 60))
+#        self.SetForegroundColour(Colour(128, 128, 128)) 
 class Panel(wx.Panel):
     def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.BORDER_NONE):
         wx.Panel.__init__(self, parent, id, pos, size, style );

@@ -60,7 +60,7 @@ ROWCOUNTMATRIX={
     'PMFILTER':0,
     'BIN':0
 }
-RELEASE='eDR3'
+RELEASE='DR3'
 CATALOG='KEB-0.50pc'
 HPS_SCALE=192
 HPS_SCALE = int(gl_cfg.getItem('hps_scale','SETTINGS', 192))
@@ -389,7 +389,7 @@ class gaiaStarRetrieval(wx.Panel):
         
         # Import Total prompt
         
-        static_Total = StaticText(self, id=wx.ID_ANY, label="Total pairs:")
+        static_Total = StaticText(self, id=wx.ID_ANY, label="Total stars:")
         self.sizer_h2.Add(static_Total, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Total
@@ -462,6 +462,8 @@ class gaiaStarRetrieval(wx.Panel):
                                                     "pmra_error"	FLOAT, \
                                                     "pmdec"	FLOAT, \
                                                     "ruwe"	FLOAT, \
+                                                    "mass_flame"	FLOAT, \
+                                                    "age_flame"	FLOAT, \
                                                     "pmdec_error"	FLOAT, \
                                                     PRIMARY KEY("RELEASE_","source_id") \
                                                     );'
@@ -561,6 +563,8 @@ class gaiaStarRetrieval(wx.Panel):
             gaia_source.phot_g_mean_flux_over_error,
             gaia_source.phot_rp_mean_flux_over_error,
             gaia_source.phot_bp_mean_flux_over_error,
+            astrophysical_parameters.mass_flame,
+            astrophysical_parameters.age_flame,
                 
             --gaia_source.phot_variable_flag,
             --gaia_source.teff_val,
@@ -571,7 +575,9 @@ class gaiaStarRetrieval(wx.Panel):
             gaia_source.ruwe,
             gaia_source.pmdec_error
         
-            FROM gaiaedr3.gaia_source
+            FROM gaiadr3.gaia_source
+                left join  gaiadr3.astrophysical_parameters
+                on gaia_source.source_id=astrophysical_parameters.source_id
         """
         
         count=0
@@ -776,7 +782,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         global CATALOG
         for file in files:
             try:
-                setattr(self.parent,file, pd.read_pickle('bindata/{RELEASE}/{CATALOG}/'+file+'.'+fileSuffix))
+                setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
             except Exception:
                 setattr(self.parent,file, pd.DataFrame())
 
@@ -790,9 +796,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             print("Unexpected error:", sys.exc_info())
             exit(1)
         
-        print("\nFile copy done!\n")
-             
-        
+        print("File restore done!\n")
+        print(self.parent.status)
         try:
             file_to_read = open('bindata/starSystemList.'+fileSuffix2, 'rb') #File containing example object
             self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
@@ -1263,7 +1268,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         -- Pair distance is angular distance. Other fields removed for separate star data download.
         -- It is expected that the star data is downloaded once - about 8 million stars - and the binaries are downloaded many times.
         -- This separation of data speeds up the binary downloads.
-        SELECT g2.source_id as source_id2, t1.source_id, t1.dr2_radial_velocity as radial_velocity, g2.dr2_radial_velocity as radial_velocity2, distance(POINT('ICRS', t1.ra, t1.dec), POINT('ICRS', g2.ra, g2.dec)) AS pairdistance
+        SELECT g2.source_id as source_id2, t1.source_id, t1.radial_velocity as radial_velocity, g2.radial_velocity as radial_velocity2, distance(POINT('ICRS', t1.ra, t1.dec), POINT('ICRS', g2.ra, g2.dec)) AS pairdistance
         """
         # Comments for CICLE parameter
         #"""
@@ -1418,7 +1423,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             FROM
             -- outer product of candidates for primary star with candidates for secondary star
             -- t1 is primary
-            (select * from gaiaedr3.gaia_source
+            (select * from gaiadr3.gaia_source
             where
                 {fromHealpixClause}
                 -- outside solar system and within 333 pcs
@@ -1431,7 +1436,7 @@ class gaiaBinaryRetrieval(wx.Panel):
                 {commentBp1} and phot_bp_mean_flux_over_error > {self.spin_Bp_err1.GetValue()}
                 )
                 as t1,
-            (select * from gaiaedr3.gaia_source
+            (select * from gaiadr3.gaia_source
             where 
                 {fromHealpixClause}
                 {commentRp2} {commentBp2} bp_rp is not null and
@@ -4119,7 +4124,14 @@ class HRDataPlotting(wx.Panel):
             self.hrGraph.axes.set_title(f"Colour/Magnitude plot for {self.parent.status['include'].sum():,} selected and {unselectedBins:,} unselected stars", fontsize=FONTSIZE)
             self.hrGraph.axes.patch.set_facecolor('0.25')  # Grey shade
             c='white'
+            #c=xdata1
     
+        # visualizing the mapping from values to colors
+        #cbar=self.hrGraph.colorbar()
+        ##legend
+        #cbar.set_label(r'Redshift in $kms^{-1}$', rotation=270, labelpad=20, y=0.50)
+        # Saves plot
+        
         marker = ','
         markersize=1
         if self.largePointsCheckBox.GetValue():
@@ -5670,7 +5682,7 @@ class NumberDensityPlotting(wx.Panel):
 
     def OnPlot(self, event=0):
 
-        self.parent.export=[]
+        #self.parent.export=[]
         attributes=[self.textctrl_xUpper, self.textctrl_yUpper]
         for attribute in attributes:
             if not attribute.runValidRoutine():
@@ -6091,6 +6103,33 @@ class NumberDensityPlotting(wx.Panel):
         self.Layout()
         self.parent.printArrays()
 
+        ## Save pandas files as pickle files for next time.
+        #files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
+        #
+        ##Check directory exists and create if not.
+        #if not os.path.isdir(f'bindata'):
+        #    os.mkdir (f'bindata')
+        #for file in files:
+        #    try:
+        #        x = getattr(self.parent,file)
+        #        x=pd.DataFrame(x)
+        #        x.to_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.saved')
+        #    except Exception:
+        #        print('Error directory failed to save:')
+        #        print (f'bindata/{RELEASE}/{CATALOG}/{file}.saved')
+        #
+        ## adding exception handling
+        #try:
+        #    cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        #except IOError as e:
+        #    print("Unable to copy file. %s" % e)
+        #    #exit(1)
+        #except:
+        #    print("Unexpected error:", sys.exc_info())
+        #    exit(1)
+        #
+        #print("\nFile copy done!\n")
+             
         self.plot_but.Enable()
     
     def XreturnY(self, X):
@@ -6157,8 +6196,8 @@ class AladinView(wx.Panel):
         
         # Draw button
         
-        self.cat_but = Button(self, id=wx.ID_ANY, label="&Gaia eDR3 catalogue", pos=wx.DefaultPosition,size=wx.DefaultSize)
-        self.cat_but.Bind(wx.EVT_BUTTON, self.onGaiaeDR3catalogue)
+        self.cat_but = Button(self, id=wx.ID_ANY, label="&Gaia DR3 catalogue", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        self.cat_but.Bind(wx.EVT_BUTTON, self.onGaiaCatalogue)
         fgsizer.Add(self.cat_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         sortChoices=['SOURCE_ID_PRIMARY',
@@ -6258,7 +6297,7 @@ class AladinView(wx.Panel):
             self.binaryList.Append([row.SOURCE_ID_PRIMARY,row.SOURCE_ID_SECONDARY, round(row.r,4), round(V2D,4), round(DIST,2)])
             if index > 1000:
                 return
-    def onGaiaeDR3catalogue(self, event=0):
+    def onGaiaCatalogue(self, event=0):
     
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         binaryIdx = self.binaryList.GetNextSelected(-1)
