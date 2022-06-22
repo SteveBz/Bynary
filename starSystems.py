@@ -43,7 +43,7 @@ class binaryStarSystems():
             #'DEC_ERROR': row.DEC_ERROR,
             #'PARALLAX': row.parallax,
             #'PARALLAX_ERROR': row.parallax_error,
-            #'PHOT_G_MEAN_MAG': row.phot_g_mean_mag,
+            'phot_g_mean_mag': row.phot_g_mean_mag,
             #'PHOT_G_MEAN_FLUX_OVER_ERROR': row.phot_g_mean_flux_over_error,
             #'PHOT_BP_MEAN_FLUX_OVER_ERROR': row.phot_bp_mean_flux_over_error,
             #'PHOT_RP_MEAN_FLUX_OVER_ERROR': row.phot_rp_mean_flux_over_error,
@@ -61,7 +61,19 @@ class binaryStarSystems():
             'RUWE': row.ruwe,
             'DIST': row.DIST,
             'PAIRING': ccdm,
-            'INDEX': idx}
+            'INDEX': idx,
+            
+            'phot_g_mean_flux_over_error':row.phot_g_mean_flux_over_error,	
+            #'phot_rp_mean_flux_over_error':row.phot_rp_mean_flux_over_error
+            #'phot_bp_mean_flux_over_error':row.phot_bp_mean_flux_over_error
+            'mass_flame':row.mass_flame,
+            #'mass_flame_upper':row.mass_flame_upper
+            #'mass_flame_lower':row.mass_flame_lower
+            'age_flame':row.age_flame,
+            #'age_flame_upper':row.age_flame_upper
+            #'age_flame_lower':row.age_flame_lower
+            'classprob_dsc_specmod_binarystar':row.classprob_dsc_specmod_binarystar
+            }
         if not pd.isna(row.parallax):
             self.star_rows[idx]['PARALLAX']=row.parallax
         else:
@@ -100,6 +112,16 @@ class binaryStarSystems():
             self.star_rows[idx]['RADIAL_VELOCITY']=row.radial_velocity
         else:
             self.star_rows[idx]['RADIAL_VELOCITY']=0
+            
+        if not pd.isna(row.radial_velocity):
+            self.star_rows[idx]['mass_flame']=row.mass_flame
+        else:
+            self.star_rows[idx]['mass_flame']=0
+            
+        if not pd.isna(row.radial_velocity):
+            self.star_rows[idx]['age_flame']=row.age_flame
+        else:
+            self.star_rows[idx]['age_flame']=0
         #self.star_rows[idx]['PHOT_G_MEAN_MAG']=row.phot_g_mean_mag,
         #self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=row.phot_g_mean_flux_over_error
         #self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=row.phot_bp_mean_flux_over_error

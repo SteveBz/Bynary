@@ -91,7 +91,8 @@ sqlite_connection = engine.connect()
 #);
 class MainPanel(wx.Panel):
     def __init__(self, mainFrame):
-        wx.Panel.__init__(self, mainFrame)
+        self.mainFrame=mainFrame
+        wx.Panel.__init__(self, self.mainFrame)
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         
         # Menu & Status bar ###########################################################
@@ -108,13 +109,9 @@ class MainPanel(wx.Panel):
         m_about = menuAbout.Append(wx.ID_ABOUT, "&About", "Information about this program")
         self.Bind(wx.EVT_MENU, self.OnAbout, m_about)
         menuBar.Append(menuAbout, "&Help")
-        mainFrame.SetMenuBar(menuBar)
         
-        mainFrame.SetMenuBar(menuBar)
-        mainFrame.statusbar = mainFrame.CreateStatusBar()
-        t=time.strftime("%Y/%m/%d/ %H:%M:%S")
-        mainFrame.statusbar.SetStatusText(t)
-        mainFrame.statusbar.SetBackgroundColour(Colour(50, 50, 60)) #Grey
+        self.mainFrame.SetMenuBar(menuBar)
+        self.mainFrame.statusbar = self.mainFrame.CreateStatusBar()
         
         self.sizer_nb=wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer_nb)
@@ -122,11 +119,14 @@ class MainPanel(wx.Panel):
         self.sizer_nb.Add(self.nb, 1, wx.ALL|wx.EXPAND, 5)
 
         self.nb.printArrays=self.printArrays
+        self.nb.StatusBarNormal=self.StatusBarNormal
+        self.nb.StatusBarProcessing=self.StatusBarProcessing
+        
         # Here we create a panel and a notebook on the panel
         self.releasePage = gaiaStarRetrieval(self.nb, self)
         self.catalogPage = gaiaBinaryRetrieval(self.nb, self)
         self.retrievalPage = dataRetrieval(self.nb, self)
-        self.filterPage = dataFilter(self.nb)
+        self.filterPage = dataFilter(self.nb, self)
         self.plottingPage = kineticDataPlotting(self.nb, self)
         self.skyPage = skyDataPlotting(self.nb, self)
         self.hrPage = HRDataPlotting(self.nb, self)
@@ -149,13 +149,35 @@ class MainPanel(wx.Panel):
         self.nb.AddPage(self.AladinPage, "View Binaries in Aladin Lite")
         self.nb.SetSelection(int(gl_cfg.getItem('tab','SETTINGS'))) # get setting from config file)
         
+    def StatusBarNormal(self, text=""):
+        
+        t=time.strftime("%Y/%m/%d/ %H:%M:%S")
+        if text:
+            self.mainFrame.statusbar.SetStatusText(f'{t} | {text}')
+        else:
+            self.mainFrame.statusbar.SetStatusText(t)
+            
+        self.mainFrame.statusbar.SetBackgroundColour(Colour(50, 50, 60)) #Grey
+        
+    def StatusBarProcessing(self, text=""):
+        
+        t=time.strftime("%Y/%m/%d/ %H:%M:%S")
+        if text:
+            self.mainFrame.statusbar.SetStatusText(f'{t} | {text}')
+        else:
+            self.mainFrame.statusbar.SetStatusText(t)
+            
+        self.mainFrame.statusbar.SetBackgroundColour(Colour(150, 50, 60)) #Grey
+        
+        wx.Yield()
+        
     def OnAbout(self, event):
         dlg = AboutBox()
         dlg.ShowModal()
         dlg.Destroy()
         
     def OnClose(self, event):
-        print('Closing message')
+        #print('Closing message')
         dlg = wx.MessageDialog(self, 
             "Do you really want to close this application?",
             "Confirm Exit", wx.OK|wx.CANCEL|wx.ICON_QUESTION)
@@ -422,6 +444,8 @@ class gaiaStarRetrieval(wx.Panel):
         global CANCEL
         self.button1.Enable()
         CANCEL= True
+        
+        self.parent.StatusBarNormal('Completed OK')
     #    
     #    
     def releaseRefresh(self, event=0):
@@ -461,10 +485,15 @@ class gaiaStarRetrieval(wx.Panel):
                                                     "pmra"	FLOAT, \
                                                     "pmra_error"	FLOAT, \
                                                     "pmdec"	FLOAT, \
+                                                    "pmdec_error"	FLOAT, \
                                                     "ruwe"	FLOAT, \
                                                     "mass_flame"	FLOAT, \
+                                                    "mass_flame_upper"	FLOAT, \
+                                                    "mass_flame_lower"	FLOAT, \
                                                     "age_flame"	FLOAT, \
-                                                    "pmdec_error"	FLOAT, \
+                                                    "age_flame_upper"	FLOAT, \
+                                                    "age_flame_lower"	FLOAT, \
+                                                    "classprob_dsc_specmod_binarystar"	FLOAT, \
                                                     PRIMARY KEY("RELEASE_","source_id") \
                                                     );'
             )
@@ -496,6 +525,16 @@ class gaiaStarRetrieval(wx.Panel):
             records = TBL_RELEASE.selectRecordSet()
         self.releases=[]
         
+        #PHOT_G_MEAN_FLUX_OVER_ERROR	
+        #PHOT_RP_MEAN_FLUX_OVER_ERROR
+        #PHOT_BP_MEAN_FLUX_OVER_ERROR
+        #MASS_FLAME
+        #MASS_FLAME_UPPER
+        #MASS_FLAME_LOWER
+        #AGE_FLAME
+        #AGE_FLAME_UPPER
+        #AGE_FLAME_LOWER
+        #CLASSPROB_DSC_SPECMOD_BINARYSTAR
         for row in records.fetchall():
             self.releases.append(str(row[0]))
         #
@@ -523,7 +562,9 @@ class gaiaStarRetrieval(wx.Panel):
         
     #    
     def read_GaiaStars(self, event):
-    
+            
+        self.parent.StatusBarProcessing('Star download commenced')
+        
         self.button1.Disable()
         self.listctrl.DeleteAllItems()
         
@@ -564,8 +605,12 @@ class gaiaStarRetrieval(wx.Panel):
             gaia_source.phot_rp_mean_flux_over_error,
             gaia_source.phot_bp_mean_flux_over_error,
             astrophysical_parameters.mass_flame,
+            astrophysical_parameters.mass_flame_upper,
+            astrophysical_parameters.mass_flame_lower,
+            astrophysical_parameters.age_flame_upper,
+            astrophysical_parameters.age_flame_lower,
             astrophysical_parameters.age_flame,
-                
+            astrophysical_parameters.classprob_dsc_specmod_binarystar,
             --gaia_source.phot_variable_flag,
             --gaia_source.teff_val,
             --gaia_source.a_g_val, 
@@ -611,9 +656,8 @@ class gaiaStarRetrieval(wx.Panel):
         if int(self.spin_Bp_err.GetValue()):
             commentBp=''
             
-                    
-            #data.to_sql()
-        print(f'delete old records for RA {lowerRA} to {upperRA} degrees')
+        self.parent.StatusBarProcessing(f'Delete old records for RA {lowerRA} to {upperRA} degrees')
+
         TBL_OBJECTS = SQLLib.sqlDelete(iStro, "TBL_OBJECTS")
         #TBL_OBJECTS.setWhereValueLTFloat('RA_', i+1)
         #TBL_OBJECTS.setWhereValueGEFloat('RA_', i)
@@ -622,7 +666,8 @@ class gaiaStarRetrieval(wx.Panel):
         try:
             TBL_OBJECTS.deleteRecordSet()
         except Exception:
-            print('Delete Failed.')
+            self.parent.StatusBarProcessing(f'Delete failed')
+
         
         if self.deactivateIndicesCheckBox.GetValue():
             #Deactivate 4 indices on TBL_OBJECTS
@@ -631,7 +676,7 @@ class gaiaStarRetrieval(wx.Panel):
             for idx in range(1,5):
                 bulkSQL=f"DROP INDEX IF EXISTS IDX_TBL_OBJECTS{idx} ;"
                 TBL_OBJECTS .executeIAD(bulkSQL)
-                print(f'{bulkSQL} of 4')
+                self.parent.StatusBarProcessing(f'{bulkSQL} of 4')
                 
         for i in range(lowerRA, upperRA, step):
             query[0] = selectFrom + f"""
@@ -649,11 +694,11 @@ class gaiaStarRetrieval(wx.Panel):
             """
             
             #print( query[0] )
-            print (f'i = {i}')
+            self.parent.StatusBarProcessing (f'i = {i}')
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
             #filePrefix='iEquals0' + date_time
-            print('start query', date_time)
+            self.parent.StatusBarProcessing('start query')
             # output_data = gaia_cnxn.gaia_get_pairs_of_close_stars(save_to_pickle=True, dump_to_file=True, output_format='json')
             
             if not os.path.isdir(f'bindata/{release}'):
@@ -663,16 +708,16 @@ class gaiaStarRetrieval(wx.Panel):
                 
             if (not forceIt) and os.path.isfile(f'bindata/{release}/stars/gaia_{release}_RA{i}'):
                 data =pd.read_pickle(f'bindata/{release}/stars/gaia_{release}_RA{i}')
-                print(f'Restore from local pickle file')
+                self.parent.StatusBarProcessing(f'Restore from local pickle file')
             else:
                 gaia_cnxn = da.GaiaDataAccess()
                 data = gaia_cnxn.gaia_query_to_pandas(query[0])
-                print(f'Download from Gaia')
-                print(f'bindata/{release}/stars/gaia_{release}_RA{i}')
+                self.parent.StatusBarProcessing(f'Download from Gaia')
+                self.parent.StatusBarProcessing(f'bindata/{release}/stars/gaia_{release}_RA{i}')
                 data.to_pickle(f'bindata/{release}/stars/gaia_{release}_RA{i}', protocol=int(gl_cfg.getItem('pickle_protocol', 'SETTINGS', 4))) # save setting in config file)
                 
             lenArray=len(data)
-            self.listctrl.Append([release,i, i+step, lenArray, date_time])
+            self.listctrl.Append([release,i, i+step, f'{lenArray:,}', date_time])
             self.listctrl.EnsureVisible(i-lowerRA)
             self.Layout()
             wx.Yield()
@@ -696,11 +741,11 @@ class gaiaStarRetrieval(wx.Panel):
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
             #filePrefix='iEquals0' + date_time
-            print(f'start processing {len(data)} records at {date_time}.' )
+            self.parent.StatusBarProcessing(f'start processing {len(data):,} records at {date_time}.' )
             bulkSQL='execute block as begin'
             source_id_array=[]
             data2=data.to_dict()
-            print(f'Number of stars: {len(data)} in {TotalCount}')
+            self.parent.StatusBarProcessing(f'Number of stars: {len(data):,} in {TotalCount:,}')
             global sqlite_connection
             data = data.rename(columns={
                                                'ra': 'RA_',
@@ -729,7 +774,7 @@ class gaiaStarRetrieval(wx.Panel):
             bulkSQL=''
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
-            print('end query', date_time)
+            self.parent.StatusBarProcessing('end query')
             # output_data = gaia_cnxn.gaia_get_pairs_o
         
         print(2)
@@ -752,8 +797,9 @@ class gaiaStarRetrieval(wx.Panel):
             TBL_OBJECTS .executeIAD(SQL)
                 
         self.button1.Enable()
-        print(7)
-        
+
+        self.parent.StatusBarNormal('Completed OK')
+                
 class gaiaBinaryRetrieval(wx.Panel):
     
     def dump(self, obj):
@@ -790,13 +836,13 @@ class gaiaBinaryRetrieval(wx.Panel):
         try:
             cp(f'bindata/{RELEASE}/{CATALOG}/binClient.conf', 'binClient.conf')
         except IOError as e:
-            print("Unable to copy file. %s" % e)
+            self.parent.StatusBarProcessing("Unable to copy file. %s" % e)
             #exit(1)
         except:
-            print("Unexpected error:", sys.exc_info())
+            print(f"Unexpected error: {sys.exc_info()}")
             exit(1)
         
-        print("File restore done!\n")
+        self.parent.StatusBarProcessing("File restore done!\n")
         print(self.parent.status)
         try:
             file_to_read = open('bindata/starSystemList.'+fileSuffix2, 'rb') #File containing example object
@@ -1065,7 +1111,7 @@ class gaiaBinaryRetrieval(wx.Panel):
                 
         # Import Total prompt
         
-        static_Total = StaticText(self, id=wx.ID_ANY, label="Total stars:")
+        static_Total = StaticText(self, id=wx.ID_ANY, label="Total pairs:")
         self.sizer_h2.Add(static_Total, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Total
@@ -1106,7 +1152,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         jobs = [job for job in gaia_cnxn.list_async_jobs()]
         #job_ids = [inp.jobid for inp in jobs]
         for inp in jobs:
-            print(gaia_cnxn.remove_jobs([inp.jobid]))
+            self.parent.StatusBarProcessing(gaia_cnxn.remove_jobs([inp.jobid]))
         
     def onHPScale_Refresh(self, event=0):
 
@@ -1141,6 +1187,8 @@ class gaiaBinaryRetrieval(wx.Panel):
         global CANCEL
         self.button1.Enable()
         CANCEL= True
+        
+        self.parent.StatusBarNormal('Completed OK')
         
     def catRefresh(self, event=0):
         
@@ -1223,6 +1271,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             return False
     def read_GaiaBinaries(self, event):
 
+        self.parent.StatusBarProcessing('Downloading binary lists from Gaia')
+        
         attributes=[self.textctrl_Separation, self.textctrl_PXfrom2, self.textctrl_PXfrom1, self.textCtrl_max_data]
         for attribute in attributes:
             if not attribute.runValidRoutine():
@@ -1365,7 +1415,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         nside = int(math.sqrt(int(self.HPScale_combo.GetValue())/12))
         #print (nside)
         
-        print(f'delete old records for healix {HPSlower} to {HPSupper}')
+        #print(f'delete old records for healix {HPSlower} to {HPSupper}')
+        t=time.strftime("%Y/%m/%d/ %H:%M:%S")
+        self.parent.StatusBarProcessing(f'Delete old records for healix {HPSlower} to {HPSupper}')
+        wx.Yield()
         TBL_BINARIES = SQLLib.sqlDelete(iStro, "TBL_BINARIES");
         #TBL_BINARIES.setWhereValueLTFloat('HEALPIX', HPSupper)
         #TBL_BINARIES.setWhereValueGEFloat('HEALPIX', HPSlower)
@@ -1376,7 +1429,9 @@ class gaiaBinaryRetrieval(wx.Panel):
         try:
             TBL_BINARIES.deleteRecordSet()
         except Exception:
-            print('delete failed')
+            t=time.strftime("%Y/%m/%d/ %H:%M:%S")
+            self.parent.StatusBarProcessing(f'Delete failed')
+            wx.Yield()
             pass
         
         if self.deactivateIndicesCheckBox.GetValue():
@@ -1386,14 +1441,14 @@ class gaiaBinaryRetrieval(wx.Panel):
             for idx in range(1,12):
                 bulkSQL=f"DROP INDEX IF EXISTS IDX_TBL_BINARIES{idx} ;"
                 TBL_BINARIES .executeIAD(bulkSQL)
-                print(f'TBL_BINARIES{idx} of 11')
-                 
+                self.parent.StatusBarProcessing(f'TBL_BINARIES{idx} of 11')
+            
         for i in HPS:
             
             healpixA=int(2**35*4**(12-2)*i*192/HPS_SCALE)
             healpixB=int(2**35*4**(12-2)*(i+step)*192/HPS_SCALE)
         
-            print(nside, i)
+            self.parent.StatusBarProcessing(f"{nside} = {i}")
             theta, phi = hp.pix2ang(nside, i)
             ra = np.degrees(pi*2.-phi)
             dec = -np.degrees(theta-pi/2.)
@@ -1410,14 +1465,14 @@ class gaiaBinaryRetrieval(wx.Panel):
             gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
             
             if abs(gal_b) < mod_b_gt:
-                print(f"- Dropping healpix {i}; |b| = {round(gal_b, 1)}, ra = {round(ra,1)}, dec = {round(dec,1)}")
+                self.parent.StatusBarProcessing(f"- Dropping healpix {i}; |b| = {round(gal_b, 1)}, ra = {round(ra,1)}, dec = {round(dec,1)}")
                 continue
         
             fromHealpixClause=f"""
             -- index file: {i}
             source_id >= {healpixA} and source_id < {healpixB} and
             """
-            print (i, healpixA)
+            self.parent.StatusBarProcessing (f"{i} {healpixA}")
             
             Gaia50000From=f"""
             FROM
@@ -1456,7 +1511,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
-            print('start query', date_time)
+            self.parent.StatusBarProcessing('start query')
             if not os.path.isdir(f'bindata/{release}'):
                 os.mkdir (f'bindata/{release}')
             if not os.path.isdir(f'bindata/{release}/{catalogue}'):
@@ -1464,17 +1519,17 @@ class gaiaBinaryRetrieval(wx.Panel):
             try:
                 if (not forceIt) and os.path.isfile(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}'):
                     data =pd.read_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}')
-                    print('Local copy restored')
+                    self.parent.StatusBarProcessing('Local copy restored')
                 else:
                     #print('Temporary workouround.  Delete <continue> here -->')
                     #continue
                     print(query[0])
                     gaia_cnxn = da.GaiaDataAccess()
                     data = gaia_cnxn.gaia_query_to_pandas(query[0])
-                    #print(data)
+                    #self.parent.StatusBarProcessing(data)
                     data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}', protocol=int(gl_cfg.getItem('pickle_protocol', 'SETTINGS')))
             except Exception:
-                print (f'timeout for HPS i = {i}')
+                self.parent.StatusBarProcessing (f'timeout for HPS i = {i}')
                 timeoutCount=timeoutCount+1
                 continue
             
@@ -1518,12 +1573,12 @@ class gaiaBinaryRetrieval(wx.Panel):
             #    print('delete failed')
             #    pass
             if max_data and len(data) > max_data:
-                print(f"- Dropping healpix {i}; length of data = {len(data):,}, |b| = {round(gal_b, 1)}, ra = {round(ra,1)}, dec = {round(dec,1)}")
+                self.parent.StatusBarProcessing(f"- Dropping healpix {i}; length of data = {len(data):,}, |b| = {round(gal_b, 1)}, ra = {round(ra,1)}, dec = {round(dec,1)}")
                 continue
         
-            print('start processing record', date_time)
+            self.parent.StatusBarProcessing('start processing record')
             bulkSQL='execute block as begin'
-            print(f'length of data = {len(data):,}')
+            self.parent.StatusBarProcessing(f'length of data = {len(data):,}')
             source_id_array=[]
             
             global sqlite_connection
@@ -1551,7 +1606,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
-            print('update', date_time)
+            self.parent.StatusBarProcessing('update')
             
             #if forked:
             #    #if not parent (ie it is the child) fork then
@@ -1600,6 +1655,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             TBL_BINARIES .executeIAD(SQL)
                 
         self.button1.Enable()
+        
+        self.parent.StatusBarNormal('Completed OK')
         
 class dataRetrieval(wx.Panel):
     
@@ -1915,13 +1972,13 @@ class dataRetrieval(wx.Panel):
         try:
             cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
         except IOError as e:
-            print("Unable to copy file. %s" % e)
+            self.parent.StatusBarProcessing("Unable to copy file. %s" % e)
             #exit(1)
         except:
-            print("Unexpected error:", sys.exc_info())
+            print("Unexpected error: {sys.exc_info()}")
             exit(1)
         
-        print("\nFile copy done!\n")
+        self.parent.StatusBarProcessing("\nFile copy done!\n")
              
         
     def catalogRestore(self, event=0):
@@ -1937,19 +1994,19 @@ class dataRetrieval(wx.Panel):
             try:
                 setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.saved'))
             except Exception:
-                print('Error directory failed to restore:')
-                print (f'bindata/{RELEASE}/{CATALOG}/{file}.saved')
+                self.parent.StatusBarProcessing('Error directory failed to restore:')
+                self.parent.StatusBarProcessing (f'bindata/{RELEASE}/{CATALOG}/{file}.saved')
         
         try:
             cp(f'bindata/{RELEASE}/{CATALOG}/binClient.conf', 'binClient.conf')
         except IOError as e:
-            print("Unable to copy file. %s" % e)
+            self.parent.StatusBarProcessing("Unable to copy file. %s" % e)
             #exit(1)
         except:
-            print("Unexpected error:", sys.exc_info())
+            print("Unexpected error: {sys.exc_info()}")
             exit(1)
         
-        print("\nFile copy done!\n")
+        self.parent.StatusBarProcessing("\nFile copy done!\n")
         self.restoreListCtrl()
     def loadTypeRefresh(self, event=0):
 
@@ -1979,6 +2036,8 @@ class dataRetrieval(wx.Panel):
         self.dbload.Enable()
         
         CANCEL= True
+        
+        self.parent.StatusBarNormal('Completed OK')
         
     def catRefresh(self, event=0):
         
@@ -2032,7 +2091,8 @@ class dataRetrieval(wx.Panel):
     def read_db(self, event):
 
         self.dbload.Disable()
-        
+
+        self.parent.StatusBarProcessing('Loading from DB into memory')
         
         gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'RETRIEVAL') # save setting in config file
         gl_cfg.setItem('loadType',self.loadType_combo.GetSelection(), 'RETRIEVAL') # save setting in config file
@@ -2125,12 +2185,26 @@ class dataRetrieval(wx.Panel):
                         o1.RADIAL_VELOCITY_ERROR,
                         o1.PMRA, o1.PMRA_ERROR, o1.PMDEC, o1.PMDEC_ERROR, o1.RELEASE_, o1.RUWE,
                         1000/o1.PARALLAX as DIST,
+                        o1.MASS_FLAME,
+                        o1.MASS_FLAME_UPPER,
+                        o1.MASS_FLAME_LOWER,
+                        o1.AGE_FLAME,
+                        o1.AGE_FLAME_UPPER,
+                        o1.AGE_FLAME_LOWER,
+                        o1.CLASSPROB_DSC_SPECMOD_BINARYSTAR,
                         
         o2.SOURCE_ID, o2.RA_, o2.RA_ERROR, o2.DEC_, o2.DEC_ERROR,
                         o2.PARALLAX, o2.parallax_error, o2.phot_g_mean_mag, o2.PHOT_RP_MEAN_FLUX_OVER_ERROR, o2.PHOT_G_MEAN_FLUX_OVER_ERROR, o2.PHOT_BP_MEAN_FLUX_OVER_ERROR, o2.BP_RP, o2.RADIAL_VELOCITY,
                         o2.RADIAL_VELOCITY_ERROR, 
                         o2.PMRA, o2.PMRA_ERROR, o2.PMDEC, o2.PMDEC_ERROR, o2.RELEASE_, o2.RUWE,
-                        1000/o2.PARALLAX as DIST
+                        1000/o2.PARALLAX as DIST,
+                        o2.MASS_FLAME,
+                        o2.MASS_FLAME_UPPER,
+                        o2.MASS_FLAME_LOWER,
+                        o2.AGE_FLAME,
+                        o2.AGE_FLAME_UPPER,
+                        o2.AGE_FLAME_LOWER,
+                        o2.CLASSPROB_DSC_SPECMOD_BINARYSTAR
         FROM TBL_BINARIES b
             left join TBL_OBJECTS o1
                 on b.SOURCE_ID_PRIMARY=o1.SOURCE_ID and b.RELEASE_ = o1.RELEASE_
@@ -2145,7 +2219,7 @@ class dataRetrieval(wx.Panel):
             {commentRVnotGroup} and b.HAS_RADIAL_VELOCITY = True and b.NOT_GROUPED = True
             {commentGroupedandUngroupedwithRV} and b.HAS_RADIAL_VELOCITY = True 
             {commentRVandRVnullUngrouped} and b.NOT_GROUPED = True 
- 
+
         --    and b.SOURCE_ID_PRIMARY < b.SOURCE_ID_SECONDARY
         
         --    {commentRVnotGroup} and  o1.RADIAL_VELOCITY > 0
@@ -2163,13 +2237,13 @@ class dataRetrieval(wx.Panel):
         recordsAll = pd.read_sql(querySQL, iStro)
         i=0
         lenArray=len(recordsAll)
-        print(f'lenArray={lenArray}')
+        self.parent.StatusBarProcessing(f'lenArray={lenArray:,}')
         self.parent.starSystemList=binaryStarSystems(lenArray)
         
         records=recordsAll.iloc[:,range(9)]
         records.drop(columns=['RELEASE_', 'CATALOG', 'SOURCE_ID_PRIMARY', 'SOURCE_ID_SECONDARY'])
-        X=recordsAll.iloc[:,range(9,30)]
-        Y=recordsAll.iloc[:,range(30,51)]
+        X=recordsAll.iloc[:,range(9,37)]
+        Y=recordsAll.iloc[:,range(37,65)]
         records=records.convert_dtypes()
         del recordsAll
         X=X.convert_dtypes()
@@ -2299,7 +2373,7 @@ class dataRetrieval(wx.Panel):
                 #
                 # Add second star (companion star)
                 (ccdm, R, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(Y.iloc[index], i)
-                print(f'Except: G_MEAN_MAG error')
+                self.parent.StatusBarProcessing(f'Except: G_MEAN_MAG error')
                 include=0
             primaryPointer=self.parent.starSystemList.binaryList[str(index+1)].primary
             star2Pointer=self.parent.starSystemList.binaryList[str(index+1)].star2
@@ -2368,6 +2442,70 @@ class dataRetrieval(wx.Panel):
                 YPHOT_G_MEAN_MAG=float(self.parent.starSystemList.binaryList[str(index+1)].star2.phot_g_mean_mag)
             except:
                 YPHOT_G_MEAN_MAG=0
+                
+            
+            try:
+                Xmass_flame=float(self.parent.starSystemList.binaryList[str(index+1)].primary.mass_flame)
+            except:
+                Xmass_flame=0
+            try:
+                Ymass_flame=float(self.parent.starSystemList.binaryList[str(index+1)].star2.mass_flame)
+            except:
+                Ymass_flame=0
+        
+            try:
+                Xmass_flame_upper=float(self.parent.starSystemList.binaryList[str(index+1)].primary.mass_flame_upper)
+            except:
+                Xmass_flame_upper=0
+            try:
+                Ymass_flame_upper=float(self.parent.starSystemList.binaryList[str(index+1)].star2.mass_flame_upper)
+            except:
+                Ymass_flame_upper=0
+        
+            try:
+                Xmass_flame_lower=float(self.parent.starSystemList.binaryList[str(index+1)].primary.mass_flame_lower)
+            except:
+                Xmass_flame_lower=0
+            try:
+                Ymass_flame_lower=float(self.parent.starSystemList.binaryList[str(index+1)].star2.mass_flame_lower)
+            except:
+                Ymass_flame_lower=0
+        
+            try:
+                Xage_flame=float(self.parent.starSystemList.binaryList[str(index+1)].primary.age_flame)
+            except:
+                Xage_flame=0
+            try:
+                Yage_flame=float(self.parent.starSystemList.binaryList[str(index+1)].star2.age_flame)
+            except:
+                Yage_flame=0
+        
+            try:
+                Xage_flame_upper=float(self.parent.starSystemList.binaryList[str(index+1)].primary.age_flame_upper)
+            except:
+                Xage_flame_upper=0
+            try:
+                Yage_flame_upper=float(self.parent.starSystemList.binaryList[str(index+1)].star2.age_flame_upper)
+            except:
+                Yage_flame_upper=0
+        
+            try:
+                Xage_flame_lower=float(self.parent.starSystemList.binaryList[str(index+1)].primary.age_flame_lower)
+            except:
+                Xage_flame_lower=0
+            try:
+                Yage_flame_lower=float(self.parent.starSystemList.binaryList[str(index+1)].star2.age_flame_lower)
+            except:
+                Yage_flame_lower=0
+        
+            try:
+                Xclassprob_dsc_specmod_binarystar=float(self.parent.starSystemList.binaryList[str(index+1)].primary.classprob_dsc_specmod_binarystar)
+            except:
+                Xclassprob_dsc_specmod_binarystar=0
+            try:
+                Yclassprob_dsc_specmod_binarystar=float(self.parent.starSystemList.binaryList[str(index+1)].star2.classprob_dsc_specmod_binarystar)
+            except:
+                Yclassprob_dsc_specmod_binarystar=0
         
             try:
                 self.parent.X[index] = {
@@ -2382,10 +2520,17 @@ class dataRetrieval(wx.Panel):
                     'PARALLAX':float(self.parent.starSystemList.binaryList[str(index+1)].primary.parallax),
                     'parallax_error':float(self.parent.starSystemList.binaryList[str(index+1)].primary.parallax_error),
                     'DIST':float(self.parent.starSystemList.binaryList[str(index+1)].primary.DIST),
-                    'RUWE':XRUWE
+                    'RUWE':XRUWE,
+                    'mass_flame':Xmass_flame,
+                    'mass_flame_upper':Xmass_flame_upper,
+                    'mass_flame_lower':Xmass_flame_lower,
+                    'age_flame':Xage_flame,
+                    'age_flame_upper':Xage_flame_upper,
+                    'age_flame_lower':Xage_flame_lower,
+                    'classprob_dsc_specmod_binarystar':Xclassprob_dsc_specmod_binarystar
                     }
             except Exception:
-                    print (f'Skipped record {index}')
+                    self.parent.StatusBarProcessing (f'Skipped record {index}')
                     #row=row.transpose()
                     print('Error 1', row)
                     print(index)
@@ -2420,7 +2565,15 @@ class dataRetrieval(wx.Panel):
                     'PARALLAX':float(self.parent.starSystemList.binaryList[str(index+1)].star2.parallax),
                     'parallax_error':float(self.parent.starSystemList.binaryList[str(index+1)].star2.parallax_error),
                     'DIST':float(self.parent.starSystemList.binaryList[str(index+1)].star2.DIST),
-                    'RUWE':YRUWE}
+                    'RUWE':YRUWE,
+                    'mass_flame':Ymass_flame,
+                    'mass_flame_upper':Ymass_flame_upper,
+                    'mass_flame_lower':Ymass_flame_lower,
+                    'age_flame':Yage_flame,
+                    'age_flame_upper':Yage_flame_upper,
+                    'age_flame_lower':Yage_flame_lower,
+                    'classprob_dsc_specmod_binarystar':Yclassprob_dsc_specmod_binarystar
+                    }
             except Exception:
                     print (f'Skipped record {index}')
                     #row=row.transpose()
@@ -2490,7 +2643,7 @@ class dataRetrieval(wx.Panel):
         
         ROWCOUNTMATRIX['ADQL']=len(self.parent.selectedStarBinaryMappings)
         self.static_Total.SetLabel(f'{int(len(self.parent.selectedStarIDs)/2):,}')
-        print('End')
+        self.parent.StatusBarProcessing('End')
         
         self.parent.selectedStarIDs=pd.DataFrame(self.parent.selectedStarIDs, columns=['source_id'])
         self.parent.selectedStarBinaryMappings=pd.DataFrame.from_dict(self.parent.selectedStarBinaryMappings, orient='index')#, columns=['i', 'SOURCE_ID_PRIMARY', 'SOURCE_ID_SECONDARY'
@@ -2543,9 +2696,13 @@ class dataRetrieval(wx.Panel):
         self.parent.printArrays()
         self.dbload.Enable()
         
+        self.parent.StatusBarNormal('Completed OK')
+        
     def resetStatus(self, event):
         
         self.reset.Disable()
+        
+        self.parent.StatusBarProcessing('Resetting')
         
         global RELEASE, CATALOG
         RELEASE=self.release.GetValue()
@@ -2567,10 +2724,16 @@ class dataRetrieval(wx.Panel):
         
         self.reset.Enable()
     
+        self.parent.StatusBarNormal('Completed OK')
+        
     def deselectRVnull(self, event):
+        
+
+        self.parent.StatusBarProcessing('Deselecting binaries with no RV')
         
         self.rvnull.Disable()
         
+        wx.Yield()
         commentHP='--'
         commentRA='--'
         commentDec='--'
@@ -2614,7 +2777,7 @@ class dataRetrieval(wx.Panel):
 
         lenArray=len(records)
         Array=[]
-        print(f'length = {lenArray}')
+        self.parent.StatusBarProcessing(f'length = {lenArray:,}')
         records=records.convert_dtypes()
         for index, row  in records.iterrows():
             #self.parent.radialvelocity[index]=0
@@ -2674,8 +2837,10 @@ class dataRetrieval(wx.Panel):
             self.static_RVnull.SetLabel(f'{row[0]:,}')
         self.rvnull.Enable()
         self.Layout()
-        print(records)
+        self.parent.StatusBarProcessing(records)
 
+        self.parent.StatusBarNormal('Completed OK')
+        
     def deselectRVnull_old(self, event):
         
         self.rvnull.Disable()
@@ -2750,6 +2915,8 @@ class dataRetrieval(wx.Panel):
         #Move Ba to another catalogue
         self.deleteSelection.Disable()
         
+        self.parent.StatusBarProcessing('Deleting catalogue')
+        
         global RELEASE, CATALOG
         RELEASE=self.release.GetValue()
         CATALOG=self.catalogue.GetValue()
@@ -2774,9 +2941,13 @@ class dataRetrieval(wx.Panel):
         
         self.deleteSelection.Enable()
         
+        self.parent.StatusBarNormal('Completed OK')
+        
     def moveBineries(self, event):
         #Move Ba to another catalogue
         self.move.Disable()
+        
+        self.parent.StatusBarProcessing('Moving binary catalogue commenced')
         
         global RELEASE, CATALOG
         #RELEASE=self.release.GetValue()
@@ -2793,9 +2964,13 @@ class dataRetrieval(wx.Panel):
         
         self.move.Enable()
         
+        self.parent.StatusBarNormal('Completed OK')
+        
     def deselectDuplicates(self, event):
         #Freeze button
         self.ungroup.Disable()
+        
+        self.parent.StatusBarProcessing('Degrouping commenced')
         
         global RELEASE, CATALOG
         RELEASE=self.release.GetValue()
@@ -2855,7 +3030,7 @@ class dataRetrieval(wx.Panel):
         records = pd.read_sql(sql, iStro)
 
         lenArray=len(records)
-        print(f'Ungrouping {lenArray} records started')
+        self.parent.StatusBarProcessing(f'Ungrouping {lenArray:,} records started')
         Array=[] 
         records=records.convert_dtypes()
         for index, row  in records.iterrows():
@@ -2937,10 +3112,13 @@ class dataRetrieval(wx.Panel):
         self.ungroup.Enable()
         self.Layout()
         
+        self.parent.StatusBarNormal('Completed OK')
+        
 class dataFilter(wx.Panel):
     
-    def __init__(self, parent):
+    def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
+        self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
@@ -3069,24 +3247,39 @@ class dataFilter(wx.Panel):
         
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1920,600), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Gaia %s Source ID" % RELEASE, width=180)
-        self.listctrl.InsertColumn(1, u"pairing no.", width=80)
-        self.listctrl.InsertColumn(2, u"ra", width=100)
+        self.listctrl.InsertColumn(1, u"pair #", width=60)
+        self.listctrl.InsertColumn(2, u"ra", width=70)
         #self.listctrl.InsertColumn(3, u"ra_error", width=100)
-        self.listctrl.InsertColumn(3, u"dec", width=100)
+        self.listctrl.InsertColumn(3, u"dec", width=70)
         #self.listctrl.InsertColumn(5, u"dec error", width=100)
-        self.listctrl.InsertColumn(4, u"parallax", width=100)
-        self.listctrl.InsertColumn(5, u"px err", width=100)
-        self.listctrl.InsertColumn(6, u"pmra", width=100)
-        self.listctrl.InsertColumn(7, u"pmra err", width=100)
-        self.listctrl.InsertColumn(8, u"pmdec", width=100)
-        self.listctrl.InsertColumn(9, u"pmdec err", width=100)
-        self.listctrl.InsertColumn(10, u"RUWE", width=100)
-        self.listctrl.InsertColumn(11, u"Rad. Vel", width=100)
+        self.listctrl.InsertColumn(4, u"parallax", width=70)
+        self.listctrl.InsertColumn(5, u"px err", width=70)
+        self.listctrl.InsertColumn(6, u"pmra", width=70)
+        self.listctrl.InsertColumn(7, u"pmra err", width=70)
+        self.listctrl.InsertColumn(8, u"pmdec", width=70)
+        self.listctrl.InsertColumn(9, u"pmdec err", width=70)
+        self.listctrl.InsertColumn(10, u"RUWE", width=70)
+        self.listctrl.InsertColumn(11, u"Rad. Vel", width=70)
         #self.listctrl.InsertColumn(12, u"Exclude", width=100)
-        self.listctrl.InsertColumn(12, u"Release", width=80)
-        self.listctrl.InsertColumn(13, u"RV > 0 Flag", width=100)
-        self.listctrl.InsertColumn(14, u"Not Grouped", width=100)
-        self.listctrl.InsertColumn(15, u"Included", width=100)
+        self.listctrl.InsertColumn(12, u"Release", width=70)
+        self.listctrl.InsertColumn(13, u"RV?", width=50)
+        self.listctrl.InsertColumn(14, u"UnGrp?", width=70)
+        self.listctrl.InsertColumn(15, u"Incl?", width=50)
+        self.listctrl.InsertColumn(16, u"g mag", width=70)
+        self.listctrl.InsertColumn(17, u"mass", width=70)
+        self.listctrl.InsertColumn(18, u"age", width=70)
+        self.listctrl.InsertColumn(19, u"% bin", width=60)
+
+        #"phot_g_mean_flux_over_error"	FLOAT, \
+        #"phot_rp_mean_flux_over_error"	FLOAT, \
+        #"phot_bp_mean_flux_over_error"	FLOAT, \
+        #"mass_flame"	FLOAT, \
+        #"mass_flame_upper"	FLOAT, \
+        #"mass_flame_lower"	FLOAT, \
+        #"age_flame"	FLOAT, \
+        #"age_flame_upper"	FLOAT, \
+        #"age_flame_lower"	FLOAT, \
+        #"classprob_dsc_specmod_binarystar"	FLOAT, \
 
         self.sizer_v.Add(self.listctrl, 0, wx.TOP | wx.BOTTOM , 10)
         self.sizer_v.Add(hsizer1, 0, wx.ALIGN_CENTER_HORIZONTAL)
@@ -3103,15 +3296,21 @@ class dataFilter(wx.Panel):
         CANCEL= True
         self.loadData.Enable()
         
+        self.parent.StatusBarNormal('Completed OK')
+        
     def OnReset(self, event=0):
         self.parent.status=pd.DataFrame(self.parent.status)
         self.parent.status['include']=self.parent.status['dataLoadOut']
         self.parent.status['populateOut']=self.parent.status['dataLoadOut']
         self.parent.status['hrOut']=self.parent.status['dataLoadOut']
         self.parent.status['kineticOut']=self.parent.status['dataLoadOut']
+        self.parent.status['ruweExcl']=self.parent.status['dataLoadOut']
         
     def applyFilter(self, event):
         
+        self.parent.StatusBarProcessing('Filter processing commenced')
+        
+        wx.Yield()
         attributes=[self.text_ruwe]
         for attribute in attributes:
             attribute.setValidRoutine(attribute.Validate_Float)
@@ -3239,7 +3438,7 @@ class dataFilter(wx.Panel):
                                 excludeTxt=f'RV diff={int(sn_row)}'
                                 include=0
                     else:
-                        print (f'Skipped record {index}')
+                        self.parent.StatusBarProcessing (f'Skipped record {index}')
                         row=row.transpose()
                         print(1, row)
                         print(index)
@@ -3251,7 +3450,7 @@ class dataFilter(wx.Panel):
                         #continue
             except Exception:
                 print(2, row)
-                print(f'index = {index}')
+                self.parent.StatusBarProcessing(f'index = {index}')
                 #print(star_rows)
                 print(star_rows[:index+5])
                 self.loadData.SetBackgroundColour(Colour(150,20,20))
@@ -3394,11 +3593,14 @@ class dataFilter(wx.Panel):
         self.parent.status['populateOut']=self.parent.status['include']
         self.parent.status['hrOut']=self.parent.status['include']
         self.parent.status['kineticOut']=self.parent.status['include']
+        self.parent.status['ruweExcl']=self.parent.status['include']
         self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
         populateOut=self.parent.status['populateOut'].sum()
         self.dataInTotal.SetLabel(f'{populateOut:,}')
         self.loadData.Enable()
         self.parent.printArrays()
+        
+        self.parent.StatusBarNormal('Completed OK')
         
     def restoreListCtrl(self, event=0, limit=1000):
         
@@ -3424,31 +3626,59 @@ class dataFilter(wx.Panel):
             try:
                 ruwe=float(row.RUWE)
             except Exception:
-                ruwe=0
+                ruwe=0             
+            try:
+                age=float(row.age_flame)
+            except Exception:
+                age=0             
+            try:
+                mass=float(row.mass_flame)
+            except Exception:
+                mass=0        
+            try:
+                binarystar=float(row.classprob_dsc_specmod_binarystar)
+            except Exception:
+                binarystar=0
             try:
                 self.listctrl.Append(
                     [int(row.SOURCE_ID),
                      int(row.PAIRING),
-                     float(row.RA_),
+                     round(float(row.RA_),4),
                      #float(row.RA_ERROR),
-                     float(row.DEC_) ,
+                     round(float(row.DEC_),4) ,
                      #float(row.DEC_ERROR),
-                     float(row.PARALLAX) ,
-                     float(row.PARALLAX_ERROR),
-                     float(row.PMRA),
-                     float(row.PMRA_ERROR),
-                     float(row.PMDEC),
-                     float(row.PMDEC_ERROR),
-                     ruwe,rv,
-                     #'',
+                     round(float(row.PARALLAX),4),
+                     round(float(row.PARALLAX_ERROR),4),
+                     round(float(row.PMRA),4),
+                     round(float(row.PMRA_ERROR),4),
+                     round(float(row.PMDEC),4),
+                     round(float(row.PMDEC_ERROR),4),
+                     round(ruwe, 4),
+                     round(rv,4),
                      row.RELEASE_,
                      self.parent.status.radialvelocity[int(index/2)],
                      self.parent.status.notgroup[int(index/2)],
-                     self.parent.status.include[int(index/2)]])
+                     self.parent.status.include[int(index/2)],
+                     round(float(row.PHOT_G_MEAN_MAG),4),
+                     round(float(mass),4),
+                     round(float(age),4),
+                     round(float(binarystar),4)])
+                     
+        #"phot_g_mean_flux_over_error"	FLOAT, \
+        #"phot_rp_mean_flux_over_error"	FLOAT, \
+        #"phot_bp_mean_flux_over_error"	FLOAT, \
+        #"mass_flame"	FLOAT, \
+        #"mass_flame_upper"	FLOAT, \
+        #"mass_flame_lower"	FLOAT, \
+        #"age_flame"	FLOAT, \
+        #"age_flame_upper"	FLOAT, \
+        #"age_flame_lower"	FLOAT, \
+        #"classprob_dsc_specmod_binarystar"	FLOAT, \
             except Exception:
                 print(self.parent.status)
-                print('"star_rows" Error')
-                exit(1)
+                print(row)
+                self.parent.StatusBarProcessing('"star_rows" Error')
+                #exit(1)
 
 class skyDataPlotting(wx.Panel):
 
@@ -3551,10 +3781,15 @@ class skyDataPlotting(wx.Panel):
 
         global CANCEL
         CANCEL= True
+        self.plot_but.Enable()
+        self.starsOnly_but.Enable()
+        self.parent.StatusBarNormal('Completed OK')
         
     def OnStarsOnly(self, event=0):
 
         # Draw sky plot
+        
+        self.parent.StatusBarProcessing('Sky plotting commenced')
         
         querySQL = f"""SELECT 
             o1.SOURCE_ID, o1.RA_, o1.RA_ERROR, o1.DEC_, o1.PHOT_G_MEAN_MAG
@@ -3584,7 +3819,7 @@ class skyDataPlotting(wx.Panel):
         self.skyGraph.axes.set_yscale('linear')
         self.skyGraph.axes.set_xscale('linear')
         self.skyGraph.set_limits([360,0],[-90, 90])
-        self.skyGraph.axes.grid(b=None, which='minor', axis='both')
+        self.skyGraph.axes.grid(visible=None, which='minor', axis='both')
         
         # To remove the artist
         for frame in self.skyGraph.frames:
@@ -3632,10 +3867,14 @@ class skyDataPlotting(wx.Panel):
             pass
         self.Layout()
 
+        self.parent.StatusBarNormal('Completed OK')
+        
     def OnPlot(self, event=0):
 
         self.plot_but.Disable()
         self.parent.export=[]
+        
+        self.parent.StatusBarProcessing('Sky plotting commenced')
         
         prntVersion=self.prntVersionCheckBox.GetValue()
         gl_cfg.setItem('prntversion',prntVersion, 'SKYPLOT') # save setting in config file
@@ -3702,12 +3941,20 @@ class skyDataPlotting(wx.Panel):
                     # Convert to Galactic Coords.
                     sc = SkyCoord(ra=xdata2.ra[i]*u.deg,dec=ydata2.dec[i]*u.deg)
                     gal_l=str(sc.galactic.l)
-                    deg, minutes, seconds, fraction =  re.split('[dm.]', gal_l)
+                    try:
+                        deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_l)
+                    except:
+                        self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
+                        deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
                     gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
                     l.append(gal_l)
                     
                     gal_b=str(sc.galactic.b)
-                    deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
+                    try:
+                        deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
+                    except:
+                        self.parent.StatusBarProcessing(f'Missing decimal point in gal_b={gal_b}')
+                        deg, minutes, seconds, fraction  =  re.split('[dms]', gal_b)
                     gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
                     b.append(gal_b)
                 xdata2.ra=l
@@ -3721,7 +3968,7 @@ class skyDataPlotting(wx.Panel):
             try:
                 self.line2, = self.skyGraph.axes.plot(xdata2.ra.to_list(), ydata2.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             except Exception as e:
-                print (f'self.skyGraph.axes.plot Crash 1) "{e}"')
+                self.parent.StatusBarProcessing (f'self.skyGraph.axes.plot Crash 1) "{e}"')
                 print(xdata2)
                 print(ydata2)
                 self.plot_but.SetBackgroundColour(Colour(150,20,20))
@@ -3754,12 +4001,20 @@ class skyDataPlotting(wx.Panel):
                 # Convert to Galactic Coords.
                 sc = SkyCoord(ra=xdata1.ra[i]*u.deg,dec=ydata1.dec[i]*u.deg)
                 gal_l=str(sc.galactic.l)
-                deg, minutes, seconds, fraction =  re.split('[dm.]', gal_l)
+                try:
+                    deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_l)
+                except:
+                    self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
+                    deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
                 gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
                 l.append(gal_l)
                 
                 gal_b=str(sc.galactic.b)
-                deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
+                try:
+                    deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
+                except:
+                    self.parent.StatusBarProcessing(f'Missing decimal point in gal_b={gal_b}')
+                    deg, minutes, seconds, fraction  =  re.split('[dms]', gal_b)
                 gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
                 b.append(gal_b)
             xdata1.ra=l
@@ -3767,7 +4022,7 @@ class skyDataPlotting(wx.Panel):
         try:
             self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
         except Exception as e:
-            print (f'self.skyGraph.axes.plot Crash 2) "{e}"')
+            self.parent.StatusBarProcessing (f'self.skyGraph.axes.plot Crash 2) "{e}"')
             print(xdata1)
             print(ydata1)
             self.plot_but.SetBackgroundColour(Colour(150,20,20))
@@ -3784,6 +4039,8 @@ class skyDataPlotting(wx.Panel):
         self.parent.printArrays()
 
         self.plot_but.Enable()
+        
+        self.parent.StatusBarNormal('Completed OK')
         
 class HRDataPlotting(wx.Panel):
 
@@ -3912,6 +4169,8 @@ class HRDataPlotting(wx.Panel):
         CANCEL= True
         self.Filter_but.Enable()
         
+        self.parent.StatusBarNormal(f'Completed OK')
+        
     def OnReset(self, event=0):
         #if hasattr(self.parent, 'populateOut'):
         self.parent.status['include']=self.parent.status['populateOut']
@@ -3921,6 +4180,8 @@ class HRDataPlotting(wx.Panel):
         self.OnPlot()
         
     def OnFilter(self, event=0):
+        
+        self.parent.StatusBarProcessing('H-R plotting commenced')
         
         attributes=[self.text_colourLower, self.text_colourUpper, self.text_magLower, self.text_magUpper,
                     self.text_magRange]
@@ -4031,7 +4292,7 @@ class HRDataPlotting(wx.Panel):
         try:
             self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
         except Exception:
-            print('Error directory failed to save')
+            self.parent.StatusBarProcessing('Error directory failed to save')
             print (self.parent.status)
         
         self.OnPlot()
@@ -4039,6 +4300,8 @@ class HRDataPlotting(wx.Panel):
         self.Filter_but.SetLabel(f'{label:,.1f}%')
         self.Filter_but.Enable()
 
+        self.parent.StatusBarNormal('Completed OK')
+        
     def XreturnY(self, X):
         # Return range of acceptable magnitudes.
         Y=float(self.m*float(X) + float(self.c))
@@ -4159,14 +4422,14 @@ class HRDataPlotting(wx.Panel):
         
         self.plot_but.Enable()
 
-
+        self.parent.StatusBarNormal(f'Completed OK')
+        
 class kineticDataPlotting(wx.Panel):
 
 #Plot Actual motion in the 1d plane of the sky vs separation of binaries and compare with Newtonian motion.
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
@@ -4361,6 +4624,7 @@ class kineticDataPlotting(wx.Panel):
         global CANCEL
         CANCEL= True
         self.plot_but.Enable()
+        self.parent.StatusBarNormal(f'OK')
     
     def OnReset(self, event=0):
         #if hasattr(self.parent, 'hrinclude'):
@@ -4368,7 +4632,9 @@ class kineticDataPlotting(wx.Panel):
         self.parent.status['kineticOut']=self.parent.status['include']
 
     def OnPlot(self, event=0):
-
+        
+        self.parent.StatusBarProcessing('Kinetic plotting commenced')
+        
         attributes=[self.textctrl_xLower, self.textctrl_xUpper, self.textctrl_yLower, self.textctrl_yUpper,
                     self.text_x_TopLeft, self.text_y_TopLeft, self.text_x_BottomRight, self.text_y_BottomRight,
                     self.text_upperCutoff, self.text_vxerrCutoff]
@@ -4803,11 +5069,13 @@ class kineticDataPlotting(wx.Panel):
         try:
             self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
         except Exception:
-            print('Error directory failed to save')
+            self.parent.StatusBarProcessing('Error directory failed to save')
             print (self.parent.status)
         self.parent.printArrays()
 
         self.plot_but.Enable()
+
+        self.parent.StatusBarNormal('Completed OK')
         
     def CalcVoverdv(self):
         
@@ -5039,11 +5307,17 @@ class TFDataPlotting(wx.Panel):
         global CANCEL
         CANCEL= True
     
+        self.parent.StatusBarNormal('Completed OK')
+        
+        self.plot_but.Enable()
     def OnReset(self, event=0):
         self.parent.status['include']=self.parent.status['kineticOut']
 
     def OnPlot(self, event=0):
 
+        self.parent.StatusBarProcessing('Tulley Fisher plotting commenced')
+        
+        wx.Yield()
         #self.parent.export=pd.DataFrame(columns=['SOURCE_ID_PRIMARY','ra1','dec1','mag1','SOURCE_ID_SECONDARY','ra2','dec2','mag2', 'vRA', 'vDEC', 'V2D', 'M', 'r'])
         self.parent.export=[]
         attributes=[self.textctrl_xLower, self.textctrl_xUpper, self.textctrl_yLower, self.textctrl_yUpper, self.text_upperRCutoff, self.text_upperYCutoff, self.TextCtrl_sepnCutoff]
@@ -5140,9 +5414,9 @@ class TFDataPlotting(wx.Panel):
             #    include=int(self.parent.status.include[i])
             #Set up local variables to avoid repeated PD access and for clarity
             if math.isnan(self.parent.binaryDetail.vRA[i]) :
-                print(f'i={i}, vRA = {self.parent.binaryDetail.vRA[i]}')
+                self.parent.StatusBarProcessing(f'i={i}, vRA = {self.parent.binaryDetail.vRA[i]}')
             if math.isnan(self.parent.binaryDetail.vDEC[i]) :
-                print(f'i={i}, vDEC = {self.parent.binaryDetail.vDEC[i]}')
+                self.parent.StatusBarProcessing(f'i={i}, vDEC = {self.parent.binaryDetail.vDEC[i]}')
             vRA=float(self.parent.binaryDetail.vRA[i])
             vDEC=float(self.parent.binaryDetail.vDEC[i])
             V2D=math.sqrt(vRA**2+vDEC**2)
@@ -5205,14 +5479,14 @@ class TFDataPlotting(wx.Panel):
                     self.parent.export.append(exportRecord)
                     if self.V1D_CheckBox.GetValue()==True:
                         if dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, value=0) :
-                            print(f'Exclude "vRAerr (a)" x={M}, y={vRA}')
+                            self.parent.StatusBarProcessing(f'Exclude "vRAerr (a)" x={M}, y={vRA}')
                         if dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, value=0) :
-                            print(f'Exclude "vDECerr (a)" x={M}, y={vDEC}')
+                            self.parent.StatusBarProcessing(f'Exclude "vDECerr (a)" x={M}, y={vDEC}')
                         
                     else:
                         if dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, value=0) :
                             self.parent.status.include[i]=0
-                            print(f'Exclude "Verr" x={M}, y={V2D}')
+                            self.parent.StatusBarProcessing(f'Exclude "Verr" x={M}, y={V2D}')
                 else:
                     self.parent.status.include[i]=0
             else:
@@ -5221,13 +5495,13 @@ class TFDataPlotting(wx.Panel):
                     self.parent.export.append(exportRecord)
                     if self.V1D_CheckBox.GetValue()==True:
                         if dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, value=0):
-                            print(f'Exclude "vRAerr (b)" x={M}, y={vRA}')
+                            self.parent.StatusBarProcessing(f'Exclude "vRAerr (b)" x={M}, y={vRA}')
                         if dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, value=0) :
-                            print(f'Exclude "vDECerr (b)" x={M}, y={vDEC}')
+                            self.parent.StatusBarProcessing(f'Exclude "vDECerr (b)" x={M}, y={vDEC}')
                     else:
                         if dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, value=0) :
                             self.parent.status.include[i]=0
-                            print(f'Exclude "verr" x={M}, y={V2D}')
+                            self.parent.StatusBarProcessing(f'Exclude "verr" x={M}, y={V2D}')
                 else:
                     self.parent.status.include[i]=0
         exportPD=pd.DataFrame(self.parent.export)
@@ -5301,7 +5575,7 @@ class TFDataPlotting(wx.Panel):
             self.TulleyFPlot.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,} binary stars, Gaia {RELEASE}, {ND}D relative velocity vs total mass", fontsize=FONTSIZE)
             self.TulleyFPlot.axes.patch.set_facecolor('0.25')  # Grey shade
         
-        self.TulleyFPlot.axes.grid(b=1, which='both', axis='both')     
+        self.TulleyFPlot.axes.grid(visible=1, which='both', axis='both')     
         
         marker = ','
         markersize=1
@@ -5508,7 +5782,9 @@ class TFDataPlotting(wx.Panel):
         self.parent.printArrays()
 
         self.plot_but.Enable()
-    
+
+        self.parent.StatusBarNormal('Completed OK')
+        
     def XreturnY(self, X):
         # Return lower outlier range.
         Y=self.slope*float(X) + self.offset
@@ -5676,12 +5952,16 @@ class NumberDensityPlotting(wx.Panel):
         global CANCEL
         self.plot_but.Enable()
         CANCEL= True
-    
+        self.parent.StatusBarNormal('Completed OK')
+        
     def OnReset(self, event=0):
         self.parent.status['include']=self.parent.status['kineticOut']
 
     def OnPlot(self, event=0):
-
+       
+        self.parent.StatusBarProcessing('Number Density Plotting commenced')
+        
+        wx.Yield()
         #self.parent.export=[]
         attributes=[self.textctrl_xUpper, self.textctrl_yUpper]
         for attribute in attributes:
@@ -5813,7 +6093,7 @@ class NumberDensityPlotting(wx.Panel):
                     return
                 wx.Yield()
                 if dataNDBins1.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
-                    print(f'Exclude "vRAerr (c)" x={DIST}, y=1')
+                    self.parent.StatusBarProcessing(f'Exclude "vRAerr (c)" x={DIST}, y=1')
     
             xdata1ND=dataNDBins1.getBinXArray(type='centre')
             ydata1ND=dataNDBins1.getBinYLabelArray()
@@ -5853,7 +6133,7 @@ class NumberDensityPlotting(wx.Panel):
                     return
                 wx.Yield()
                 if dataNDBins2.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
-                    print(f'Exclude "vRAerr (d)" x={DIST}, y=1')
+                    self.parent.StatusBarProcessing(f'Exclude "vRAerr (d)" x={DIST}, y=1')
     
             xdata2ND=dataNDBins2.getBinXArray(type='centre')
             ydata2ND=dataNDBins2.getBinYLabelArray()
@@ -5891,7 +6171,7 @@ class NumberDensityPlotting(wx.Panel):
                     return
                 wx.Yield()
                 if dataNDBins3.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
-                    print(f'Exclude "vRAerr (e)" x={DIST}, y=1')
+                    self.parent.StatusBarProcessing(f'Exclude "vRAerr (e)" x={DIST}, y=1')
     
             xdata3ND=dataNDBins3.getBinXArray(type='centre')
             ydata3ND=dataNDBins3.getBinYLabelArray()
@@ -5929,7 +6209,7 @@ class NumberDensityPlotting(wx.Panel):
                     return
                 wx.Yield()
                 if dataNDBins4.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
-                    print(f'Exclude "vRAerr (f)" x={DIST}, y=1')
+                    self.parent.StatusBarProcessing(f'Exclude "vRAerr (f)" x={DIST}, y=1')
     
             xdata4ND=dataNDBins4.getBinXArray(type='centre')
             ydata4ND=dataNDBins4.getBinYLabelArray()
@@ -6004,7 +6284,7 @@ class NumberDensityPlotting(wx.Panel):
             self.NumberDensityPlot.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,} binary stars, Gaia {RELEASE}, star density by distance.", fontsize=FONTSIZE)
             self.NumberDensityPlot.axes.patch.set_facecolor('0.25')  # Grey shade
         
-        self.NumberDensityPlot.axes.grid(b=1, which='both', axis='both')     
+        self.NumberDensityPlot.axes.grid(visible=1, which='both', axis='both')     
         
         
         if not prntVersion:
@@ -6130,7 +6410,8 @@ class NumberDensityPlotting(wx.Panel):
         #
         #print("\nFile copy done!\n")
              
-        self.plot_but.Enable()
+        self.parent.StatusBarNormal('Completed OK')
+        
     
     def XreturnY(self, X):
         # Return lower outlier range.
@@ -6282,7 +6563,7 @@ class AladinView(wx.Panel):
         try:
             self.parent.export=self.parent.export.sort_values(by=self.sort.GetValue(), ascending=int(self.ascBool.GetSelection()))
         except Exception:
-            print('Sort failed')
+            self.parent.StatusBarProcessing('Sort failed')
         self.binaryList.DeleteAllItems()
         self.summaryList.DeleteAllItems()
         self.exportDisplay=pd.DataFrame(self.parent.export)
@@ -6357,7 +6638,7 @@ class AladinView(wx.Panel):
         newJava=''
         if gaiaMarker:
             newJava='''
-        aladin.addCatalog(A.catalogFromVizieR('I/350/gaiaedr3', '%s', 0.2, {shape: 'square', sourceSize: 8, color: 'red', onClick: 'showPopup'}));
+        aladin.addCatalog(A.catalogFromVizieR('I/355/gaiadr3', '%s', 0.2, {shape: 'square', sourceSize: 8, color: 'red', onClick: 'showPopup'}));
             ''' % coords
             
         if len(coords2):
@@ -6415,9 +6696,9 @@ class AladinView(wx.Panel):
         #and then check the response...
         if response == 0:
             self.cosmicBrowser.SetPage(data,"")
-            print(hostname+' available.')
+            self.parent.StatusBarProcessing(hostname+' available.')
         else:
-            print(hostname+' not available!')
+            self.parent.StatusBarProcessing(hostname+' not available!')
 
 class matplotlibPanel(wx.Panel):
     def __init__(self, parent, size):
@@ -6433,7 +6714,7 @@ class matplotlibPanel(wx.Panel):
         self.axes.set_xlabel('2D separation (pc)', fontsize=FONTSIZE)
         self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
         self.axes.patch.set_facecolor('0.25')  # Grey shade
-        self.axes.grid(b=1, which='major', axis='both')
+        self.axes.grid(visible=1, which='major', axis='both')
         self.axes.set_autoscale_on(True)
         self.axes.margins(1)
         self.axes.set_yscale('log', nonpositive='clip')
