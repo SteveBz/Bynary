@@ -139,8 +139,8 @@ class MainPanel(wx.Panel):
 #        ## add the pages to the notebook with the label to show on the tab
         self.nb.AddPage(self.releasePage, "Download stars and attributes")
         self.nb.AddPage(self.catalogPage, "Download binary catalogue")
-        self.nb.AddPage(self.retrievalPage, "Binary catalogue")
-        self.nb.AddPage(self.filterPage, "Binary filters")
+        self.nb.AddPage(self.retrievalPage, "Load Binary catalogue")
+        self.nb.AddPage(self.filterPage, "Apply binary filters")
         self.nb.AddPage(self.skyPage, "Sky density plot")
         self.nb.AddPage(self.hrPage, "H-R plot")
         self.nb.AddPage(self.plottingPage, "Kinematic plot")
@@ -565,6 +565,8 @@ class gaiaStarRetrieval(wx.Panel):
             
         self.parent.StatusBarProcessing('Star download commenced')
         
+        global CANCEL
+        CANCEL = False
         self.button1.Disable()
         self.listctrl.DeleteAllItems()
         
@@ -694,11 +696,11 @@ class gaiaStarRetrieval(wx.Panel):
             """
             
             #print( query[0] )
-            self.parent.StatusBarProcessing (f'i = {i}')
+            #self.parent.StatusBarProcessing (f'i = {i}')
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
             #filePrefix='iEquals0' + date_time
-            self.parent.StatusBarProcessing('start query')
+            self.parent.StatusBarProcessing(f'start query: ra = {i} to {i+1}')
             # output_data = gaia_cnxn.gaia_get_pairs_of_close_stars(save_to_pickle=True, dump_to_file=True, output_format='json')
             
             if not os.path.isdir(f'bindata/{release}'):
@@ -725,6 +727,8 @@ class gaiaStarRetrieval(wx.Panel):
             TotalCount=TotalCount+lenArray
             self.static_Total.SetLabel(f'{TotalCount:,}')
             if downloadOnly:
+                self.spin_RAfrom.SetValue(i)
+                gl_cfg.setItem('rafrom',i, 'GAIASTAR') # save setting in config file
                 continue
             #
             ##data.to_sql()
@@ -765,7 +769,6 @@ class gaiaStarRetrieval(wx.Panel):
             label=i
             self.button1.SetLabel(f'{label}')
             self.Layout()
-            global CANCEL
             if CANCEL:
                 CANCEL = False
                 self.button1.Enable()
@@ -776,7 +779,11 @@ class gaiaStarRetrieval(wx.Panel):
             date_time = now.strftime("%Y%m%d_%H%M%S")
             self.parent.StatusBarProcessing('end query')
             # output_data = gaia_cnxn.gaia_get_pairs_o
+            self.spin_RAfrom.SetValue(i)
+            gl_cfg.setItem('rafrom',i, 'GAIASTAR') # save setting in config file
         
+        self.spin_RAfrom.SetValue(lowerRA)
+        gl_cfg.setItem('rafrom',lowerRA, 'GAIASTAR') # save setting in config file
         print(2)
 
         if self.deactivateIndicesCheckBox.GetValue():
@@ -809,28 +816,28 @@ class gaiaBinaryRetrieval(wx.Panel):
         wx.Panel.__init__(self, parent)
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
-        
-        #Try to find existing files, if not, create blank one
-        files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
-        if len (sys.argv)>1:
-            arg=sys.argv[1].strip()
-        else:
-            arg=''
-        if arg == 'new':
-            #Force exception if 'new' passed
-            fileSuffix='new'
-            fileSuffix2='new'
-        else:
-            fileSuffix='saved'
-            fileSuffix2='pickle'
-        
+        #
+        ##Try to find existing files, if not, create blank one
+        #files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
+        #if len (sys.argv)>1:
+        #    arg=sys.argv[1].strip()
+        #else:
+        #    arg=''
+        #if arg == 'new':
+        #    #Force exception if 'new' passed
+        #    fileSuffix='new'
+        #    fileSuffix2='new'
+        #else:
+        #    fileSuffix='saved'
+        #    fileSuffix2='pickle'
+        #
         global RELEASE
         global CATALOG
-        for file in files:
-            try:
-                setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
-            except Exception:
-                setattr(self.parent,file, pd.DataFrame())
+        #for file in files:
+        #    try:
+        #        setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
+        #    except Exception:
+        #        setattr(self.parent,file, pd.DataFrame())
 
         # adding exception handling
         try:
@@ -843,13 +850,13 @@ class gaiaBinaryRetrieval(wx.Panel):
             exit(1)
         
         self.parent.StatusBarProcessing("File restore done!\n")
-        print(self.parent.status)
-        try:
-            file_to_read = open('bindata/starSystemList.'+fileSuffix2, 'rb') #File containing example object
-            self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
-            file_to_read.close()
-        except Exception:
-            self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
+        #print(self.parent.status)
+        #try:
+        #    file_to_read = open('bindata/starSystemList.'+fileSuffix2, 'rb') #File containing example object
+        #    self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
+        #    file_to_read.close()
+        #except Exception:
+        #    self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
         
         self.sizer_main_divider=wx.BoxSizer(wx.HORIZONTAL)
         self.sizer_main=wx.BoxSizer(wx.VERTICAL)
@@ -1116,9 +1123,20 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         # Total
         
-        self.static_Total = StaticText(self, id=wx.ID_ANY, label='n/a')
+        self.static_Total = StaticText(self, id=wx.ID_ANY, label='N/a')
         self.sizer_h2.Add(self.static_Total, 0, wx.ALL, 5)
         
+        
+        # Number in clusters prompt
+        
+        static_Cluster = StaticText(self, id=wx.ID_ANY, label="Number in clusters:")
+        self.sizer_h2.Add(static_Cluster, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
+        # Cluster
+        
+        #ROWCOUNTMATRIX['GRP']=len(self.parent.selectedStarBinaryMappings)
+        self.static_Cluster = StaticText(self, id=wx.ID_ANY, label=f'N/a')
+        self.sizer_h2.Add(self.static_Cluster, 0, wx.ALL, 5)
         
         ################New catalogue name
         self.buttonCatalogue = Button(self, wx.ID_ANY, u"New catalogue")
@@ -1146,13 +1164,221 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.button3.SetToolTip("Clerar down old Gaia jobs.")
         self.sizer_v2.Add(self.button3, 0, wx.LEFT | wx.ALL , 5)
         
+        #Deselect grouped stars (ie stars in more than 1 binary)
+        
+        self.ungroup = Button(self, id=wx.ID_ANY, label="&Ungroup", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        self.ungroup.Bind(wx.EVT_BUTTON, self.deselectDuplicates)
+        self.ungroup.SetToolTip("Deselect binaries with stars that appear in more than one pair.  Ie deselect both pairs or entire cluster.")
+        self.sizer_v2.Add(self.ungroup, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
+        #Reset status
+        
+        self.reset = Button(self, id=wx.ID_ANY, label="&Reset", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        self.reset.Bind(wx.EVT_BUTTON, self.resetStatus)
+        self.reset.SetToolTip("Reset 'degrouping' for all binaries in this catalogue")
+        self.sizer_v2.Add(self.reset, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
+    def resetStatus(self, event):
+        
+        self.reset.Disable()
+        
+        self.parent.StatusBarProcessing('Resetting')
+        
+        global RELEASE, CATALOG
+        global HPS_SCALE
+        HPS_SCALE=int(self.HPScale_combo.GetValue())
+        RELEASE=self.release.GetValue()
+        CATALOG=self.catalogue.GetValue()
+        i=int(self.spin_loadType.GetValue())
+        
+        TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
+        TBL_BINARIES.setAttributeString("STATUS", "")
+        TBL_BINARIES.setAttributeBool("NOT_GROUPED", True)
+        #TBL_BINARIES.setAttributeBool("HAS_RADIAL_VELOCITY", True)
+        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+        TBL_BINARIES.setWhereValueString("release_", RELEASE)
+        
+        if self.loadType_combo.GetSelection()==0:
+            healpix=2**35*4**(12-2)*i*192/HPS_SCALE
+            if i<HPS_SCALE:
+                TBL_BINARIES.setWhereValueLTInt("source_id", healpix)
+        print(TBL_BINARIES.updateRecord())
+        
+        self.reset.Enable()
+    
+        self.parent.StatusBarNormal('Completed OK')
+        
+    def deselectDuplicates(self, event):
+        #Freeze button
+        self.ungroup.Disable()
+        
+        global CANCEL
+        CANCEL = False
+        self.parent.StatusBarProcessing('Degrouping commenced')
+        
+        global RELEASE, CATALOG
+        global HPS_SCALE
+        HPS_SCALE=int(self.HPScale_combo.GetValue())
+        RELEASE=self.release.GetValue()
+        CATALOG=self.catalogue.GetValue()
+        #i=int(self.spin_loadType.GetValue())
+        i = HPS_SCALE
+        #if self.deactivateIndicesCheckBox.GetValue():
+        #    #Deactivate 9 indices on TBL_BINARIES
+        #    TBL_BINARIES  = SQLLib.sql(iStro, "TBL_objects ")
+        #    #ALTER INDEX IDX_TBL_BINARIES1 to 9 INACTIVE
+        #    for idx in range(1,10):
+        #        bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES{idx} ACTIVE ;"
+        #        TBL_BINARIES .executeIAD(bulkSQL)
+        #        print(f'{bulkSQL} of 9')
+        #    bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES3 INACTIVE ;"
+        #    TBL_BINARIES .executeIAD(bulkSQL)
+        #    print(f'{bulkSQL}')
+        #    bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES5 INACTIVE ;"
+        #    TBL_BINARIES .executeIAD(bulkSQL)
+        #    print(f'{bulkSQL}')
+            
+            
+            
+            
+#        CREATE VIEW ALLSTARS2 (SOURCE_ID, CATALOG, RELEASE_, RA_, DEC_, STATUS, NOT_GROUPED, HAS_RADIAL_VELOCITY, PHOT_G_MEAN_MAG, SEPARATION, RUWE)
+#AS SELECT SOURCE_ID_SECONDARY, CATALOG, b.RELEASE_, o1.RA_, o1.DEC_, b.STATUS, b.NOT_GROUPED, b.HAS_RADIAL_VELOCITY, o1.PHOT_G_MEAN_MAG, SEPARATION, o1.RUWE
+#FROM TBL_BINARIES b
+#    left join TBL_OBJECTS o1
+#    on b.SOURCE_ID_SECONDARY=o1.SOURCE_ID and b.RELEASE_ = o1.RELEASE_
+#UNION ALL
+#SELECT SOURCE_ID_PRIMARY, CATALOG, c.RELEASE_, o2.RA_, o2.DEC_, c.STATUS, c.NOT_GROUPED, c.HAS_RADIAL_VELOCITY, o2.PHOT_G_MEAN_MAG, SEPARATION, o2.RUWE
+#FROM TBL_BINARIES c
+#    left join TBL_OBJECTS o2
+#    on c.SOURCE_ID_PRIMARY=o2.SOURCE_ID and c.RELEASE_ = o2.RELEASE_;
+    
+        TBL_BINARIES = SQLLib.sqlSelect(iStro, "ALLSTARS2")
+        TBL_BINARIES.setReturnCol("SOURCE_ID")
+        TBL_BINARIES.setGroupByCol("SOURCE_ID")
+        TBL_BINARIES.setHavingGTInt("COUNT(SOURCE_ID)",1) # Having count > 1 (ie duplicate SOURCE_ID)
+        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+        TBL_BINARIES.setWhereValueString("release_", RELEASE)
+        TBL_BINARIES.setWhereValueBool("NOT_GROUPED", True)
+        TBL_BINARIES.setSortCol("SOURCE_ID")
+
+        #if self.loadType_combo.GetSelection()==0:
+        healpix=2**35*4**(12-2)*i*192/HPS_SCALE
+        if i<HPS_SCALE:
+            TBL_BINARIES.setWhereValueLTInt("SOURCE_ID", healpix)
+        #if self.loadType_combo.GetSelection()==1:
+        #    TBL_BINARIES.setWhereValueLTInt("RA_", i)
+        #if self.loadType_combo.GetSelection()==2:
+        #    TBL_BINARIES.setWhereValueLTInt("DEC_", i)
+        #    TBL_BINARIES.setWhereValueLTInt(-i, "DEC_")
+        
+        sql = TBL_BINARIES.getSQL()
+        print (sql)
+        records = pd.read_sql(sql, iStro)
+
+        lenArray=len(records)
+        self.parent.StatusBarProcessing(f'Ungrouping {lenArray:,} records started')
+        Array=[] 
+        records=records.convert_dtypes()
+        for index, row  in records.iterrows():
+            Array.append( row.SOURCE_ID)
+            
+            if not index % 200:
+                TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
+                TBL_BINARIES.setAttributeString("STATUS", "dupl")
+                TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
+                TBL_BINARIES.setWhereInList("SOURCE_ID_PRIMARY", Array)
+                TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+                TBL_BINARIES.setWhereValueString("release_", RELEASE)
+                TBL_BINARIES.updateRecord()
+                
+                TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
+                TBL_BINARIES.setAttributeString("STATUS", "dupl")
+                TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
+                TBL_BINARIES.setWhereInList("SOURCE_ID_SECONDARY", Array)
+                TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+                TBL_BINARIES.setWhereValueString("release_", RELEASE)
+                TBL_BINARIES.updateRecord()
+                
+                Array=[] 
+    
+                label=float(100 * index /lenArray)
+                self.ungroup.SetLabel(f'{label:,.1f}%')
+                if CANCEL:
+                    CANCEL = False
+                    #Release button
+                    self.ungroup.Enable()
+                    self.dbload.Enable()
+                    return
+                wx.Yield()
+                 
+        TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
+        TBL_BINARIES.setAttributeString("STATUS", "dupl")
+        TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
+        TBL_BINARIES.setWhereInList("SOURCE_ID_PRIMARY", Array)
+        #TBL_BINARIES.setWhereValueInt("SOURCE_ID_PRIMARY", row.SOURCE_ID)
+        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+        TBL_BINARIES.setWhereValueString("release_", RELEASE)
+        TBL_BINARIES.updateRecord()
+        
+        TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
+        TBL_BINARIES.setAttributeString("STATUS", "dupl")
+        TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
+        TBL_BINARIES.setWhereInList("SOURCE_ID_SECONDARY", Array)
+        #TBL_BINARIES.setWhereValueInt("SOURCE_ID_SECONDARY", row.SOURCE_ID)
+        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+        TBL_BINARIES.setWhereValueString("release_", RELEASE)
+        TBL_BINARIES.updateRecord()
+        
+        label=int(100)
+        self.ungroup.SetLabel(f'{label:,.1f}%')
+        
+        
+        TBL_BINARIES = SQLLib.sqlSelect(iStro, "TBL_BINARIES")
+        TBL_BINARIES.setWhereValueString("RELEASE_", RELEASE)
+        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+        TBL_BINARIES.setWhereValueBool("NOT_GROUPED", False)
+        TBL_BINARIES.setReturnCol("count(*) as CNT")
+        records = TBL_BINARIES.selectRecordSet()
+        for row in records:
+            #print(f'{row[0]:,}')
+            ROWCOUNTMATRIX['GRP']=row[0]
+            self.static_Cluster.SetLabel(f'{row[0]:,}')
+        
+        #if self.deactivateIndicesCheckBox.GetValue():
+        #    #Deactivate 9 indices on TBL_BINARIES
+        #    TBL_BINARIES  = SQLLib.sql(iStro, "TBL_objects ")
+        #    #ALTER INDEX IDX_TBL_BINARIES1 to 9 INACTIVE
+        #    for idx in range(1,10):
+        #        bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES{idx} ACTIVE ;"
+        #        TBL_BINARIES .executeIAD(bulkSQL)
+        #        print(f'{bulkSQL} of 9')
+                
+        #Release button
+        self.ungroup.Enable()
+        self.Layout()
+        
+        self.parent.StatusBarNormal('Completed OK')
+        
     def OnClear(self, event=0):
         
+        self.button3.Disable()
         gaia_cnxn = da.GaiaDataAccess()
         jobs = [job for job in gaia_cnxn.list_async_jobs()]
         #job_ids = [inp.jobid for inp in jobs]
+        numJobs = len(jobs)
+        num=0
         for inp in jobs:
-            self.parent.StatusBarProcessing(gaia_cnxn.remove_jobs([inp.jobid]))
+            num=num+1
+            gaia_cnxn.remove_jobs([inp.jobid])
+            self.parent.StatusBarProcessing(f'Job id = {inp.jobid} removed. ({num:,} of {numJobs:,})')
+            wx.Yield()
+            global CANCEL
+            if CANCEL:
+                CANCEL = False
+                self.button3.Enable()
+                return
+        self.parent.StatusBarNormal(f'Complete OK - {numJobs} removed.')
+        self.button3.Enable()
         
     def onHPScale_Refresh(self, event=0):
 
@@ -1187,6 +1413,8 @@ class gaiaBinaryRetrieval(wx.Panel):
         global CANCEL
         self.button1.Enable()
         CANCEL= True
+        self.button3.Enable()
+        self.ungroup.Enable()
         
         self.parent.StatusBarNormal('Completed OK')
         
@@ -1220,6 +1448,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.catalogue.SetSelection(0)
         
         gl_cfg.setItem('release',self.release.GetSelection(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('release',self.release.GetSelection(), 'GAIASTAR') # save setting in config file
         
     def releaseRefresh(self, event=0):
         
@@ -1271,6 +1500,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             return False
     def read_GaiaBinaries(self, event):
 
+        global CANCEL
+        CANCEL = False
         self.parent.StatusBarProcessing('Downloading binary lists from Gaia')
         
         attributes=[self.textctrl_Separation, self.textctrl_PXfrom2, self.textctrl_PXfrom1, self.textCtrl_max_data]
@@ -1283,8 +1514,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.listctrl.DeleteAllItems()
         
         gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'GAIABINARY') # save setting in config file
-        gl_cfg.setItem('value',self.textctrl_Separation.GetValue(), 'GAIABINARY') # save setting in config file        
+        gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'RETRIEVAL') # save setting in config file
+        gl_cfg.setItem('value',self.textctrl_Separation.GetValue(), 'GAIABINARY') # save setting in config file 
         gl_cfg.setItem('release',self.release.GetSelection(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('release',self.release.GetSelection(), 'GAIASTAR') # save setting in config file
         gl_cfg.setItem('hpsfrom',self.spin_HPSfrom.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('hpsto',self.spin_HPSto.GetValue(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('downloadonly',self.downloadOnlyCheckBox.GetValue(), 'GAIABINARY') # save setting in config file
@@ -1468,6 +1701,8 @@ class gaiaBinaryRetrieval(wx.Panel):
                 self.parent.StatusBarProcessing(f"- Dropping healpix {i}; |b| = {round(gal_b, 1)}, ra = {round(ra,1)}, dec = {round(dec,1)}")
                 continue
         
+            self.spin_HPSfrom.SetValue(i)
+            gl_cfg.setItem('hpsfrom',i, 'GAIABINARY') # save setting in config file
             fromHealpixClause=f"""
             -- index file: {i}
             source_id >= {healpixA} and source_id < {healpixB} and
@@ -1511,7 +1746,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
-            self.parent.StatusBarProcessing('start query')
+            self.parent.StatusBarProcessing(f'start query: healpix = {i} to {i+1}')
             if not os.path.isdir(f'bindata/{release}'):
                 os.mkdir (f'bindata/{release}')
             if not os.path.isdir(f'bindata/{release}/{catalogue}'):
@@ -1531,6 +1766,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             except Exception:
                 self.parent.StatusBarProcessing (f'timeout for HPS i = {i}')
                 timeoutCount=timeoutCount+1
+                self.spin_HPSfrom.SetValue(i)
+                gl_cfg.setItem('hpsfrom',i, 'GAIABINARY') # save setting in config file
                 continue
             
             now = datetime.datetime.utcnow() # current date and time
@@ -1547,6 +1784,8 @@ class gaiaBinaryRetrieval(wx.Panel):
             self.Layout()
             wx.Yield()
             if downloadOnly:
+                self.spin_HPSfrom.SetValue(i)
+                gl_cfg.setItem('hpsfrom',i, 'GAIABINARY') # save setting in config file
                 continue
             
             #If there is no 'next' file then it's ok to download one from Gaia.  If there is a 'next' file, then we don't want to overload the processor.
@@ -1576,9 +1815,9 @@ class gaiaBinaryRetrieval(wx.Panel):
                 self.parent.StatusBarProcessing(f"- Dropping healpix {i}; length of data = {len(data):,}, |b| = {round(gal_b, 1)}, ra = {round(ra,1)}, dec = {round(dec,1)}")
                 continue
         
-            self.parent.StatusBarProcessing('start processing record')
+            self.parent.StatusBarProcessing(f'start processing record. Healpix {i}')
             bulkSQL='execute block as begin'
-            self.parent.StatusBarProcessing(f'length of data = {len(data):,}')
+            self.parent.StatusBarProcessing(f'length of data for healpix {i} = {len(data):,}')
             source_id_array=[]
             
             global sqlite_connection
@@ -1606,7 +1845,7 @@ class gaiaBinaryRetrieval(wx.Panel):
             
             now = datetime.datetime.utcnow() # current date and time
             date_time = now.strftime("%Y%m%d_%H%M%S")
-            self.parent.StatusBarProcessing('update')
+            self.parent.StatusBarProcessing(f'updated healpix {i}')
             
             #if forked:
             #    #if not parent (ie it is the child) fork then
@@ -1618,13 +1857,16 @@ class gaiaBinaryRetrieval(wx.Panel):
             label=i
             self.button1.SetLabel(f'{label}')
             self.Layout()
-            global CANCEL
             if CANCEL:
                 CANCEL = False
                 self.button1.Enable()
                 return
             wx.Yield()
+            self.spin_HPSfrom.SetValue(i)
+            gl_cfg.setItem('hpsfrom',i, 'GAIABINARY') # save setting in config file
         
+        self.spin_HPSfrom.SetValue(HPSlower)
+        gl_cfg.setItem('hpsfrom',HPSlower, 'GAIABINARY') # save setting in config file
         self.parent.printArrays()
                 
         if self.deactivateIndicesCheckBox.GetValue():
@@ -1683,6 +1925,37 @@ class dataRetrieval(wx.Panel):
         #except Exception:
         #    self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
         
+        
+        #Try to find existing files, if not, create blank one
+        files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
+        if len (sys.argv)>1:
+            arg=sys.argv[1].strip()
+        else:
+            arg=''
+        if arg == 'new':
+            #Force exception if 'new' passed
+            fileSuffix='new'
+            #fileSuffix2='new'
+        else:
+            fileSuffix='saved'
+            #fileSuffix2='pickle'
+        
+        global RELEASE
+        global CATALOG
+        for file in files:
+            try:
+                setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
+                print(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}')
+            except Exception:
+                setattr(self.parent,file, pd.DataFrame())
+
+        try:
+            file_to_read = open('bindata/{RELEASE}/{CATALOG}/starSystemList.pickle', 'rb') #File containing example object
+            self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
+            file_to_read.close()
+        except Exception:
+            self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
+        
         self.sizer_main_divider=wx.BoxSizer(wx.HORIZONTAL)
         self.sizer_main=wx.BoxSizer(wx.VERTICAL)
         self.sizer_main_divider.Add(self.sizer_main)
@@ -1707,7 +1980,7 @@ class dataRetrieval(wx.Panel):
         self.release.SetSelection(int(gl_cfg.getItem('release','RETRIEVAL')))
         self.release.SetToolTip("Select release source")
         self.sizer_h.Add(self.release, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-        global RELEASE
+        #global RELEASE
         RELEASE = self.release.GetValue()
         
         # Catalogue prompt
@@ -1718,7 +1991,7 @@ class dataRetrieval(wx.Panel):
         self.catRefresh()
         self.catalogue.SetSelection(int(gl_cfg.getItem('catalog', 'RETRIEVAL')))
         self.sizer_h.Add(self.catalogue, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-        global CATALOG
+        #global CATALOG
         CATALOG = self.catalogue.GetValue()
         
         # Load Catalogue
@@ -1732,10 +2005,11 @@ class dataRetrieval(wx.Panel):
         self.sizer_h.Add(self.loadType_combo, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
 
         # Values (ie row 2)
-        self.spin_loadType = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=360,initial=int(gl_cfg.getItem('value', 'RETRIEVAL')))  
+        self.spin_loadType = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=0,initial=0)  
         self.sizer_h.Add(self.spin_loadType, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_loadType.SetToolTip(f"Upper Healpix to scan to - out of {HPS_SCALE}")
         self.loadTypeRefresh()
+        self.spin_loadType.SetValue(int(gl_cfg.getItem('value', 'RETRIEVAL')))
         
         # Create ungrouped data check box
         ungroupedStaticText = StaticText(self, id=wx.ID_ANY, label="Load clusters?")
@@ -1790,16 +2064,6 @@ class dataRetrieval(wx.Panel):
         self.static_Total = StaticText(self, id=wx.ID_ANY, label=f'{ROWCOUNTMATRIX["ADQL"]:,}')
         self.sizer_h2.Add(self.static_Total, 0, wx.ALL, 5)
         
-        # Number in clusters prompt
-        
-        static_Cluster = StaticText(self, id=wx.ID_ANY, label="Number in clusters:")
-        self.sizer_h2.Add(static_Cluster, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        
-        # Cluster
-        
-        #ROWCOUNTMATRIX['GRP']=len(self.parent.selectedStarBinaryMappings)
-        self.static_Cluster = StaticText(self, id=wx.ID_ANY, label=f'N/a')
-        self.sizer_h2.Add(self.static_Cluster, 0, wx.ALL, 5)
         
         # Number in RVnulls prompt
         
@@ -1872,13 +2136,13 @@ class dataRetrieval(wx.Panel):
         self.deleteSelection.Bind(wx.EVT_BUTTON, self.OnDeleteSelection)
         self.deleteSelection.SetToolTip("Delete bineries with that combination of 'release', 'catalogue', and 'healpix/RA/dec'")
         self.sizer_v2.Add(self.deleteSelection, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        
-        #Deselect grouped stars (ie stars in more than 1 binary)
-        
-        self.ungroup = Button(self, id=wx.ID_ANY, label="&Ungroup", pos=wx.DefaultPosition,size=wx.DefaultSize)
-        self.ungroup.Bind(wx.EVT_BUTTON, self.deselectDuplicates)
-        self.ungroup.SetToolTip("Deselect binaries with stars that appear in more than one pair.  Ie deselect both pairs or entire cluster.")
-        self.sizer_v2.Add(self.ungroup, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        #
+        ##Deselect grouped stars (ie stars in more than 1 binary)
+        #
+        #self.ungroup = Button(self, id=wx.ID_ANY, label="&Ungroup", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        #self.ungroup.Bind(wx.EVT_BUTTON, self.deselectDuplicates)
+        #self.ungroup.SetToolTip("Deselect binaries with stars that appear in more than one pair.  Ie deselect both pairs or entire cluster.")
+        #self.sizer_v2.Add(self.ungroup, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Reset status
         
@@ -1898,7 +2162,7 @@ class dataRetrieval(wx.Panel):
         exportpd=pd.DataFrame(self.parent.export)
         exportpd.to_csv(fileName)
         
-        print ("Write complete")
+        self.parent.StatusBarProcessing ("Write complete")
             
     def restoreListCtrl(self, event=0, limit=1000):
         
@@ -2027,6 +2291,7 @@ class dataRetrieval(wx.Panel):
             self.spin_loadType.SetMax(1000)
             self.spin_loadType.SetToolTip("Px to load to - 3 - 1000")
 
+        gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'RETRIEVAL') # save setting in config file
         gl_cfg.setItem('loadType',self.loadType_combo.GetSelection(), 'RETRIEVAL') # save setting in config file
     def OnCancel(self, event=0):
@@ -2063,6 +2328,8 @@ class dataRetrieval(wx.Panel):
         self.catalogue.SetSelection(0)
         
         gl_cfg.setItem('release',self.release.GetSelection(), 'RETRIEVAL') # save setting in config file
+        gl_cfg.setItem('release',self.release.GetSelection(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('release',self.release.GetSelection(), 'GAIASTAR') # save setting in config file
         
     def releaseRefresh(self, event=0):
         
@@ -2090,14 +2357,20 @@ class dataRetrieval(wx.Panel):
         
     def read_db(self, event):
 
+        global CANCEL
+        CANCEL = False
         self.dbload.Disable()
 
         self.parent.StatusBarProcessing('Loading from DB into memory')
         
         gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'RETRIEVAL') # save setting in config file
+        gl_cfg.setItem('catalog',self.catalogue.GetSelection(), 'GAIABINARY') # save setting in config file
         gl_cfg.setItem('loadType',self.loadType_combo.GetSelection(), 'RETRIEVAL') # save setting in config file
         gl_cfg.setItem('value',self.spin_loadType.GetValue(), 'RETRIEVAL') # save setting in config file
+        #gl_cfg.setItem('value_max',self.spin_loadType.GetValue(), 'RETRIEVAL') # save setting in config file
         gl_cfg.setItem('release',self.release.GetSelection(), 'RETRIEVAL') # save setting in config file
+        gl_cfg.setItem('release',self.release.GetSelection(), 'GAIABINARY') # save setting in config file
+        gl_cfg.setItem('release',self.release.GetSelection(), 'GAIASTAR') # save setting in config file
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         gl_cfg.setItem('ungrouped',self.unGroupedCheckBox.GetValue(), 'RETRIEVAL') # save notebook tab setting in config file
         gl_cfg.setItem('rvnull',self.rvnullCheckBox.GetValue(), 'RETRIEVAL') # save notebook tab setting in config file       
@@ -2256,7 +2529,6 @@ class dataRetrieval(wx.Panel):
                 self.static_Total.SetLabel(f'{index:,} of {lenArray:,}')
                 if index > 0 and not math.log10(index) % 1:
                     self.Layout()
-                global CANCEL
                 if CANCEL:
                     CANCEL = False
                     self.dbload.Enable()
@@ -2611,6 +2883,18 @@ class dataRetrieval(wx.Panel):
                     'PARALLAX_ERROR1':float(primaryPointer.parallax_error),
                     'DIST1':float(primaryPointer.DIST),
                     'RUWE1':XRUWE,
+                    'PMRA1':float(primaryPointer.pmra),
+                    'PMRA_ERROR1':float(primaryPointer.pmra_error),
+                    'PMDEC1':float(primaryPointer.pmdec),
+                    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
+                    'BminusR1':float(XBminusR),
+                    'mass_flame1':Xmass_flame,
+                    'mass_flame_upper1':Xmass_flame_upper,
+                    'mass_flame_lower1':Xmass_flame_lower,
+                    'age_flame1':Xage_flame,
+                    'age_flame_upper1':Xage_flame_upper,
+                    'age_flame_lower1':Xage_flame_lower,
+                    'classprob_dsc_specmod_binarystar1':Xclassprob_dsc_specmod_binarystar,
                     'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
                     'ra2':float(star2Pointer.RA_),
                     'dec2':float(star2Pointer.DEC_),
@@ -2620,6 +2904,18 @@ class dataRetrieval(wx.Panel):
                     'parallax_error2':float(star2Pointer.parallax_error),
                     'DIST2':float(star2Pointer.DIST),
                     'RUWE2':YRUWE,
+                    'PMRA2':float(star2Pointer.pmra),
+                    'PMRA_ERROR2':float(star2Pointer.pmra_error),
+                    'PMDEC2':float(star2Pointer.pmdec),
+                    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
+                    'BminusR2':float(YBminusR),
+                    'mass_flame2':Ymass_flame,
+                    'mass_flame_upper2':Ymass_flame_upper,
+                    'mass_flame_lower2':Ymass_flame_lower,
+                    'age_flame2':Yage_flame,
+                    'age_flame_upper2':Yage_flame_upper,
+                    'age_flame_lower2':Yage_flame_lower,
+                    'classprob_dsc_specmod_binarystar2':Yclassprob_dsc_specmod_binarystar,
                     'vRA':abs(V[0]),
                     'vRAerr':abs(Verr[0]),
                     'vDEC':abs(V[1]),
@@ -2711,8 +3007,8 @@ class dataRetrieval(wx.Panel):
         
         TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
         TBL_BINARIES.setAttributeString("STATUS", "")
-        TBL_BINARIES.setAttributeBool("NOT_GROUPED", True)
-        TBL_BINARIES.setAttributeBool("HAS_RADIAL_VELOCITY", True)
+        #TBL_BINARIES.setAttributeBool("NOT_GROUPED", True)
+        TBL_BINARIES.setAttributeBool("HAS_RADIAL_VELOCITY", False)
         TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
         TBL_BINARIES.setWhereValueString("release_", RELEASE)
         
@@ -2728,6 +3024,8 @@ class dataRetrieval(wx.Panel):
         
     def deselectRVnull(self, event):
         
+        global CANCEL
+        CANCEL = False
 
         self.parent.StatusBarProcessing('Deselecting binaries with no RV')
         
@@ -2801,7 +3099,6 @@ class dataRetrieval(wx.Panel):
                 Array=[] 
                 label=float(100 * index /lenArray)
                 self.rvnull.SetLabel(f'{label:,.1f}%')
-                global CANCEL
                 if CANCEL:
                     CANCEL = False
                     self.rvnull.Enable()
@@ -2841,76 +3138,76 @@ class dataRetrieval(wx.Panel):
 
         self.parent.StatusBarNormal('Completed OK')
         
-    def deselectRVnull_old(self, event):
-        
-        self.rvnull.Disable()
-        
-        commentHP='--'
-        commentRA='--'
-        commentDec='--'
-        commentPx='--'
-        
-        i=int(self.spin_loadType.GetValue())
-        if self.loadType_combo.GetSelection()==0:
-            healpix=2**35*4**(12-2)*i*192/HPS_SCALE  # From Gaia website
-            commentHP=''
-        if self.loadType_combo.GetSelection()==1:
-            commentRA=''
-        if self.loadType_combo.GetSelection()==2:
-            commentDec=''
-        if self.loadType_combo.GetSelection()==3:
-            commentPx=''
-
-        
-        global RELEASE, CATALOG
-        RELEASE=self.release.GetValue()
-        CATALOG=self.catalogue.GetValue()
-        i=int(self.spin_loadType.GetValue())
-        healpix=2**35*4**(12-2)*i*192/HPS_SCALE
-        
-        sql = f"""
-        UPDATE b
-        set b.STATUS = 'rv=0', b.HAS_RADIAL_VELOCITY = 0
-
-        FROM TBL_BINARIES b
-            inner join TBL_OBJECTS o1
-                on b.SOURCE_ID_PRIMARY=o1.SOURCE_ID and b.RELEASE_ = o1.RELEASE_
-            inner join TBL_OBJECTS o2
-                on b.SOURCE_ID_SECONDARY=o2.SOURCE_ID and b.RELEASE_ = o2.RELEASE_
-        where (o1.RADIAL_VELOCITY is Null
-        or o2.RADIAL_VELOCITY is Null)
-        and b.CATALOG = '{CATALOG}'
-        and b.RELEASE_ = '{RELEASE}'
-        and b.HAS_RADIAL_VELOCITY = 1
-    
-        {commentHP} and b.SOURCE_ID_PRIMARY < {healpix}
-        {commentRA} and o1.RA_ < {i}  and o2.RA_ < {i}
-        {commentDec} and o1.DEC_ < {i}  and o2.DEC_ < {i} and o1.DEC_ > {-i}  and o2.DEC_ > {-i}
-        {commentPx} and o1.PARALLAX > {i} and o2.PARALLAX > {i}
-                    
-        and o2.SOURCE_ID is not null
-        """
-        print(sql)
-        TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
-        TBL_BINARIES.setAttributeString("STATUS", "rv=0")
-        TBL_BINARIES.updateRecord(sql)
-        
-        label=int(100)
-        self.rvnull.SetLabel(f'{label:,.1f}%')
-        
-        TBL_BINARIES = SQLLib.sqlSelect(iStro, "TBL_BINARIES")
-        TBL_BINARIES.setWhereValueString("RELEASE_", RELEASE)
-        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-        TBL_BINARIES.setWhereValueBool("HAS_RADIAL_VELOCITY", False)
-        TBL_BINARIES.setReturnCol("count(*) as CNT")
-        records = TBL_BINARIES.selectRecordSet()
-        for row in records:
-            #print(f'{row[0]:,}')
-            ROWCOUNTMATRIX['RV0']=row[0]
-            self.static_RVnull.SetLabel(f'{row[0]:,}')
-        self.rvnull.Enable()
-        self.Layout()
-        
+    #def deselectRVnull_old(self, event):
+    #    
+    #    self.rvnull.Disable()
+    #    
+    #    commentHP='--'
+    #    commentRA='--'
+    #    commentDec='--'
+    #    commentPx='--'
+    #    
+    #    i=int(self.spin_loadType.GetValue())
+    #    if self.loadType_combo.GetSelection()==0:
+    #        healpix=2**35*4**(12-2)*i*192/HPS_SCALE  # From Gaia website
+    #        commentHP=''
+    #    if self.loadType_combo.GetSelection()==1:
+    #        commentRA=''
+    #    if self.loadType_combo.GetSelection()==2:
+    #        commentDec=''
+    #    if self.loadType_combo.GetSelection()==3:
+    #        commentPx=''
+    #
+    #    
+    #    global RELEASE, CATALOG
+    #    RELEASE=self.release.GetValue()
+    #    CATALOG=self.catalogue.GetValue()
+    #    i=int(self.spin_loadType.GetValue())
+    #    healpix=2**35*4**(12-2)*i*192/HPS_SCALE
+    #    
+    #    sql = f"""
+    #    UPDATE b
+    #    set b.STATUS = 'rv=0', b.HAS_RADIAL_VELOCITY = 0
+    #
+    #    FROM TBL_BINARIES b
+    #        inner join TBL_OBJECTS o1
+    #            on b.SOURCE_ID_PRIMARY=o1.SOURCE_ID and b.RELEASE_ = o1.RELEASE_
+    #        inner join TBL_OBJECTS o2
+    #            on b.SOURCE_ID_SECONDARY=o2.SOURCE_ID and b.RELEASE_ = o2.RELEASE_
+    #    where (o1.RADIAL_VELOCITY is Null
+    #    or o2.RADIAL_VELOCITY is Null)
+    #    and b.CATALOG = '{CATALOG}'
+    #    and b.RELEASE_ = '{RELEASE}'
+    #    and b.HAS_RADIAL_VELOCITY = 1
+    #
+    #    {commentHP} and b.SOURCE_ID_PRIMARY < {healpix}
+    #    {commentRA} and o1.RA_ < {i}  and o2.RA_ < {i}
+    #    {commentDec} and o1.DEC_ < {i}  and o2.DEC_ < {i} and o1.DEC_ > {-i}  and o2.DEC_ > {-i}
+    #    {commentPx} and o1.PARALLAX > {i} and o2.PARALLAX > {i}
+    #                
+    #    and o2.SOURCE_ID is not null
+    #    """
+    #    print(sql)
+    #    TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
+    #    TBL_BINARIES.setAttributeString("STATUS", "rv=0")
+    #    TBL_BINARIES.updateRecord(sql)
+    #    
+    #    label=int(100)
+    #    self.rvnull.SetLabel(f'{label:,.1f}%')
+    #    
+    #    TBL_BINARIES = SQLLib.sqlSelect(iStro, "TBL_BINARIES")
+    #    TBL_BINARIES.setWhereValueString("RELEASE_", RELEASE)
+    #    TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
+    #    TBL_BINARIES.setWhereValueBool("HAS_RADIAL_VELOCITY", False)
+    #    TBL_BINARIES.setReturnCol("count(*) as CNT")
+    #    records = TBL_BINARIES.selectRecordSet()
+    #    for row in records:
+    #        #print(f'{row[0]:,}')
+    #        ROWCOUNTMATRIX['RV0']=row[0]
+    #        self.static_RVnull.SetLabel(f'{row[0]:,}')
+    #    self.rvnull.Enable()
+    #    self.Layout()
+    #    
     def OnDeleteSelection(self, event):
         #Move Ba to another catalogue
         self.deleteSelection.Disable()
@@ -2966,154 +3263,6 @@ class dataRetrieval(wx.Panel):
         
         self.parent.StatusBarNormal('Completed OK')
         
-    def deselectDuplicates(self, event):
-        #Freeze button
-        self.ungroup.Disable()
-        
-        self.parent.StatusBarProcessing('Degrouping commenced')
-        
-        global RELEASE, CATALOG
-        RELEASE=self.release.GetValue()
-        CATALOG=self.catalogue.GetValue()
-        i=int(self.spin_loadType.GetValue())
-        
-        #if self.deactivateIndicesCheckBox.GetValue():
-        #    #Deactivate 9 indices on TBL_BINARIES
-        #    TBL_BINARIES  = SQLLib.sql(iStro, "TBL_objects ")
-        #    #ALTER INDEX IDX_TBL_BINARIES1 to 9 INACTIVE
-        #    for idx in range(1,10):
-        #        bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES{idx} ACTIVE ;"
-        #        TBL_BINARIES .executeIAD(bulkSQL)
-        #        print(f'{bulkSQL} of 9')
-        #    bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES3 INACTIVE ;"
-        #    TBL_BINARIES .executeIAD(bulkSQL)
-        #    print(f'{bulkSQL}')
-        #    bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES5 INACTIVE ;"
-        #    TBL_BINARIES .executeIAD(bulkSQL)
-        #    print(f'{bulkSQL}')
-            
-            
-            
-            
-#        CREATE VIEW ALLSTARS2 (SOURCE_ID, CATALOG, RELEASE_, RA_, DEC_, STATUS, NOT_GROUPED, HAS_RADIAL_VELOCITY, PHOT_G_MEAN_MAG, SEPARATION, RUWE)
-#AS SELECT SOURCE_ID_SECONDARY, CATALOG, b.RELEASE_, o1.RA_, o1.DEC_, b.STATUS, b.NOT_GROUPED, b.HAS_RADIAL_VELOCITY, o1.PHOT_G_MEAN_MAG, SEPARATION, o1.RUWE
-#FROM TBL_BINARIES b
-#    left join TBL_OBJECTS o1
-#    on b.SOURCE_ID_SECONDARY=o1.SOURCE_ID and b.RELEASE_ = o1.RELEASE_
-#UNION ALL
-#SELECT SOURCE_ID_PRIMARY, CATALOG, c.RELEASE_, o2.RA_, o2.DEC_, c.STATUS, c.NOT_GROUPED, c.HAS_RADIAL_VELOCITY, o2.PHOT_G_MEAN_MAG, SEPARATION, o2.RUWE
-#FROM TBL_BINARIES c
-#    left join TBL_OBJECTS o2
-#    on c.SOURCE_ID_PRIMARY=o2.SOURCE_ID and c.RELEASE_ = o2.RELEASE_;
-    
-        TBL_BINARIES = SQLLib.sqlSelect(iStro, "ALLSTARS2")
-        TBL_BINARIES.setReturnCol("SOURCE_ID")
-        TBL_BINARIES.setGroupByCol("SOURCE_ID")
-        TBL_BINARIES.setHavingGTInt("COUNT(SOURCE_ID)",1) # Having count > 1 (ie duplicate SOURCE_ID)
-        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-        TBL_BINARIES.setWhereValueString("release_", RELEASE)
-        TBL_BINARIES.setWhereValueBool("NOT_GROUPED", True)
-        TBL_BINARIES.setSortCol("SOURCE_ID")
-
-        if self.loadType_combo.GetSelection()==0:
-            healpix=2**35*4**(12-2)*i*192/HPS_SCALE
-            if i<HPS_SCALE:
-                TBL_BINARIES.setWhereValueLTInt("SOURCE_ID", healpix)
-        if self.loadType_combo.GetSelection()==1:
-            TBL_BINARIES.setWhereValueLTInt("RA_", i)
-        if self.loadType_combo.GetSelection()==2:
-            TBL_BINARIES.setWhereValueLTInt("DEC_", i)
-            TBL_BINARIES.setWhereValueLTInt(-i, "DEC_")
-        
-        sql = TBL_BINARIES.getSQL()
-        print (sql)
-        records = pd.read_sql(sql, iStro)
-
-        lenArray=len(records)
-        self.parent.StatusBarProcessing(f'Ungrouping {lenArray:,} records started')
-        Array=[] 
-        records=records.convert_dtypes()
-        for index, row  in records.iterrows():
-            Array.append( row.SOURCE_ID)
-            
-            if not index % 200:
-                TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
-                TBL_BINARIES.setAttributeString("STATUS", "dupl")
-                TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
-                TBL_BINARIES.setWhereInList("SOURCE_ID_PRIMARY", Array)
-                TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-                TBL_BINARIES.setWhereValueString("release_", RELEASE)
-                TBL_BINARIES.updateRecord()
-                
-                TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
-                TBL_BINARIES.setAttributeString("STATUS", "dupl")
-                TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
-                TBL_BINARIES.setWhereInList("SOURCE_ID_SECONDARY", Array)
-                TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-                TBL_BINARIES.setWhereValueString("release_", RELEASE)
-                TBL_BINARIES.updateRecord()
-                
-                Array=[] 
-    
-                label=float(100 * index /lenArray)
-                self.ungroup.SetLabel(f'{label:,.1f}%')
-                global CANCEL
-                if CANCEL:
-                    CANCEL = False
-                    #Release button
-                    self.ungroup.Enable()
-                    self.dbload.Enable()
-                    return
-                wx.Yield()
-                 
-        TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
-        TBL_BINARIES.setAttributeString("STATUS", "dupl")
-        TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
-        TBL_BINARIES.setWhereInList("SOURCE_ID_PRIMARY", Array)
-        #TBL_BINARIES.setWhereValueInt("SOURCE_ID_PRIMARY", row.SOURCE_ID)
-        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-        TBL_BINARIES.setWhereValueString("release_", RELEASE)
-        TBL_BINARIES.updateRecord()
-        
-        TBL_BINARIES = SQLLib.sqlUpdate(iStro, "TBL_BINARIES")
-        TBL_BINARIES.setAttributeString("STATUS", "dupl")
-        TBL_BINARIES.setAttributeBool("NOT_GROUPED", False)
-        TBL_BINARIES.setWhereInList("SOURCE_ID_SECONDARY", Array)
-        #TBL_BINARIES.setWhereValueInt("SOURCE_ID_SECONDARY", row.SOURCE_ID)
-        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-        TBL_BINARIES.setWhereValueString("release_", RELEASE)
-        TBL_BINARIES.updateRecord()
-        
-        label=int(100)
-        self.ungroup.SetLabel(f'{label:,.1f}%')
-        
-        
-        TBL_BINARIES = SQLLib.sqlSelect(iStro, "TBL_BINARIES")
-        TBL_BINARIES.setWhereValueString("RELEASE_", RELEASE)
-        TBL_BINARIES.setWhereValueString("CATALOG", CATALOG)
-        TBL_BINARIES.setWhereValueBool("NOT_GROUPED", False)
-        TBL_BINARIES.setReturnCol("count(*) as CNT")
-        records = TBL_BINARIES.selectRecordSet()
-        for row in records:
-            #print(f'{row[0]:,}')
-            ROWCOUNTMATRIX['GRP']=row[0]
-            self.static_Cluster.SetLabel(f'{row[0]:,}')
-        
-        #if self.deactivateIndicesCheckBox.GetValue():
-        #    #Deactivate 9 indices on TBL_BINARIES
-        #    TBL_BINARIES  = SQLLib.sql(iStro, "TBL_objects ")
-        #    #ALTER INDEX IDX_TBL_BINARIES1 to 9 INACTIVE
-        #    for idx in range(1,10):
-        #        bulkSQL=f"ALTER INDEX IDX_TBL_BINARIES{idx} ACTIVE ;"
-        #        TBL_BINARIES .executeIAD(bulkSQL)
-        #        print(f'{bulkSQL} of 9')
-                
-        #Release button
-        self.ungroup.Enable()
-        self.Layout()
-        
-        self.parent.StatusBarNormal('Completed OK')
-        
 class dataFilter(wx.Panel):
     
     def __init__(self, parent, mainPanel):
@@ -3122,7 +3271,7 @@ class dataFilter(wx.Panel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=9, hgap=0, rows=3, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=10, hgap=0, rows=3, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
         fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
@@ -3153,6 +3302,9 @@ class dataFilter(wx.Panel):
         
         self.static_ruwe = StaticText(self, label='RUWE') 
         fgsizer.Add(self.static_ruwe, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        
+        self.static_text_binProbability = StaticText(self, label='Bin Prob') 
+        fgsizer.Add(self.static_text_binProbability, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         
         self.static_InOut = StaticText(self, label='Inner/outer') 
         fgsizer.Add(self.static_InOut, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
@@ -3195,6 +3347,11 @@ class dataFilter(wx.Panel):
         self.text_ruwe = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('ruwe_lt','FILTER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_ruwe, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_ruwe.SetToolTip("Maximum RUWE in either star.  Enter decimal x for RUWE < x")
+        
+        #Binary probability.
+        self.text_binProbability = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bin_probability_lt','FILTER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        fgsizer.Add(self.text_binProbability, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.text_binProbability.SetToolTip("Maximum probability in either star.  Enter decimal x for probability < x")
         
         self.combo_InOut = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['Inner','Outer'], value='')
         self.combo_InOut.SetSelection(int(gl_cfg.getItem('io','FILTER')))
@@ -3268,7 +3425,7 @@ class dataFilter(wx.Panel):
         self.listctrl.InsertColumn(16, u"g mag", width=70)
         self.listctrl.InsertColumn(17, u"mass", width=70)
         self.listctrl.InsertColumn(18, u"age", width=70)
-        self.listctrl.InsertColumn(19, u"% bin", width=60)
+        self.listctrl.InsertColumn(19, u"bin prob", width=60)
 
         #"phot_g_mean_flux_over_error"	FLOAT, \
         #"phot_rp_mean_flux_over_error"	FLOAT, \
@@ -3308,10 +3465,12 @@ class dataFilter(wx.Panel):
         
     def applyFilter(self, event):
         
+        global CANCEL
+        CANCEL = False
         self.parent.StatusBarProcessing('Filter processing commenced')
         
         wx.Yield()
-        attributes=[self.text_ruwe]
+        attributes=[self.text_ruwe, self.text_binProbability]
         for attribute in attributes:
             attribute.setValidRoutine(attribute.Validate_Float)
             if not attribute.runValidRoutine():
@@ -3326,6 +3485,7 @@ class dataFilter(wx.Panel):
         gl_cfg.setItem('pmsn_gt',self.spin_pmsnratio.GetValue(),'FILTER')
         gl_cfg.setItem('rv_lt',self.spin_diff_radial_velocity.GetValue(),'FILTER')
         gl_cfg.setItem('ruwe_lt',self.text_ruwe.GetValue(),'FILTER')
+        gl_cfg.setItem('bin_probability_lt',self.text_binProbability.GetValue(),'FILTER')
         gl_cfg.setItem('io',self.combo_InOut.GetSelection(),'FILTER')
         gl_cfg.setItem('cutoff',self.spin_distCutoff.GetValue(),'FILTER')
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
@@ -3370,6 +3530,7 @@ class dataFilter(wx.Panel):
         distCutoff_limit=float(self.spin_distCutoff.GetValue())
         outerShell=bool(self.combo_InOut.GetSelection())
         ruwe_limit=float(self.text_ruwe.GetValue())
+        binProbability_limit=float(self.text_binProbability.GetValue())
         
         rv_diff_limit=float(self.spin_diff_radial_velocity.GetValue())
         idxBin=0   # Binary index (obviously there are 2x as many stars as binaries)
@@ -3385,22 +3546,21 @@ class dataFilter(wx.Panel):
         statusIndices = indexStatus[condition]
         statusIndicesList = statusIndices.tolist()
         
-        for index in statusIndicesList:
-        #for index, row in star_rows.iterrows():
-            idxBin=int(index/2)
-            row=star_rows.iloc[index]
+        for idxStar in statusIndicesList:
+        #for idxStar, row in star_rows.iterrows():
+            idxBin=int(idxStar/2)
+            row=star_rows.iloc[idxStar]
             
-            if not index % 100:
-                label=float(100 * index /(lenArray))
+            if not idxStar % 100:
+                label=float(100 * idxStar /(lenArray))
                 self.loadData.SetLabel(f'{label:,.1f}%')
-                global CANCEL
                 if CANCEL:
                     CANCEL = False
                     self.loadData.Enable()
                     return
                 wx.Yield()
             ## We can skip this code after n>1000
-            #if self.parent.status.include[idxBin]==0 and index>1000:
+            #if self.parent.status.include[idxBin]==0 and idxStar>1000:
             #    continue
             try:
                 if selectedStarBinaryMappings.SOURCE_ID_PRIMARY.iloc[row.PAIRING-1] == int(row.SOURCE_ID):
@@ -3438,21 +3598,21 @@ class dataFilter(wx.Panel):
                                 excludeTxt=f'RV diff={int(sn_row)}'
                                 include=0
                     else:
-                        self.parent.StatusBarProcessing (f'Skipped record {index}')
+                        self.parent.StatusBarProcessing (f'Skipped record {idxStar}')
                         row=row.transpose()
                         print(1, row)
-                        print(index)
-                        print(star_rows[:index+2])
-                        print(selectedStarBinaryMappings[:int(index/2+2)])
+                        print(idxStar)
+                        print(star_rows[:idxStar+2])
+                        print(selectedStarBinaryMappings[:int(idxStar/2+2)])
                         self.loadData.SetBackgroundColour(Colour(150,20,20))
                         self.loadData.Enable()
                         return
                         #continue
             except Exception:
                 print(2, row)
-                self.parent.StatusBarProcessing(f'index = {index}')
+                self.parent.StatusBarProcessing(f'idxStar = {idxStar}')
                 #print(star_rows)
-                print(star_rows[:index+5])
+                print(star_rows[:idxStar+5])
                 self.loadData.SetBackgroundColour(Colour(150,20,20))
                 self.loadData.Enable()
                 return
@@ -3489,6 +3649,11 @@ class dataFilter(wx.Panel):
             except Exception:
                 ruwe=0
                 
+            try:
+                binProb=float(row.classprob_dsc_specmod_binarystar)
+            except Exception:
+                binProb=0
+                
             if include:
                 #Parallax S/N filter
                 if include and sn_px_limit:
@@ -3524,6 +3689,7 @@ class dataFilter(wx.Panel):
                 if include and outerShell and dist_row<distCutoff_limit:
                     excludeTxt=f'Inside shell'
                     include=0
+                    
                 if  include and not outerShell and dist_row>distCutoff_limit:
                     excludeTxt=f'Outer shell'
                     include=0
@@ -3538,19 +3704,31 @@ class dataFilter(wx.Panel):
                         excludeTxt=f'SN_PMDEC={int(sn_row)}'
                         include=0
 
-                if ruwe_limit:
+                if include and ruwe_limit:
                     ruwe_row=abs(ruwe)
-                    if ruwe_row>ruwe_limit:
+                    #Exclude ruwe above limit or 0 (ie not available)
+                    if ruwe_row>ruwe_limit or ruwe_row==0:
                         excludeTxt=f'RUWE={round(float(ruwe_row),2)}'
                         include=0 
                         self.parent.status.ruweExcl[idxBin]=0
 
+                if include and binProbability_limit:
+                    binProb_row=abs(binProb)
+                    #Exclude binProb_row above limit or 0 (ie not available)
+                    if binProb_row>binProbability_limit or binProb_row==0:
+                        excludeTxt=f'Probability {round(float(binProb_row),2)} > limit = {round(float(binProbability_limit),2)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
+                        include=0
+                    #else:
+                    #    print(f'Probability {round(float(binProb_row),2)} !> limit = {round(float(binProbability_limit),2)}')
+
             if not include:
                 self.parent.status.include[idxBin]=0
-            odd=(index-2*idxBin)
+            odd=(idxStar-2*idxBin)
             if odd and self.parent.status.include[idxBin]:
                 primaryPointer=self.parent.starSystemList.binaryList[str(idxBin+1)].primary
                 star2Pointer=self.parent.starSystemList.binaryList[str(idxBin+1)].star2
+                #print(primaryPointer)
                 exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
                     'ra1':float(primaryPointer.RA_),
                     'dec1':float(primaryPointer.DEC_),
@@ -3560,6 +3738,19 @@ class dataFilter(wx.Panel):
                     'parallax_error1':float(primaryPointer.parallax_error),
                     'DIST1':float(primaryPointer.DIST),
                     'RUWE1':primaryPointer.ruwe,
+                    'PMRA1':float(primaryPointer.pmra),
+                    'PMRA_ERROR1':float(primaryPointer.pmra_error),
+                    'PMDEC1':float(primaryPointer.pmdec),
+                    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
+                    'BminusR1':float(primaryPointer.bp_rp),
+                    'mass_flame1':primaryPointer.mass_flame,
+                    'mass_flame_upper1':primaryPointer.mass_flame_upper,
+                    'mass_flame_lower1':primaryPointer.mass_flame_lower,
+                    'age_flame1':primaryPointer.age_flame,
+                    'age_flame_upper1':primaryPointer.age_flame_upper,
+                    'age_flame_lower1':primaryPointer.age_flame_lower,
+                    #'classprob_dsc_specmod_binarystar1':Xclassprob_dsc_specmod_binarystar,
+                    'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
                     'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
                     'ra2':float(star2Pointer.RA_),
                     'dec2':float(star2Pointer.DEC_),
@@ -3569,6 +3760,18 @@ class dataFilter(wx.Panel):
                     'parallax_error2':float(star2Pointer.parallax_error),
                     'DIST2':float(star2Pointer.DIST),
                     'RUWE2':star2Pointer.ruwe,
+                    'PMRA2':float(star2Pointer.pmra),
+                    'PMRA_ERROR2':float(star2Pointer.pmra_error),
+                    'PMDEC2':float(star2Pointer.pmdec),
+                    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
+                    'BminusR2':float(star2Pointer.bp_rp),
+                    'mass_flame2':star2Pointer.mass_flame,
+                    'mass_flame_upper2':star2Pointer.mass_flame_upper,
+                    'mass_flame_lower2':star2Pointer.mass_flame_lower,
+                    'age_flame2':star2Pointer.age_flame,
+                    'age_flame_upper2':star2Pointer.age_flame_upper,
+                    'age_flame_lower2':star2Pointer.age_flame_lower,
+                    'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
                     'vRA':abs(self.parent.binaryDetail.vRA[idxBin]),
                     'vRAerr':abs(self.parent.binaryDetail.vRAerr[idxBin]),
                     'vDEC':abs(self.parent.binaryDetail.vDEC[idxBin]),
@@ -3610,19 +3813,19 @@ class dataFilter(wx.Panel):
         except Exception:
             pass
         #print(self.parent.star_rows)
-        for index, row  in self.parent.star_rows.iterrows():
+        for idxStar, row  in self.parent.star_rows.iterrows():
             #print(row)
-            if index>=limit:
+            if idxStar>=limit:
                 break
             try:
                 rv=float(row.RADIAL_VELOCITY)
             except Exception:
                 rv=0
-                self.parent.status.include[int(index/2)]=0
-                self.parent.status.radialvelocity[int(index/2)]=0
+                self.parent.status.include[int(idxStar/2)]=0
+                self.parent.status.radialvelocity[int(idxStar/2)]=0
             if not rv:
-                self.parent.status.include[int(index/2)]=0
-                self.parent.status.radialvelocity[int(index/2)]=0                
+                self.parent.status.include[int(idxStar/2)]=0
+                self.parent.status.radialvelocity[int(idxStar/2)]=0                
             try:
                 ruwe=float(row.RUWE)
             except Exception:
@@ -3656,9 +3859,9 @@ class dataFilter(wx.Panel):
                      round(ruwe, 4),
                      round(rv,4),
                      row.RELEASE_,
-                     self.parent.status.radialvelocity[int(index/2)],
-                     self.parent.status.notgroup[int(index/2)],
-                     self.parent.status.include[int(index/2)],
+                     self.parent.status.radialvelocity[int(idxStar/2)],
+                     self.parent.status.notgroup[int(idxStar/2)],
+                     self.parent.status.include[int(idxStar/2)],
                      round(float(row.PHOT_G_MEAN_MAG),4),
                      round(float(mass),4),
                      round(float(age),4),
@@ -3871,6 +4074,8 @@ class skyDataPlotting(wx.Panel):
         
     def OnPlot(self, event=0):
 
+        global CANCEL
+        CANCEL = False
         self.plot_but.Disable()
         self.parent.export=[]
         
@@ -4257,6 +4462,19 @@ class HRDataPlotting(wx.Panel):
                     'parallax_error1':float(primaryPointer.parallax_error),
                     'DIST1':float(primaryPointer.DIST),
                     'RUWE1':primaryPointer.RUWE,
+                    'RUWE1':primaryPointer.ruwe,
+                    'PMRA1':float(primaryPointer.pmra),
+                    'PMRA_ERROR1':float(primaryPointer.pmra_error),
+                    'PMDEC1':float(primaryPointer.pmdec),
+                    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
+                    'BminusR1':float(primaryPointer.bp_rp),
+                    'mass_flame1':primaryPointer.mass_flame,
+                    'mass_flame_upper1':primaryPointer.mass_flame_upper,
+                    'mass_flame_lower1':primaryPointer.mass_flame_lower,
+                    'age_flame1':primaryPointer.age_flame,
+                    'age_flame_upper1':primaryPointer.age_flame_upper,
+                    'age_flame_lower1':primaryPointer.age_flame_lower,
+                    'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
                     'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
                     'ra2':float(star2Pointer.RA_),
                     'dec2':float(star2Pointer.DEC_),
@@ -4265,7 +4483,19 @@ class HRDataPlotting(wx.Panel):
                     'PARALLAX2':float(star2Pointer.PARALLAX),
                     'parallax_error2':float(star2Pointer.parallax_error),
                     'DIST2':float(star2Pointer.DIST),
-                    'RUWE2':star2Pointer.RUWE,
+                    'RUWE2':star2Pointer.ruwe,
+                    'PMRA2':float(star2Pointer.pmra),
+                    'PMRA_ERROR2':float(star2Pointer.pmra_error),
+                    'PMDEC2':float(star2Pointer.pmdec),
+                    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
+                    'BminusR2':float(star2Pointer.bp_rp),
+                    'mass_flame2':star2Pointer.mass_flame,
+                    'mass_flame_upper2':star2Pointer.mass_flame_upper,
+                    'mass_flame_lower2':star2Pointer.mass_flame_lower,
+                    'age_flame2':star2Pointer.age_flame,
+                    'age_flame_upper2':star2Pointer.age_flame_upper,
+                    'age_flame_lower2':star2Pointer.age_flame_lower,
+                    'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
                     'vRA':abs(self.parent.binaryDetail.vRA[index]),
                     'vRAerr':abs(self.parent.binaryDetail.vRAerr[index]),
                     'vDEC':abs(self.parent.binaryDetail.vDEC[index]), 
@@ -4310,6 +4540,8 @@ class HRDataPlotting(wx.Panel):
     
     def OnPlot(self, event=0):
 
+        global CANCEL
+        CANCEL = False
         self.plot_but.Disable()
         # Draw velocity map
         xdata1=pd.concat([self.parent.X.BminusR * self.parent.status['include'], self.parent.Y.BminusR * self.parent.status['include']])
@@ -4633,6 +4865,8 @@ class kineticDataPlotting(wx.Panel):
 
     def OnPlot(self, event=0):
         
+        global CANCEL
+        CANCEL = False
         self.parent.StatusBarProcessing('Kinetic plotting commenced')
         
         attributes=[self.textctrl_xLower, self.textctrl_xUpper, self.textctrl_yLower, self.textctrl_yUpper,
@@ -4782,7 +5016,6 @@ class kineticDataPlotting(wx.Panel):
                 # Go through and bin
                 label=float(100.0 * i /lenArray)
                 self.plot_but.SetLabel(f'{label:,.1f}%')
-                global CANCEL
                 if CANCEL:
                     CANCEL = False
                     self.plot_but.Enable()
@@ -4822,6 +5055,19 @@ class kineticDataPlotting(wx.Panel):
                             'parallax_error1':float(primaryPointer.parallax_error),
                             'DIST1':float(primaryPointer.DIST),
                             'RUWE1':primaryPointer.ruwe,
+                            'RUWE1':primaryPointer.ruwe,
+                            'PMRA1':float(primaryPointer.pmra),
+                            'PMRA_ERROR1':float(primaryPointer.pmra_error),
+                            'PMDEC1':float(primaryPointer.pmdec),
+                            'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
+                            'BminusR1':float(primaryPointer.bp_rp),
+                            'mass_flame1':primaryPointer.mass_flame,
+                            'mass_flame_upper1':primaryPointer.mass_flame_upper,
+                            'mass_flame_lower1':primaryPointer.mass_flame_lower,
+                            'age_flame1':primaryPointer.age_flame,
+                            'age_flame_upper1':primaryPointer.age_flame_upper,
+                            'age_flame_lower1':primaryPointer.age_flame_lower,
+                            'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
                             'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
                             'ra2':float(star2Pointer.RA_),
                             'dec2':float(star2Pointer.DEC_),
@@ -4831,6 +5077,18 @@ class kineticDataPlotting(wx.Panel):
                             'parallax_error2':float(star2Pointer.parallax_error),
                             'DIST2':float(star2Pointer.DIST),
                             'RUWE2':star2Pointer.ruwe,
+                            'PMRA2':float(star2Pointer.pmra),
+                            'PMRA_ERROR2':float(star2Pointer.pmra_error),
+                            'PMDEC2':float(star2Pointer.pmdec),
+                            'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
+                            'BminusR2':float(star2Pointer.bp_rp),
+                            'mass_flame2':star2Pointer.mass_flame,
+                            'mass_flame_upper2':star2Pointer.mass_flame_upper,
+                            'mass_flame_lower2':star2Pointer.mass_flame_lower,
+                            'age_flame2':star2Pointer.age_flame,
+                            'age_flame_upper2':star2Pointer.age_flame_upper,
+                            'age_flame_lower2':star2Pointer.age_flame_lower,
+                            'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
                             'vRA':abs(self.parent.binaryDetail.vRA[i]),
                             'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
                             'vDEC':abs(self.parent.binaryDetail.vDEC[i]), 
@@ -5317,6 +5575,8 @@ class TFDataPlotting(wx.Panel):
 
         self.parent.StatusBarProcessing('Tulley Fisher plotting commenced')
         
+        global CANCEL
+        CANCEL = False
         wx.Yield()
         #self.parent.export=pd.DataFrame(columns=['SOURCE_ID_PRIMARY','ra1','dec1','mag1','SOURCE_ID_SECONDARY','ra2','dec2','mag2', 'vRA', 'vDEC', 'V2D', 'M', 'r'])
         self.parent.export=[]
@@ -5429,7 +5689,6 @@ class TFDataPlotting(wx.Panel):
             # Go through and bin
             label=float(100.0 * i /lenArray)
             self.plot_but.SetLabel(f'{label:,.1f}%')
-            global CANCEL
             if CANCEL:
                 CANCEL = False
                 self.plot_but.Enable()
@@ -5447,6 +5706,19 @@ class TFDataPlotting(wx.Panel):
                 'parallax_error1':float(primaryPointer.parallax_error),
                 'DIST1':float(primaryPointer.DIST),
                 'RUWE1':primaryPointer.ruwe,
+                'RUWE1':primaryPointer.ruwe,
+                'PMRA1':float(primaryPointer.pmra),
+                'PMRA_ERROR1':float(primaryPointer.pmra_error),
+                'PMDEC1':float(primaryPointer.pmdec),
+                'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
+                'BminusR1':float(primaryPointer.bp_rp),
+                'mass_flame1':primaryPointer.mass_flame,
+                'mass_flame_upper1':primaryPointer.mass_flame_upper,
+                'mass_flame_lower1':primaryPointer.mass_flame_lower,
+                'age_flame1':primaryPointer.age_flame,
+                'age_flame_upper1':primaryPointer.age_flame_upper,
+                'age_flame_lower1':primaryPointer.age_flame_lower,
+                'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
                 'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
                 'ra2':float(star2Pointer.RA_),
                 'dec2':float(star2Pointer.DEC_),
@@ -5456,6 +5728,18 @@ class TFDataPlotting(wx.Panel):
                 'parallax_error2':float(star2Pointer.parallax_error),
                 'DIST2':float(star2Pointer.DIST),
                 'RUWE2':star2Pointer.ruwe,
+                'PMRA2':float(star2Pointer.pmra),
+                'PMRA_ERROR2':float(star2Pointer.pmra_error),
+                'PMDEC2':float(star2Pointer.pmdec),
+                'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
+                'BminusR2':float(star2Pointer.bp_rp),
+                'mass_flame2':star2Pointer.mass_flame,
+                'mass_flame_upper2':star2Pointer.mass_flame_upper,
+                'mass_flame_lower2':star2Pointer.mass_flame_lower,
+                'age_flame2':star2Pointer.age_flame,
+                'age_flame_upper2':star2Pointer.age_flame_upper,
+                'age_flame_lower2':star2Pointer.age_flame_lower,
+                'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
                 'vRA':self.parent.binaryDetail.vRA[i],
                 'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
                 'vDEC':self.parent.binaryDetail.vDEC[i],
@@ -5959,6 +6243,8 @@ class NumberDensityPlotting(wx.Panel):
 
     def OnPlot(self, event=0):
        
+        global CANCEL
+        CANCEL = False
         self.parent.StatusBarProcessing('Number Density Plotting commenced')
         
         wx.Yield()
@@ -6064,7 +6350,6 @@ class NumberDensityPlotting(wx.Panel):
             dataNDBins4.newBin(lower, upper)
             upper=lower
             lower=upper-factor
-        global CANCEL
         # Initial data (Red, 1)
         if self.Series1CheckBox.GetValue():
             #Select Intial Data Loaded
@@ -6541,7 +6826,7 @@ class AladinView(wx.Panel):
         self.summaryList=ListCtrl(self, size=(500, 750)) 
         fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
         self.summaryList.InsertColumn(0, "Property", wx.LIST_FORMAT_RIGHT, width=80 )
-        self.summaryList.SetColumnWidth(0, 80)
+        self.summaryList.SetColumnWidth(0, 130)
         self.summaryList.InsertColumn(1, "Primary", wx.LIST_FORMAT_RIGHT, width=170 )
         self.summaryList.SetColumnWidth(1, 170)
         self.summaryList.InsertColumn(2, "Companion", wx.LIST_FORMAT_RIGHT, width=170 )
@@ -6610,26 +6895,47 @@ class AladinView(wx.Panel):
         
         self.onRefreshPage(coords, coords2)
     def AddStats(self, binaryROW):
-        
+        print(binaryROW)
         self.summaryList.DeleteAllItems()
         self.summaryList.Append(['SOURCE_ID',str(binaryROW.SOURCE_ID_PRIMARY),str(binaryROW.SOURCE_ID_SECONDARY)])
-        self.summaryList.Append(['RA',binaryROW.ra1,binaryROW.ra2])
-        self.summaryList.Append(['DEC',binaryROW.dec1,binaryROW.dec2])
-        self.summaryList.Append(['mag',binaryROW.mag1,binaryROW.mag2])
-        self.summaryList.Append(['MAG',binaryROW.MAG1,binaryROW.MAG2])
-        self.summaryList.Append(['PARALLAX',binaryROW.PARALLAX1,binaryROW.PARALLAX2])
-        self.summaryList.Append(['DIST',binaryROW.DIST1,binaryROW.DIST2])
-        self.summaryList.Append(['RUWE',binaryROW.RUWE1,binaryROW.RUWE2])
-        self.summaryList.Append(['Separation',binaryROW.r,''])
-        self.summaryList.Append(['vRA',binaryROW.vRA,''])
-        self.summaryList.Append(['vDEC',binaryROW.vDEC,''])
-        self.summaryList.Append(['V2D',binaryROW.V2D,''])
-        self.summaryList.Append(['DIST',binaryROW.DIST,''])
-        self.summaryList.Append(['RA_MEAN',binaryROW.RA_MEAN,''])
-        self.summaryList.Append(['Log10vRA',binaryROW.Log10vRA,''])
-        self.summaryList.Append(['Log10vDEC',binaryROW.Log10vDEC,''])
-        self.summaryList.Append(['Log10r',binaryROW.Log10r,''])
-        
+        self.summaryList.Append(['RA',self.returnRounded(binaryROW.ra1,4),self.returnRounded(binaryROW.ra2,4)])
+        self.summaryList.Append(['DEC',self.returnRounded(binaryROW.dec1,4),self.returnRounded(binaryROW.dec2,4)])
+        self.summaryList.Append(['mag',self.returnRounded(binaryROW.mag1,4),self.returnRounded(binaryROW.mag2,4)])
+        self.summaryList.Append(['MAG',self.returnRounded(binaryROW.MAG1,4),self.returnRounded(binaryROW.MAG2,4)])
+        self.summaryList.Append(['PARALLAX',self.returnRounded(binaryROW.PARALLAX1,4),self.returnRounded(binaryROW.PARALLAX2,4)])
+        self.summaryList.Append(['PARALLAX err',self.returnRounded(binaryROW.parallax_error1,4),self.returnRounded(binaryROW.parallax_error2,4)])
+        self.summaryList.Append(['PMRA',self.returnRounded(binaryROW.PMRA1,4),self.returnRounded(binaryROW.PMRA2,4)])
+        self.summaryList.Append(['PMRA_ERROR',self.returnRounded(binaryROW.PMRA_ERROR1,4),self.returnRounded(binaryROW.PMRA_ERROR2,4)])
+        self.summaryList.Append(['PMDEC',self.returnRounded(binaryROW.PMDEC1,4),self.returnRounded(binaryROW.PMDEC2,4)])
+        self.summaryList.Append(['PMDEC_ERROR',self.returnRounded(binaryROW.PMDEC_ERROR1,4),self.returnRounded(binaryROW.PMDEC_ERROR2,4)])
+        self.summaryList.Append(['BminusR',self.returnRounded(binaryROW.BminusR1,4),self.returnRounded(binaryROW.BminusR2,4)])
+        self.summaryList.Append(['DIST',self.returnRounded(binaryROW.DIST1,4),self.returnRounded(binaryROW.DIST2,4)])
+        self.summaryList.Append(['RUWE',self.returnRounded(binaryROW.RUWE1,4),self.returnRounded(binaryROW.RUWE2,4)])
+        self.summaryList.Append(['mass_flame',self.returnRounded(binaryROW.mass_flame1,4),self.returnRounded(binaryROW.mass_flame2,4)])
+        self.summaryList.Append(['mass_flame_upper',self.returnRounded(binaryROW.mass_flame_upper1,4),self.returnRounded(binaryROW.mass_flame_upper2,4)])
+        self.summaryList.Append(['mass_flame_lower',self.returnRounded(binaryROW.mass_flame_lower1,4),self.returnRounded(binaryROW.mass_flame_lower2,4)])
+        self.summaryList.Append(['age_flame',self.returnRounded(binaryROW.age_flame1,4),self.returnRounded(binaryROW.age_flame2,4)])
+        self.summaryList.Append(['age_flame_upper',self.returnRounded(binaryROW.age_flame_upper1,4),self.returnRounded(binaryROW.age_flame_upper2,4)])
+        self.summaryList.Append(['age_flame_lower',self.returnRounded(binaryROW.age_flame_lower1,4),self.returnRounded(binaryROW.age_flame_lower2,4)])
+        self.summaryList.Append(['Bin Prob',self.returnRounded(binaryROW.PROB1,4),self.returnRounded(binaryROW.PROB2,4)])
+        self.summaryList.Append(['Separation',self.returnRounded(binaryROW.r,4),''])
+        self.summaryList.Append(['vRA',self.returnRounded(binaryROW.vRA,4),''])
+        self.summaryList.Append(['vDEC',self.returnRounded(binaryROW.vDEC,4),''])
+        self.summaryList.Append(['V2D',self.returnRounded(binaryROW.V2D,4),''])
+        self.summaryList.Append(['DIST',self.returnRounded(binaryROW.DIST,4),''])
+        self.summaryList.Append(['RA_MEAN',self.returnRounded(binaryROW.RA_MEAN,4),''])
+        self.summaryList.Append(['Log10vRA',self.returnRounded(binaryROW.Log10vRA,4),''])
+        self.summaryList.Append(['Log10vDEC',self.returnRounded(binaryROW.Log10vDEC,4),''])
+        self.summaryList.Append(['Log10r',self.returnRounded(binaryROW.Log10r,4),''])
+    
+    def returnRounded(self, inStr, digits=4):
+        out=inStr
+        try:
+            out = round(inStr, digits)
+        except Exception:
+            pass
+        return out
+    
     def onRefreshPage(self, coords='319.248057505893, -53.8355296313695', coords2='', gaiaMarker=0):
         # Options:
         #    coords=main star
