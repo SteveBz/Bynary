@@ -1945,15 +1945,17 @@ class dataRetrieval(wx.Panel):
         for file in files:
             try:
                 setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
-                print(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}')
+                print(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix} loaded')
             except Exception:
                 setattr(self.parent,file, pd.DataFrame())
 
         try:
-            file_to_read = open('bindata/{RELEASE}/{CATALOG}/starSystemList.pickle', 'rb') #File containing example object
+            file_to_read = open(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle', 'rb') #File containing example object
             self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
             file_to_read.close()
+            print(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle')
         except Exception:
+            print(f'Error in reading bindata/{RELEASE}/{CATALOG}/starSystemList.pickle')
             self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
         
         self.sizer_main_divider=wx.BoxSizer(wx.HORIZONTAL)
@@ -2242,7 +2244,7 @@ class dataRetrieval(wx.Panel):
             print("Unexpected error: {sys.exc_info()}")
             exit(1)
         
-        self.parent.StatusBarProcessing("\nFile copy done!\n")
+        self.parent.StatusBarProcessing("\nPandas file save done!\n")
              
         
     def catalogRestore(self, event=0):
@@ -2270,7 +2272,7 @@ class dataRetrieval(wx.Panel):
             print("Unexpected error: {sys.exc_info()}")
             exit(1)
         
-        self.parent.StatusBarProcessing("\nFile copy done!\n")
+        self.parent.StatusBarProcessing("\nPandas file restore done!\n")
         self.restoreListCtrl()
     def loadTypeRefresh(self, event=0):
 
@@ -2979,9 +2981,9 @@ class dataRetrieval(wx.Panel):
         except:
             print("Unexpected error:", sys.exc_info())
             exit(1)
+
+        self.parent.StatusBarProcessing("\nPandas file save done!\n")
         
-        print("\nFile copy done!\n")
-             
         # Open file handle
         file_to_store = open(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle', 'wb')
         #Save object to file
@@ -3576,6 +3578,7 @@ class dataFilter(wx.Panel):
                         rv=0
                         include=0
                         excludeTxt='rv=0'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         radialvelocity=0
                     rv1=rv
                 else:
@@ -3590,12 +3593,14 @@ class dataFilter(wx.Panel):
                             rv=0
                             include=0
                             excludeTxt='rv=0'
+                            self.parent.StatusBarProcessing(excludeTxt)
                             radialvelocity=0
                         # Must all exist
                         if rv_diff_limit and rv and rv1:
                             sn_row=abs(float(rv1-rv))
                             if sn_row>rv_diff_limit:
                                 excludeTxt=f'RV diff={int(sn_row)}'
+                                self.parent.StatusBarProcessing(excludeTxt)
                                 include=0
                     else:
                         self.parent.StatusBarProcessing (f'Skipped record {idxStar}')
@@ -3620,21 +3625,25 @@ class dataFilter(wx.Panel):
             if math.isnan(float(rv)) or math.isnan(float(rv1)):
                 include=0
                 excludeTxt='rv=<na>'
+                self.parent.StatusBarProcessing(excludeTxt)
                 radialvelocity=0
             #print(row.PHOT_RP_MEAN_FLUX_OVER_ERROR)
             if pd.isna(row.PHOT_G_MEAN_FLUX_OVER_ERROR):
                 include=0
                 excludeTxt='PHOT_G...=<na>'
+                self.parent.StatusBarProcessing(excludeTxt)
                 radialvelocity=0
                 
             if pd.isna(row.PHOT_RP_MEAN_FLUX_OVER_ERROR):
                 include=0
                 excludeTxt='PHOT_RP...=<na>'
+                self.parent.StatusBarProcessing(excludeTxt)
                 radialvelocity=0
                 
             if pd.isna(row.PHOT_BP_MEAN_FLUX_OVER_ERROR):
                 include=0
                 excludeTxt='PHOT_BP...=<na>'
+                self.parent.StatusBarProcessing(excludeTxt)
                 radialvelocity=0
             
             # Check and set radial velocity
@@ -3660,6 +3669,7 @@ class dataFilter(wx.Panel):
                     sn_row=abs(float(row.PARALLAX)/float(row.PARALLAX_ERROR))
                     if sn_px_limit>sn_row:
                         excludeTxt=f'SN_PX={int(sn_row)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0
                         
                 #and phot_g_mean_flux_over_error > 50
@@ -3670,38 +3680,45 @@ class dataFilter(wx.Panel):
                     sn_row=abs(float(row.PHOT_G_MEAN_FLUX_OVER_ERROR))
                     if sn_g_limit>sn_row:
                         excludeTxt=f'SN_G={int(sn_row)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0
                 #Red Flux S/N filter
                 if include and sn_rp_limit:
                     sn_row=abs(float(row.PHOT_RP_MEAN_FLUX_OVER_ERROR))
                     if sn_rp_limit>sn_row:
                         excludeTxt=f'SN_Rp={int(sn_row)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0
                 #Blue Flux S/N filter
                 if include and sn_bp_limit:
                     sn_row=abs(float(row.PHOT_BP_MEAN_FLUX_OVER_ERROR))
                     if sn_bp_limit>sn_row:
                         excludeTxt=f'SN_Bp={int(sn_row)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0
                 #Cut off inner or outer stars iside or outside limit
                 #if include:
                 dist_row=abs(float(row.DIST))
                 if include and outerShell and dist_row<distCutoff_limit:
                     excludeTxt=f'Inside shell'
+                    self.parent.StatusBarProcessing(excludeTxt)
                     include=0
                     
                 if  include and not outerShell and dist_row>distCutoff_limit:
                     excludeTxt=f'Outer shell'
+                    self.parent.StatusBarProcessing(excludeTxt)
                     include=0
                     
                 if include and sn_pm_limit:
                     sn_row=abs(float(row.PMRA)/float(row.PMRA_ERROR))
                     if sn_pm_limit>sn_row:
                         excludeTxt=f'SN_PMRA={int(sn_row)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0
                     sn_row=abs(float(row.PMDEC)/float(row.PMDEC_ERROR))
                     if  include and sn_pm_limit>sn_row:
                         excludeTxt=f'SN_PMDEC={int(sn_row)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0
 
                 if include and ruwe_limit:
@@ -3709,6 +3726,7 @@ class dataFilter(wx.Panel):
                     #Exclude ruwe above limit or 0 (ie not available)
                     if ruwe_row>ruwe_limit or ruwe_row==0:
                         excludeTxt=f'RUWE={round(float(ruwe_row),2)}'
+                        self.parent.StatusBarProcessing(excludeTxt)
                         include=0 
                         self.parent.status.ruweExcl[idxBin]=0
 
@@ -3716,7 +3734,7 @@ class dataFilter(wx.Panel):
                     binProb_row=abs(binProb)
                     #Exclude binProb_row above limit or 0 (ie not available)
                     if binProb_row>binProbability_limit or binProb_row==0:
-                        excludeTxt=f'Probability {round(float(binProb_row),2)} > limit = {round(float(binProbability_limit),2)}'
+                        excludeTxt=f'Excluded because probability {round(float(binProb_row),2)} > limit = {round(float(binProbability_limit),2)}'
                         self.parent.StatusBarProcessing(excludeTxt)
                         include=0
                     #else:
@@ -3797,7 +3815,19 @@ class dataFilter(wx.Panel):
         self.parent.status['hrOut']=self.parent.status['include']
         self.parent.status['kineticOut']=self.parent.status['include']
         self.parent.status['ruweExcl']=self.parent.status['include']
+        # Save pandas status file as pickle files for next time.
         self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
+
+        # adding exception handling
+        try:
+            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        except IOError as e:
+            print("Unable to copy file. %s" % e)
+            #exit(1)
+        except:
+            print("Unexpected error:", sys.exc_info())
+            exit(1)
+
         populateOut=self.parent.status['populateOut'].sum()
         self.dataInTotal.SetLabel(f'{populateOut:,}')
         self.loadData.Enable()
@@ -4519,12 +4549,23 @@ class HRDataPlotting(wx.Panel):
 
         self.parent.status['hrOut']=self.parent.status['include']
         self.parent.status['kineticOut']=self.parent.status['include']
+        
+        # Save pandas status file as pickle files for next time.
         try:
             self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
         except Exception:
             self.parent.StatusBarProcessing('Error directory failed to save')
             print (self.parent.status)
-        
+
+        # adding exception handling
+        try:
+            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        except IOError as e:
+            print("Unable to copy file. %s" % e)
+            #exit(1)
+        except:
+            print("Unexpected error:", sys.exc_info())
+            exit(1)
         self.OnPlot()
         label=int(100)
         self.Filter_but.SetLabel(f'{label:,.1f}%')
@@ -5288,28 +5329,38 @@ class kineticDataPlotting(wx.Panel):
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean S/N for v/dv (DEC)')
         self.summaryList.SetItem(rowCnt, 1, f"{snVoverDv[1]:,}")
+        
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean S/N PMRA')
-        snPMRAoverDPMRAx=self.CalcMeanXoverDx('PMRA','PMRA_ERROR')
+        snPMRAoverDPMRAx=self.CalcMeanXYoverDxy('PMRA','PMRA_ERROR')
         self.summaryList.SetItem(rowCnt, 1, f"{snPMRAoverDPMRAx:,}")
+        
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean S/N PMDEC')
-        snPMDECoverDPMDECx=self.CalcMeanXoverDx('PMDEC','PMDEC_ERROR')
+        snPMDECoverDPMDECx=self.CalcMeanXYoverDxy('PMDEC','PMDEC_ERROR')
         self.summaryList.SetItem(rowCnt, 1, f"{snPMDECoverDPMDECx:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean S/N Px')
-        snPxoverDpx=self.CalcMeanXoverDx('PARALLAX','parallax_error')
+        snPxoverDpx=self.CalcMeanXYoverDxy('PARALLAX','parallax_error')
         self.summaryList.SetItem(rowCnt, 1, f"{snPxoverDpx:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean RUWE')
-        avgRuwe=self.CalcMeanXoverDx('RUWE',False)
+        avgRuwe=self.CalcMeanXYoverDxy('RUWE',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgRuwe:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean Distance')
-        avgDIST=self.CalcMeanXoverDx('DIST',False)
+        avgDIST=self.CalcMeanXYoverDxy('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Mass')
+        avgMass=self.CalcPercentNotNull('mass_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Age')
+        avgAge=self.CalcPercentNotNull('age_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
-        
+        ##print(self.parent.binaryDetail)
         if self.showBinsCheckBox.GetValue():  
             #Mean binned binary RMS 1D relative velocity  in RA
             rowCnt += 1 #Next row
@@ -5324,11 +5375,22 @@ class kineticDataPlotting(wx.Panel):
             self.summaryList.SetItem(rowCnt, 1, f"{ydata3decpd.V.mean():,.4f}")
         
         self.parent.status['kineticOut']=self.parent.status['include']
+        # Save pandas status file as pickle files for next time.
         try:
             self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
         except Exception:
             self.parent.StatusBarProcessing('Error directory failed to save')
             print (self.parent.status)
+
+        # adding exception handling
+        try:
+            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        except IOError as e:
+            print("Unable to copy file. %s" % e)
+            #exit(1)
+        except:
+            print("Unexpected error:", sys.exc_info())
+            exit(1)
         self.parent.printArrays()
 
         self.plot_but.Enable()
@@ -5339,24 +5401,33 @@ class kineticDataPlotting(wx.Panel):
         
         vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
         vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
-        
         totalSelected=self.parent.status['include'].sum()
         
         return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
         
+    def CalcPercentNotNull(self, col):
         
-    def CalcMeanXoverDx(self, col, col_error):
+        XY=self.parent.status['include']*self.parent.X[col]
+        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
+        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
+        totalSelected=self.parent.status['include'].sum()*2
+        
+        return round(XYcount['X']/totalSelected,2)
+        
+        
+    def CalcMeanXYoverDxy(self, col, col_error):
         if col_error:
-            XoverDx=self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
-            XoverDx=XoverDx+self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
+            XYoverDxy=self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()/self.parent.Y[col_error].abs()
 
             totalSelected=self.parent.status['include'].sum()
             totalSelected=totalSelected*2
         else:
-            XoverDx=self.parent.status['include']*self.parent.X[col].abs()
-            totalSelected=self.parent.status['include'].sum()
+            XYoverDxy=self.parent.status['include']*self.parent.X[col].abs()
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()
+            totalSelected=self.parent.status['include'].sum()*2
         
-        return round(XoverDx.sum()/totalSelected,2)
+        return round(XYoverDxy.sum()/totalSelected,2)
         
 class TFDataPlotting(wx.Panel):
 
@@ -5950,12 +6021,22 @@ class TFDataPlotting(wx.Panel):
         self.summaryList.SetItem(rowCnt, 1, f"{snVoverDv[1]:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean RUWE')
-        avgRuwe=self.CalcMeanXoverDx('RUWE',False)
+        avgRuwe=self.CalcMeanXYoverDxy('RUWE',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgRuwe:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean Distance')
-        avgDIST=self.CalcMeanXoverDx('DIST',False)
+        avgDIST=self.CalcMeanXYoverDxy('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
+        
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Mass')
+        avgMass=self.CalcPercentNotNull('mass_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
+        
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Age')
+        avgAge=self.CalcPercentNotNull('age_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
         #Mean stellar mass 
         rowCnt += 1 #Next row
@@ -6063,6 +6144,23 @@ class TFDataPlotting(wx.Panel):
         except Exception:
             pass
         self.Layout()
+        
+        # Save pandas status file as pickle files for next time.
+        try:
+            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
+        except Exception:
+            self.parent.StatusBarProcessing('Error directory failed to save')
+            print (self.parent.status)
+
+        # adding exception handling
+        try:
+            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        except IOError as e:
+            print("Unable to copy file. %s" % e)
+            #exit(1)
+        except:
+            print("Unexpected error:", sys.exc_info())
+            exit(1)
         self.parent.printArrays()
 
         self.plot_but.Enable()
@@ -6082,19 +6180,28 @@ class TFDataPlotting(wx.Panel):
         
         return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
         
+    def CalcPercentNotNull(self, col):
         
-    def CalcMeanXoverDx(self, col, col_error):
+        XY=self.parent.status['include']*self.parent.X[col]
+        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
+        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
+        totalSelected=self.parent.status['include'].sum()*2
+        
+        return round(XYcount['X']/totalSelected,2)
+        
+    def CalcMeanXYoverDxy(self, col, col_error):
         if col_error:
-            XoverDx=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
-            XoverDx=XoverDx+self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
+            XYoverDxy=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col]/self.parent.Y[col_error]
 
             totalSelected=self.parent.status['include'].sum()
             totalSelected=totalSelected*2
         else:
-            XoverDx=self.parent.status['include']*self.parent.X[col]
-            totalSelected=self.parent.status['include'].sum()
+            XYoverDxy=self.parent.status['include']*self.parent.X[col]
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col]
+            totalSelected=self.parent.status['include'].sum()*2
         
-        return round(XoverDx.sum()/totalSelected,2)
+        return round(XYoverDxy.sum()/totalSelected,2)
         
 class NumberDensityPlotting(wx.Panel):
 
@@ -6494,7 +6601,7 @@ class NumberDensityPlotting(wx.Panel):
                     return
                 wx.Yield()
                 if dataNDBins4.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
-                    self.parent.StatusBarProcessing(f'Exclude "vRAerr (f)" x={DIST}, y=1')
+                    self.parent.StatusBarProcessing(f'Exclude 1 pair "vRAerr (f)" Distance={DIST}')
     
             xdata4ND=dataNDBins4.getBinXArray(type='centre')
             ydata4ND=dataNDBins4.getBinYLabelArray()
@@ -6654,13 +6761,22 @@ class NumberDensityPlotting(wx.Panel):
         self.summaryList.SetItem(rowCnt, 1, f"{snVoverDv[1]:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean RUWE')
-        avgRuwe=self.CalcMeanXoverDx('RUWE',False)
+        avgRuwe=self.CalcMeanXYoverDxy('RUWE',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgRuwe:,}")
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean Distance')
-        avgDIST=self.CalcMeanXoverDx('DIST',False)
+        avgDIST=self.CalcMeanXYoverDxy('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
               
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Mass')
+        avgMass=self.CalcPercentNotNull('mass_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
+        
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Age')
+        avgAge=self.CalcPercentNotNull('age_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         try:
             self.NumberDensityPlot.Layout()
         except Exception:
@@ -6694,8 +6810,26 @@ class NumberDensityPlotting(wx.Panel):
         #    exit(1)
         #
         #print("\nFile copy done!\n")
+        
+        # Save pandas status file as pickle files for next time.
+        try:
+            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
+        except Exception:
+            self.parent.StatusBarProcessing('Error directory failed to save')
+            print (self.parent.status)
+
+        # adding exception handling
+        try:
+            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        except IOError as e:
+            print("Unable to copy file. %s" % e)
+            #exit(1)
+        except:
+            print("Unexpected error:", sys.exc_info())
+            exit(1)
              
         self.parent.StatusBarNormal('Completed OK')
+        self.plot_but.Enable()
         
     
     def XreturnY(self, X):
@@ -6711,19 +6845,28 @@ class NumberDensityPlotting(wx.Panel):
         
         return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
         
+    def CalcPercentNotNull(self, col):
         
-    def CalcMeanXoverDx(self, col, col_error):
+        XY=self.parent.status['include']*self.parent.X[col]
+        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
+        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
+        totalSelected=self.parent.status['include'].sum()*2
+        
+        return round(XYcount['X']/totalSelected,2)
+        
+    def CalcMeanXYoverDxy(self, col, col_error):
         if col_error:
-            XoverDx=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
-            XoverDx=XoverDx+self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
+            XYoverDxy=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col]/self.parent.Y[col_error]
 
             totalSelected=self.parent.status['include'].sum()
             totalSelected=totalSelected*2
         else:
-            XoverDx=self.parent.status['include']*self.parent.X[col]
-            totalSelected=self.parent.status['include'].sum()
+            XYoverDxy=self.parent.status['include']*self.parent.X[col]
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()
+            totalSelected=self.parent.status['include'].sum()*2
         
-        return round(XoverDx.sum()/totalSelected,2)
+        return round(XYoverDxy.sum()/totalSelected,2)
         
 class AladinView(wx.Panel):
 
