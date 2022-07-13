@@ -5352,11 +5352,11 @@ class kineticDataPlotting(wx.Panel):
         avgDIST=self.CalcMeanXYoverDxy('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Mass')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Masses')
         avgMass=self.CalcPercentNotNull('mass_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Age')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Ages')
         avgAge=self.CalcPercentNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
@@ -6029,12 +6029,12 @@ class TFDataPlotting(wx.Panel):
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
         
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Mass')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Masses')
         avgMass=self.CalcPercentNotNull('mass_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
         
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Age')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Ages')
         avgAge=self.CalcPercentNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
@@ -6769,12 +6769,12 @@ class NumberDensityPlotting(wx.Panel):
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
               
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Mass')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Masses')
         avgMass=self.CalcPercentNotNull('mass_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
         
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Mean with Flame Age')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Ages')
         avgAge=self.CalcPercentNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         try:
