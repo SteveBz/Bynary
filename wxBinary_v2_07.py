@@ -1491,13 +1491,6 @@ class gaiaBinaryRetrieval(wx.Panel):
         TBL_BINARIES .setAttributeFloat("SEPARATION", record.pairdistance)
         TBL_BINARIES .setAttributeInteger("HEALPIX", i)
         return TBL_BINARIES .getInsertSQL()
-    def is_number(self, s):
-        
-        try:
-            float(s)
-            return True
-        except Exception:
-            return False
     def read_GaiaBinaries(self, event):
 
         global CANCEL
@@ -1900,11 +1893,77 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         self.parent.StatusBarNormal('Completed OK')
         
-class dataRetrieval(wx.Panel):
+class masterProcessingPanel(wx.Panel):
+    
+    def __init__(self, parent, mainPanel):
+        pass
     
     def dump(self, obj):
       for attr in dir(obj):
         print("obj.%s = %r" % (attr, getattr(obj, attr)))
+    
+    def is_number(self, s):
+        
+        try:
+            float(s)
+            return True
+        except Exception:
+            return False
+        
+    def CalcVoverdv(self):
+        
+        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
+        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
+        totalSelected=self.parent.status['include'].sum()
+        
+        return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
+        
+    def CalcPercentPairNotNull(self, col):
+        
+        XY=self.parent.status['include']*self.parent.X[col]
+        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
+        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
+        totalSelected=self.parent.status['include'].sum()*2
+        
+        return round(XYcount['X']/totalSelected,2)
+        
+    def CalcPercentEitherNotNull(self, col):
+        
+        XY=self.parent.status['include']*self.parent.X[col]
+        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
+        XYcount=XY1[(XY1['X'] > 0)].count() + XY1[(XY1['Y'] > 0)].count()
+        totalSelected=self.parent.status['include'].sum()*2
+        return round(XYcount['X']/totalSelected,2)
+        
+    def CalcMeanXYoverDxy(self, col, col_error=False):
+        if col_error:
+            XYoverDxy=self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()/self.parent.Y[col_error].abs()
+
+            totalSelected=self.parent.status['include'].sum()
+            totalSelected=totalSelected*2
+        else:
+            XYoverDxy=self.parent.status['include']*self.parent.X[col].abs()
+            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()
+            totalSelected=self.parent.status['include'].sum()*2
+        
+        return round(XYoverDxy.sum()/totalSelected,2)
+        
+        
+    def XreturnY(self, X):
+        # Return lower outlier range.
+        Y=self.m*float(X) + self.c
+        return Y
+    
+    def OnCancel(self, event=0):
+
+        global CANCEL
+        self.plot_but.Enable()
+        CANCEL= True
+        self.parent.StatusBarNormal('Completed OK')
+        
+class dataRetrieval(masterProcessingPanel):
+    
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
         self.mainPanel=mainPanel
@@ -2301,9 +2360,7 @@ class dataRetrieval(wx.Panel):
         global CANCEL
         self.ungroup.Enable()
         self.dbload.Enable()
-        
         CANCEL= True
-        
         self.parent.StatusBarNormal('Completed OK')
         
     def catRefresh(self, event=0):
@@ -3265,7 +3322,7 @@ class dataRetrieval(wx.Panel):
         
         self.parent.StatusBarNormal('Completed OK')
         
-class dataFilter(wx.Panel):
+class dataFilter(masterProcessingPanel):
     
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
@@ -3454,7 +3511,6 @@ class dataFilter(wx.Panel):
         global CANCEL
         CANCEL= True
         self.loadData.Enable()
-        
         self.parent.StatusBarNormal('Completed OK')
         
     def OnReset(self, event=0):
@@ -3837,7 +3893,6 @@ class dataFilter(wx.Panel):
         
     def restoreListCtrl(self, event=0, limit=1000):
         
-
         try:
             self.parent.star_rows=self.parent.star_rows.convert_dtypes()
         except Exception:
@@ -3913,7 +3968,7 @@ class dataFilter(wx.Panel):
                 self.parent.StatusBarProcessing('"star_rows" Error')
                 #exit(1)
 
-class skyDataPlotting(wx.Panel):
+class skyDataPlotting(masterProcessingPanel):
 
 # Plot position on sky for chosen binaries.
 
@@ -4277,7 +4332,7 @@ class skyDataPlotting(wx.Panel):
         
         self.parent.StatusBarNormal('Completed OK')
         
-class HRDataPlotting(wx.Panel):
+class HRDataPlotting(masterProcessingPanel):
 
 # Plot HR diagram for chosen binaries.
 
@@ -4397,13 +4452,11 @@ class HRDataPlotting(wx.Panel):
         
         self.Layout()
         
-
     def OnCancel(self, event=0):
 
         global CANCEL
         CANCEL= True
         self.Filter_but.Enable()
-        
         self.parent.StatusBarNormal(f'Completed OK')
         
     def OnReset(self, event=0):
@@ -4697,7 +4750,7 @@ class HRDataPlotting(wx.Panel):
 
         self.parent.StatusBarNormal(f'Completed OK')
         
-class kineticDataPlotting(wx.Panel):
+class kineticDataPlotting(masterProcessingPanel):
 
 #Plot Actual motion in the 1d plane of the sky vs separation of binaries and compare with Newtonian motion.
 
@@ -4891,13 +4944,6 @@ class kineticDataPlotting(wx.Panel):
         #Y=float(self.m*float(X) + float(self.c))
         Y=self.m*float(math.log10(X)) + self.c
         return 10**Y
-    
-    def OnCancel(self, event=0):
-
-        global CANCEL
-        CANCEL= True
-        self.plot_but.Enable()
-        self.parent.StatusBarNormal(f'OK')
     
     def OnReset(self, event=0):
         #if hasattr(self.parent, 'hrinclude'):
@@ -5351,13 +5397,23 @@ class kineticDataPlotting(wx.Panel):
         self.summaryList.InsertItem(rowCnt, 'Mean Distance')
         avgDIST=self.CalcMeanXYoverDxy('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
+        
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Masses')
-        avgMass=self.CalcPercentNotNull('mass_flame')
+        self.summaryList.InsertItem(rowCnt, 'Mean Binary Probability for single stars')
+        avgProb=self.CalcMeanXYoverDxy('classprob_dsc_specmod_binarystar',False)
+        self.summaryList.SetItem(rowCnt, 1, f"{avgProb:,}")
+                      
+        rowCnt += 1 #Next row 
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 FLAME Masses')
+        avgMass=self.CalcPercentPairNotNull('mass_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
+        rowCnt += 1 #Next row 
+        self.summaryList.InsertItem(rowCnt, 'Fraction of stars with FLAME Masses')
+        avgMass=self.CalcPercentEitherNotNull('mass_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Ages')
-        avgAge=self.CalcPercentNotNull('age_flame')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 FLAME Ages')
+        avgAge=self.CalcPercentPairNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
         ##print(self.parent.binaryDetail)
@@ -5397,39 +5453,7 @@ class kineticDataPlotting(wx.Panel):
 
         self.parent.StatusBarNormal('Completed OK')
         
-    def CalcVoverdv(self):
-        
-        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
-        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
-        totalSelected=self.parent.status['include'].sum()
-        
-        return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
-        
-    def CalcPercentNotNull(self, col):
-        
-        XY=self.parent.status['include']*self.parent.X[col]
-        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
-        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
-        totalSelected=self.parent.status['include'].sum()*2
-        
-        return round(XYcount['X']/totalSelected,2)
-        
-        
-    def CalcMeanXYoverDxy(self, col, col_error):
-        if col_error:
-            XYoverDxy=self.parent.status['include']*self.parent.X[col].abs()/self.parent.X[col_error].abs()
-            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()/self.parent.Y[col_error].abs()
-
-            totalSelected=self.parent.status['include'].sum()
-            totalSelected=totalSelected*2
-        else:
-            XYoverDxy=self.parent.status['include']*self.parent.X[col].abs()
-            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()
-            totalSelected=self.parent.status['include'].sum()*2
-        
-        return round(XYoverDxy.sum()/totalSelected,2)
-        
-class TFDataPlotting(wx.Panel):
+class TFDataPlotting(masterProcessingPanel):
 
 #Plot Actual motion in the 1d plane of the sky vs separation of binaries and compare with Newtonian motion.
 
@@ -5626,19 +5650,6 @@ class TFDataPlotting(wx.Panel):
             pass
         self.Layout()
 
-    def XreturnY(self, X):
-        # Return lower outlier range.
-        Y=self.m*float(X) + self.c
-        return Y
-    
-    def OnCancel(self, event=0):
-
-        global CANCEL
-        CANCEL= True
-    
-        self.parent.StatusBarNormal('Completed OK')
-        
-        self.plot_but.Enable()
     def OnReset(self, event=0):
         self.parent.status['include']=self.parent.status['kineticOut']
 
@@ -6029,13 +6040,23 @@ class TFDataPlotting(wx.Panel):
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
         
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Masses')
-        avgMass=self.CalcPercentNotNull('mass_flame')
+        self.summaryList.InsertItem(rowCnt, 'Mean Binary Probability for single stars')
+        avgProb=self.CalcMeanXYoverDxy('classprob_dsc_specmod_binarystar',False)
+        self.summaryList.SetItem(rowCnt, 1, f"{avgProb:,}")
+              
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 FLAME Masses')
+        avgMass=self.CalcPercentPairNotNull('mass_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
+        
+        rowCnt += 1 #Next row 
+        self.summaryList.InsertItem(rowCnt, 'Fraction of FLAME Masses')
+        avgMass=self.CalcPercentEitherNotNull('mass_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
         
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Ages')
-        avgAge=self.CalcPercentNotNull('age_flame')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 FLAME Ages')
+        avgAge=self.CalcPercentPairNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
         #Mean stellar mass 
@@ -6171,39 +6192,7 @@ class TFDataPlotting(wx.Panel):
         # Return lower outlier range.
         Y=self.slope*float(X) + self.offset
         return Y
-    def CalcVoverdv(self):
-        
-        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
-        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
-        
-        totalSelected=self.parent.status['include'].sum()
-        
-        return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
-        
-    def CalcPercentNotNull(self, col):
-        
-        XY=self.parent.status['include']*self.parent.X[col]
-        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
-        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
-        totalSelected=self.parent.status['include'].sum()*2
-        
-        return round(XYcount['X']/totalSelected,2)
-        
-    def CalcMeanXYoverDxy(self, col, col_error):
-        if col_error:
-            XYoverDxy=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
-            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col]/self.parent.Y[col_error]
-
-            totalSelected=self.parent.status['include'].sum()
-            totalSelected=totalSelected*2
-        else:
-            XYoverDxy=self.parent.status['include']*self.parent.X[col]
-            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col]
-            totalSelected=self.parent.status['include'].sum()*2
-        
-        return round(XYoverDxy.sum()/totalSelected,2)
-        
-class NumberDensityPlotting(wx.Panel):
+class NumberDensityPlotting(masterProcessingPanel):
 
 #Plot Density of stars by distance from Sol.
 
@@ -6333,17 +6322,6 @@ class NumberDensityPlotting(wx.Panel):
             pass
         self.Layout()
 
-    def XreturnY(self, X):
-        # Return lower outlier range.
-        Y=self.m*float(X) + self.c
-        return Y
-    
-    def OnCancel(self, event=0):
-
-        global CANCEL
-        self.plot_but.Enable()
-        CANCEL= True
-        self.parent.StatusBarNormal('Completed OK')
         
     def OnReset(self, event=0):
         self.parent.status['include']=self.parent.status['kineticOut']
@@ -6767,15 +6745,25 @@ class NumberDensityPlotting(wx.Panel):
         self.summaryList.InsertItem(rowCnt, 'Mean Distance')
         avgDIST=self.CalcMeanXYoverDxy('DIST',False)
         self.summaryList.SetItem(rowCnt, 1, f"{avgDIST:,}")
+
+        rowCnt += 1 #Next row
+        self.summaryList.InsertItem(rowCnt, 'Mean Binary Probability for single stars')
+        avgProb=self.CalcMeanXYoverDxy('classprob_dsc_specmod_binarystar',False)
+        self.summaryList.SetItem(rowCnt, 1, f"{avgProb:,}")
               
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Masses')
-        avgMass=self.CalcPercentNotNull('mass_flame')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 FLAME Masses')
+        avgMass=self.CalcPercentPairNotNull('mass_flame')
+        self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
+        
+        rowCnt += 1 #Next row 
+        self.summaryList.InsertItem(rowCnt, 'Fraction of FLAME Masses')
+        avgMass=self.CalcPercentEitherNotNull('mass_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgMass*100:,} %")
         
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 Flame Ages')
-        avgAge=self.CalcPercentNotNull('age_flame')
+        self.summaryList.InsertItem(rowCnt, 'Binaries with 2 FLAME Ages')
+        avgAge=self.CalcPercentPairNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         try:
             self.NumberDensityPlot.Layout()
@@ -6836,38 +6824,6 @@ class NumberDensityPlotting(wx.Panel):
         # Return lower outlier range.
         Y=self.slope*float(X) + self.offset
         return Y
-    def CalcVoverdv(self):
-        
-        vRAoverdv=self.parent.status['include']*self.parent.binaryDetail.vRA/self.parent.binaryDetail.vRAerr
-        vDECoverdv=self.parent.status['include']*self.parent.binaryDetail.vDEC/self.parent.binaryDetail.vDECerr
-        
-        totalSelected=self.parent.status['include'].sum()
-        
-        return([round(vRAoverdv.sum()/totalSelected,2),round(vDECoverdv.sum()/totalSelected,2)])
-        
-    def CalcPercentNotNull(self, col):
-        
-        XY=self.parent.status['include']*self.parent.X[col]
-        XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
-        XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
-        totalSelected=self.parent.status['include'].sum()*2
-        
-        return round(XYcount['X']/totalSelected,2)
-        
-    def CalcMeanXYoverDxy(self, col, col_error):
-        if col_error:
-            XYoverDxy=self.parent.status['include']*self.parent.X[col]/self.parent.X[col_error]
-            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col]/self.parent.Y[col_error]
-
-            totalSelected=self.parent.status['include'].sum()
-            totalSelected=totalSelected*2
-        else:
-            XYoverDxy=self.parent.status['include']*self.parent.X[col]
-            XYoverDxy=XYoverDxy+self.parent.status['include']*self.parent.Y[col].abs()
-            totalSelected=self.parent.status['include'].sum()*2
-        
-        return round(XYoverDxy.sum()/totalSelected,2)
-        
 class AladinView(wx.Panel):
 
 #Plot Actual motion in the 1d plane of the sky vs separation of binaries and compare with Newtonian motion.
