@@ -147,7 +147,7 @@ class MainPanel(wx.Panel):
         self.nb.AddPage(self.TulleyFisherPage, "Velocity vs Mass plot")
         self.nb.AddPage(self.NumberDensityPage, "Star Density vs Distance plot")
         self.nb.AddPage(self.AladinPage, "View Binaries in Aladin Lite")
-        self.nb.SetSelection(int(gl_cfg.getItem('tab','SETTINGS'))) # get setting from config file)
+        self.nb.SetSelection(int(gl_cfg.getItem('tab','SETTINGS', 0))) # get setting from config file)
         
     def StatusBarNormal(self, text=""):
         
@@ -262,7 +262,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.release = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=[], value='')
         releases=self.releaseRefresh()
         #self.release.Bind(wx.EVT_CHOICE, self.catRefresh)
-        self.release.SetSelection(int(gl_cfg.getItem('release','GAIASTAR')))
+        self.release.SetSelection(int(gl_cfg.getItem('release','GAIASTAR', 0)))
         self.release.SetToolTip("Select release source (currently only eDR3)")
         self.sizer_h.Add(self.release, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         global RELEASE
@@ -295,7 +295,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_RAfrom, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_RAfrom = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rafrom','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=360,initial=int(gl_cfg.getItem('rafrom', 'GAIASTAR')))  
+        self.spin_RAfrom = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rafrom','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=360,initial=int(gl_cfg.getItem('rafrom', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_RAfrom, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_RAfrom.SetToolTip("Lower RA to download - 0 to 360")
         
@@ -304,7 +304,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_RAto, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_RAto = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rato','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=360,initial=int(gl_cfg.getItem('rato', 'GAIASTAR')))  
+        self.spin_RAto = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rato','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=360,initial=int(gl_cfg.getItem('rato', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_RAto, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_RAto.SetToolTip("Upper RA to download to - out of 360")
         
@@ -313,7 +313,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXfrom, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXfrom = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxfrom', 'GAIASTAR')))  
+        self.spin_PXfrom = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxfrom', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_PXfrom, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_PXfrom.SetToolTip("Lower Parallax to download - 0 to 1000 (expectation is '3')")
         
@@ -322,7 +322,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXto, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXto = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxto','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxto', 'GAIASTAR')))  
+        self.spin_PXto = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxto','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxto', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_PXto, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_PXto.SetToolTip("Upper Parallax to download to - out of 1000 (expectation is '1000')")
         
@@ -340,7 +340,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_Px_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Px_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('px_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('px_err', 'GAIASTAR')))  
+        self.spin_Px_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('px_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('px_err', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_Px_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Px_err.SetToolTip("parallax_over_error to download - 0 to 100 (expectation is '5')")
         
@@ -349,7 +349,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_G_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_G_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('g_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('g_err', 'GAIASTAR')))  
+        self.spin_G_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('g_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('g_err', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_G_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_G_err.SetToolTip("phot_g_mean_flux_over_error to download - 0 to 100 (expectation is '50')")
         
@@ -358,7 +358,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_Rp_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Rp_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rp_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('rp_err', 'GAIASTAR')))  
+        self.spin_Rp_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rp_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('rp_err', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_Rp_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Rp_err.SetToolTip("phot_rp_mean_flux_over_error to download - 0 to 100 (expectation is '10')")
         
@@ -367,7 +367,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.sizer_h.Add(static_Bp_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Bp_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bp_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('bp_err', 'GAIASTAR')))  
+        self.spin_Bp_err = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bp_err','GAIASTAR'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('bp_err', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_Bp_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Bp_err.SetToolTip("phot_bp_mean_flux_over_error to download - 0 to 100 (expectation is '10')")
         
@@ -542,7 +542,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.release.SetItems(self.releases)
         #
         #gl_cfg.getItem('release', 'GAIASTAR') # Get setting in config file
-        self.release.SetSelection(int(gl_cfg.getItem('release', 'GAIASTAR'))) # Get setting from config file
+        self.release.SetSelection(int(gl_cfg.getItem('release', 'GAIASTAR', 0))) # Get setting from config file
         return self.releases
     def addRelease(self, event=0):
         
@@ -879,7 +879,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.release = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=[], value='')
         releases=self.releaseRefresh()
         self.release.Bind(wx.EVT_CHOICE, self.catRefresh)
-        self.release.SetSelection(int(gl_cfg.getItem('release','GAIABINARY')))
+        self.release.SetSelection(int(gl_cfg.getItem('release','GAIABINARY',0)))
         self.release.SetToolTip("Select release source")
         self.sizer_h.Add(self.release, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         RELEASE = self.release.GetValue()
@@ -890,7 +890,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.catalogue = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=(110,-1), choices=[], value='')
         self.catalogue.SetToolTip("Select Catalogue")
         self.catRefresh()
-        self.catalogue.SetSelection(int(gl_cfg.getItem('catalog', 'GAIABINARY')))
+        self.catalogue.SetSelection(int(gl_cfg.getItem('catalog', 'GAIABINARY',0)))
         self.sizer_h.Add(self.catalogue, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         CATALOG = self.catalogue.GetValue()
         
@@ -903,8 +903,8 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         # Healpix scale (192, 768, 3072, 12288)
         
-        self.HPScale_combo = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['192','768','3072', '12288'], value=gl_cfg.getItem('hps_scale', 'SETTINGS'))
-        self.HPScale_combo.SetValue(int(gl_cfg.getItem('hps_scale', 'SETTINGS')))
+        self.HPScale_combo = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['192','768','3072', '12288'], value=gl_cfg.getItem('hps_scale', 'SETTINGS', 0))
+        self.HPScale_combo.SetValue(int(gl_cfg.getItem('hps_scale', 'SETTINGS', 0)))
         self.HPScale_combo.SetToolTip("Select scale for Healpix '192','768', '3072' or '12,288'")
         self.HPScale_combo.Bind(wx.EVT_CHOICE, self.onHPScale_Refresh)
         self.sizer_h.Add(self.HPScale_combo, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
@@ -915,7 +915,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Separation, 0, wx.ALIGN_LEFT|wx.ALL, 5)
 
         # Values (ie row 2)
-        self.textctrl_Separation = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('value', 'GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT) 
+        self.textctrl_Separation = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('value', 'GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT) 
         self.sizer_h.Add(self.textctrl_Separation, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_Separation.SetToolTip("Enter separation in parsecs")
         self.textctrl_Separation.setValidRoutine(self.textctrl_Separation.Validate_Float)
@@ -925,7 +925,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_HPSfrom, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_HPSfrom = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('hpsfrom','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=HPS_SCALE,initial=int(gl_cfg.getItem('rafrom', 'GAIASTAR')))  
+        self.spin_HPSfrom = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('hpsfrom','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=HPS_SCALE,initial=int(gl_cfg.getItem('rafrom', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_HPSfrom, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_HPSfrom.SetToolTip(f"Lower HPS to download 0 to {HPS_SCALE}")
         
@@ -934,7 +934,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_HPSto, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_HPSto = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('hpsto','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=HPS_SCALE,initial=int(gl_cfg.getItem('rato', 'GAIASTAR')))  
+        self.spin_HPSto = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('hpsto','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=HPS_SCALE,initial=int(gl_cfg.getItem('rato', 'GAIASTAR',0)))  
         self.sizer_h.Add(self.spin_HPSto, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_HPSto.SetToolTip(f"Upper Healpix to scan to - out of {HPS_SCALE}")
         
@@ -945,7 +945,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXfrom1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.textctrl_PXfrom1 = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, )  
+        self.textctrl_PXfrom1 = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom1','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, )  
         self.sizer_h.Add(self.textctrl_PXfrom1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_PXfrom1.SetToolTip("Primary lower parallax to download - 0 to 1000 (expectation is '3.3')")
         
@@ -954,7 +954,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXto1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXto1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxto1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxto1', 'GAIABINARY')))  
+        self.spin_PXto1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxto1','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxto1', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_PXto1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_PXto1.SetToolTip("Primary upper parallax to download to - out of 1000 (expectation is '1000')")
         
@@ -967,7 +967,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Px_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Px_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('px_err1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('px_err1', 'GAIABINARY')))  
+        self.spin_Px_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('px_err1','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('px_err1', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_Px_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Px_err1.SetToolTip("Primary parallax_over_error to download - 0 to 100 (expectation is '20')")
         
@@ -976,7 +976,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_G_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_G_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('g_err1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('g_err1', 'GAIABINARY')))  
+        self.spin_G_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('g_err1','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('g_err1', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_G_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_G_err1.SetToolTip("Primary phot_g_mean_flux_over_error to download - 0 to 100 (expectation is '50')")
         
@@ -985,7 +985,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Rp_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Rp_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rp_err1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('rp_err1', 'GAIABINARY')))  
+        self.spin_Rp_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rp_err1','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('rp_err1', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_Rp_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Rp_err1.SetToolTip("Primary phot_rp_mean_flux_over_error to download - 0 to 100 (expectation is '20')")
         
@@ -994,7 +994,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Bp_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Bp_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bp_err1','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('bp_err1', 'GAIABINARY')))  
+        self.spin_Bp_err1 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bp_err1','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('bp_err1', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_Bp_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Bp_err1.SetToolTip("Primary phot_bp_mean_flux_over_error to download - 0 to 100 (expectation is '20')")
         
@@ -1005,7 +1005,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXfrom2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.textctrl_PXfrom2 = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, )  
+        self.textctrl_PXfrom2 = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxfrom2','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, )  
         self.sizer_h.Add(self.textctrl_PXfrom2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_PXfrom2.SetToolTip("Lower companion parallax to download - 0 to 1000 (expectation is '3')")
         self.textctrl_PXfrom2.setValidRoutine(self.textctrl_PXfrom2.Validate_Float)
@@ -1015,7 +1015,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_PXto2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Values (ie row 2)
-        self.spin_PXto2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxto2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxto2', 'GAIABINARY')))  
+        self.spin_PXto2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('pxto2','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxto2', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_PXto2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_PXto2.SetToolTip("Upper companion parallax to download to - out of 1000 (expectation is '1000')")
         
@@ -1028,7 +1028,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Px_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Px_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('px_err2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('px_err2', 'GAIABINARY')))  
+        self.spin_Px_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('px_err2','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('px_err2', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_Px_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Px_err2.SetToolTip("Companion parallax_over_error to download - 0 to 100 (expectation is '5')")
         
@@ -1037,7 +1037,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_G_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_G_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('g_err2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('g_err2', 'GAIABINARY')))  
+        self.spin_G_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('g_err2','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('g_err2', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_G_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_G_err2.SetToolTip("Companion phot_g_mean_flux_over_error to download - 0 to 100 (expectation is '50')")
         
@@ -1046,7 +1046,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Rp_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Rp_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rp_err2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('rp_err2', 'GAIABINARY')))  
+        self.spin_Rp_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('rp_err2','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('rp_err2', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_Rp_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Rp_err2.SetToolTip("Companion phot_rp_mean_flux_over_error to download - 0 to 100 (expectation is '10')")
         
@@ -1055,7 +1055,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_Bp_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_Bp_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bp_err2','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('bp_err2', 'GAIABINARY')))  
+        self.spin_Bp_err2 = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bp_err2','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=100,initial=int(gl_cfg.getItem('bp_err2', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_Bp_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_Bp_err2.SetToolTip("Companion phot_bp_mean_flux_over_error to download - 0 to 100 (expectation is '10')")
         
@@ -1088,7 +1088,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_max_data, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.textCtrl_max_data = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('max_data','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.textCtrl_max_data = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('max_data','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         self.sizer_h.Add(self.textCtrl_max_data, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textCtrl_max_data.SetToolTip("Maximum healpix file size (expectation is '1E6')")
         self.textCtrl_max_data.setValidRoutine(self.textCtrl_max_data.Validate_Float)
@@ -1098,7 +1098,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.sizer_h.Add(static_b_gt, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
-        self.spin_mod_b_gt = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mod_b_gt','GAIABINARY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=90,initial=int(gl_cfg.getItem('mod_b_gt', 'GAIABINARY')))  
+        self.spin_mod_b_gt = SpinCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mod_b_gt','GAIABINARY', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=90,initial=int(gl_cfg.getItem('mod_b_gt', 'GAIABINARY',0)))  
         self.sizer_h.Add(self.spin_mod_b_gt, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_mod_b_gt.SetToolTip("Distance from galactic plane. Mod (b) greater than entered value (expectation is '15')")
         
@@ -1467,7 +1467,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.release.Clear()
         self.release.SetItems(self.releases)
         #
-        self.release.SetSelection(int(gl_cfg.getItem('release', 'GAIABINARY'))) # Get setting from config file
+        self.release.SetSelection(int(gl_cfg.getItem('release', 'GAIABINARY',0))) # Get setting from config file
         return self.releases
         
     def binaries(self, record, i, release, catalogue ):
@@ -1755,7 +1755,7 @@ class gaiaBinaryRetrieval(wx.Panel):
                     gaia_cnxn = da.GaiaDataAccess()
                     data = gaia_cnxn.gaia_query_to_pandas(query[0])
                     #self.parent.StatusBarProcessing(data)
-                    data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}', protocol=int(gl_cfg.getItem('pickle_protocol', 'SETTINGS')))
+                    data.to_pickle(f'bindata/{release}/{catalogue}/gaia_{release}_HP{i}', protocol=int(gl_cfg.getItem('pickle_protocol', 'SETTINGS', 4)))
             except Exception:
                 self.parent.StatusBarProcessing (f'timeout for HPS i = {i}')
                 timeoutCount=timeoutCount+1
@@ -1950,9 +1950,13 @@ class masterProcessingPanel(wx.Panel):
         return round(XYoverDxy.sum()/totalSelected,2)
         
         
-    def XreturnY(self, X):
+    def XreturnY(self, X,m=0,c=0):
+        if not m:
+            m=self.m
+        if not c:
+            c=self.c
         # Return lower outlier range.
-        Y=self.m*float(X) + self.c
+        Y=m*float(X) + c
         return Y
     
     def OnCancel(self, event=0):
@@ -2038,7 +2042,7 @@ class dataRetrieval(masterProcessingPanel):
         self.release = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=[], value='')
         releases=self.releaseRefresh()
         self.release.Bind(wx.EVT_CHOICE, self.catRefresh)
-        self.release.SetSelection(int(gl_cfg.getItem('release','RETRIEVAL')))
+        self.release.SetSelection(int(gl_cfg.getItem('release','RETRIEVAL', 0)))
         self.release.SetToolTip("Select release source")
         self.sizer_h.Add(self.release, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         #global RELEASE
@@ -2050,7 +2054,7 @@ class dataRetrieval(masterProcessingPanel):
         self.catalogue = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=[], value='')
         self.catalogue.SetToolTip("Select Catalogue")
         self.catRefresh()
-        self.catalogue.SetSelection(int(gl_cfg.getItem('catalog', 'RETRIEVAL')))
+        self.catalogue.SetSelection(int(gl_cfg.getItem('catalog', 'RETRIEVAL', 0)))
         self.sizer_h.Add(self.catalogue, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         #global CATALOG
         CATALOG = self.catalogue.GetValue()
@@ -2060,7 +2064,7 @@ class dataRetrieval(masterProcessingPanel):
         # Loadtype
         
         self.loadType_combo = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['Healpix','Degrees (RA)','Degrees (Dec)', 'Parsecs'], value='')
-        self.loadType_combo.SetSelection(int(gl_cfg.getItem('loadtype', 'RETRIEVAL')))
+        self.loadType_combo.SetSelection(int(gl_cfg.getItem('loadtype', 'RETRIEVAL', 0)))
         self.loadType_combo.SetToolTip("Select load mechanism")
         self.loadType_combo.Bind(wx.EVT_CHOICE, self.loadTypeRefresh)
         self.sizer_h.Add(self.loadType_combo, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
@@ -2070,7 +2074,7 @@ class dataRetrieval(masterProcessingPanel):
         self.sizer_h.Add(self.spin_loadType, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_loadType.SetToolTip(f"Upper Healpix to scan to - out of {HPS_SCALE}")
         self.loadTypeRefresh()
-        self.spin_loadType.SetValue(int(gl_cfg.getItem('value', 'RETRIEVAL')))
+        self.spin_loadType.SetValue(int(gl_cfg.getItem('value', 'RETRIEVAL', 0)))
         
         # Create ungrouped data check box
         ungroupedStaticText = StaticText(self, id=wx.ID_ANY, label="Load clusters?")
@@ -2411,7 +2415,7 @@ class dataRetrieval(masterProcessingPanel):
         self.release.SetItems(self.releases)
         #
         #gl_cfg.getItem('release', 'RETRIEVAL') # Get setting in config file
-        self.release.SetSelection(int(gl_cfg.getItem('release', 'RETRIEVAL'))) # Get setting from config file
+        self.release.SetSelection(int(gl_cfg.getItem('release', 'RETRIEVAL', 0))) # Get setting from config file
         return self.releases
         
     def read_db(self, event):
@@ -3365,62 +3369,69 @@ class dataFilter(masterProcessingPanel):
         self.static_text_binProbability = StaticText(self, label='Bin Prob') 
         fgsizer.Add(self.static_text_binProbability, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         
-        self.static_InOut = StaticText(self, label='Inner/outer') 
-        fgsizer.Add(self.static_InOut, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        self.static_InDist = StaticText(self, label='Inner dist') 
+        fgsizer.Add(self.static_InDist, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         
-        self.static_distCutoff = StaticText(self, label='Dist. cutoff') 
-        fgsizer.Add(self.static_distCutoff, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        self.static_OutDist = StaticText(self, label='Outer Limit') 
+        fgsizer.Add(self.static_OutDist, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         
         # Values (ie row 2)
         # Signal to noise ratio for Px
-        self.spin_parallax_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxsn_gt','FILTER')))  
+        self.spin_parallax_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxsn_gt','FILTER', 0)))
         fgsizer.Add(self.spin_parallax_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_parallax_SN.SetToolTip("Signal to noise ratio for Parallax (ie Px/error) in either star.")
         
         # Signal to noise ratio for Red Magnitude
-        self.spin_red_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('rpsn_gt','FILTER')))  
+        self.spin_red_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('rpsn_gt','FILTER', 0)))
         fgsizer.Add(self.spin_red_mag_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_red_mag_SN.SetToolTip("Signal to noise ratio for Red Magnitude (ie Rp/error) in either star.")
         
         # Signal to noise ratio for Green Magnitude
-        self.spin_green_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('g_sn_gt','FILTER')))  
+        self.spin_green_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('g_sn_gt','FILTER', 0)))
         fgsizer.Add(self.spin_green_mag_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_green_mag_SN.SetToolTip("Signal to noise ratio for Green Magnitude (ie G/error) in either star.")
         
         # Signal to noise ratio for Blue Magnitude
-        self.spin_blue_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('bpsn_gt','FILTER')))  
+        self.spin_blue_mag_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('bpsn_gt','FILTER', 0)))
         fgsizer.Add(self.spin_blue_mag_SN, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_blue_mag_SN.SetToolTip("Signal to noise ratio for Blue Magnitude (ie Bp/error) in either star.")
         
         # Signal to noise ratio for PMRA and PMDEC
-        self.spin_pmsnratio = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pmsn_gt','FILTER')))
+        self.spin_pmsnratio = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pmsn_gt','FILTER',0)))
         fgsizer.Add(self.spin_pmsnratio, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_pmsnratio.SetToolTip("Signal to noise ratio for PMRA and PMDEC (ie PM/error) in either star.")
 
         #Diffence in radial velocities between primary and companion stars.
-        self.spin_diff_radial_velocity = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=99,initial=int(gl_cfg.getItem('rv_lt','FILTER')))
+        self.spin_diff_radial_velocity = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=99,initial=int(gl_cfg.getItem('rv_lt','FILTER',0)))
         fgsizer.Add(self.spin_diff_radial_velocity, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_diff_radial_velocity.SetToolTip("Difference in radial velocities between primary and companion stars.")
         
         #Max RUWE.
-        self.text_ruwe = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('ruwe_lt','FILTER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_ruwe = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('ruwe_lt','FILTER', 1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_ruwe, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_ruwe.SetToolTip("Maximum RUWE in either star.  Enter decimal x for RUWE < x")
         
         #Binary probability.
-        self.text_binProbability = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bin_probability_lt','FILTER'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_binProbability = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bin_probability_lt','FILTER', 0.1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_binProbability, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_binProbability.SetToolTip("Maximum probability in either star.  Enter decimal x for probability < x")
         
-        self.combo_InOut = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['Inner','Outer'], value='')
-        self.combo_InOut.SetSelection(int(gl_cfg.getItem('io','FILTER')))
-        fgsizer.Add(self.combo_InOut, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.combo_InOut.SetToolTip("Stars inside or outside the distance cutoff")
+        #self.combo_InOut = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['Inner','Outer'], value='')
+        #self.combo_InOut.SetSelection(int(gl_cfg.getItem('io','FILTER',0)))
+        #fgsizer.Add(self.combo_InOut, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        #self.combo_InOut.SetToolTip("Stars inside or outside the distance cutoff")
         
-        #Distance cutoff.
-        self.spin_distCutoff = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=333,initial=int(gl_cfg.getItem('cutoff','FILTER')))  
+        #Inner Distance cutoff.
+        self.spin_distInnerCutoff = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=333,initial=int(gl_cfg.getItem('cutoff-inner','FILTER', 1))) 
+        self.spin_distInnerCutoff.SetToolTip("Inner limit of distance for stars to be included.")
+        
+        fgsizer.Add(self.spin_distInnerCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        #Outer Distance cutoff.
+        self.spin_distCutoff = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=333,initial=int(gl_cfg.getItem('cutoff-outer','FILTER',100))) 
+        self.spin_distCutoff.SetToolTip("Outer limit of distance for stars to be included.")
+        
         fgsizer.Add(self.spin_distCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.spin_distCutoff.SetToolTip("Distance cutoff in pc.")
+        #self.spin_distCutoff.SetToolTip("Distance cutoff in pc.")
         
         self.SetSizer(self.sizer_v)
                 
@@ -3485,6 +3496,7 @@ class dataFilter(masterProcessingPanel):
         self.listctrl.InsertColumn(17, u"mass", width=70)
         self.listctrl.InsertColumn(18, u"age", width=70)
         self.listctrl.InsertColumn(19, u"bin prob", width=60)
+        self.listctrl.InsertColumn(20, u"Exclusion reason", width=200)
 
         #"phot_g_mean_flux_over_error"	FLOAT, \
         #"phot_rp_mean_flux_over_error"	FLOAT, \
@@ -3544,8 +3556,9 @@ class dataFilter(masterProcessingPanel):
         gl_cfg.setItem('rv_lt',self.spin_diff_radial_velocity.GetValue(),'FILTER')
         gl_cfg.setItem('ruwe_lt',self.text_ruwe.GetValue(),'FILTER')
         gl_cfg.setItem('bin_probability_lt',self.text_binProbability.GetValue(),'FILTER')
-        gl_cfg.setItem('io',self.combo_InOut.GetSelection(),'FILTER')
-        gl_cfg.setItem('cutoff',self.spin_distCutoff.GetValue(),'FILTER')
+        #gl_cfg.setItem('io',self.combo_InOut.GetSelection(),'FILTER')
+        gl_cfg.setItem('cutoff-outer',self.spin_distCutoff.GetValue(),'FILTER')
+        gl_cfg.setItem('cutoff-inner',self.spin_distInnerCutoff.GetValue(),'FILTER')
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
        
         self.loadData.Disable() #Disable the button to avoid being pressed twice
@@ -3586,7 +3599,8 @@ class dataFilter(masterProcessingPanel):
         sn_bp_limit=float(self.spin_blue_mag_SN.GetValue())
         sn_pm_limit=float(self.spin_pmsnratio.GetValue())
         distCutoff_limit=float(self.spin_distCutoff.GetValue())
-        outerShell=bool(self.combo_InOut.GetSelection())
+        distInnerCutoff_limit=float(self.spin_distInnerCutoff.GetValue())
+        #outerShell=bool(self.combo_InOut.GetSelection())
         ruwe_limit=float(self.text_ruwe.GetValue())
         binProbability_limit=float(self.text_binProbability.GetValue())
         
@@ -3603,7 +3617,7 @@ class dataFilter(masterProcessingPanel):
         condition = concat_df.include == True
         statusIndices = indexStatus[condition]
         statusIndicesList = statusIndices.tolist()
-        
+        excludeArr=[]
         for idxStar in statusIndicesList:
         #for idxStar, row in star_rows.iterrows():
             idxBin=int(idxStar/2)
@@ -3752,16 +3766,15 @@ class dataFilter(masterProcessingPanel):
                         excludeTxt=f'SN_Bp={int(sn_row)}'
                         self.parent.StatusBarProcessing(excludeTxt)
                         include=0
-                #Cut off inner or outer stars iside or outside limit
-                #if include:
+                #Cut off inner or outer stars iside or outside limits
                 dist_row=abs(float(row.DIST))
-                if include and outerShell and dist_row<distCutoff_limit:
-                    excludeTxt=f'Inside shell'
+                if include and dist_row>distCutoff_limit:
+                    excludeTxt=f'Exceeds outer cutoff'
                     self.parent.StatusBarProcessing(excludeTxt)
                     include=0
                     
-                if  include and not outerShell and dist_row>distCutoff_limit:
-                    excludeTxt=f'Outer shell'
+                if  include and dist_row<distInnerCutoff_limit:
+                    excludeTxt=f'Less than inner cutoff'
                     self.parent.StatusBarProcessing(excludeTxt)
                     include=0
                     
@@ -3862,10 +3875,11 @@ class dataFilter(masterProcessingPanel):
                 }
             
                 self.parent.export.append(exportRecord)
+            excludeArr.append(excludeTxt)
 
         exportPD=pd.DataFrame(self.parent.export)
-        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')   
-        self.restoreListCtrl()
+        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')
+        self.restoreListCtrl(txtArr=excludeArr)
         self.loadData.SetLabel(f'100%')
         self.parent.status['populateOut']=self.parent.status['include']
         self.parent.status['hrOut']=self.parent.status['include']
@@ -3891,7 +3905,7 @@ class dataFilter(masterProcessingPanel):
         
         self.parent.StatusBarNormal('Completed OK')
         
-    def restoreListCtrl(self, event=0, limit=1000):
+    def restoreListCtrl(self, event=0, limit=1000, txtArr=[]):
         
         try:
             self.parent.star_rows=self.parent.star_rows.convert_dtypes()
@@ -3927,6 +3941,10 @@ class dataFilter(masterProcessingPanel):
                 binarystar=float(row.classprob_dsc_specmod_binarystar)
             except Exception:
                 binarystar=0
+            if idxStar+1>len(txtArr):
+                txt=''
+            else:
+                txt=txtArr[idxStar]
             try:
                 self.listctrl.Append(
                     [int(row.SOURCE_ID),
@@ -3950,7 +3968,10 @@ class dataFilter(masterProcessingPanel):
                      round(float(row.PHOT_G_MEAN_MAG),4),
                      round(float(mass),4),
                      round(float(age),4),
-                     round(float(binarystar),4)])
+                     round(float(binarystar),4),
+                     txt
+                     ]
+                )
                      
         #"phot_g_mean_flux_over_error"	FLOAT, \
         #"phot_rp_mean_flux_over_error"	FLOAT, \
@@ -4400,21 +4421,21 @@ class HRDataPlotting(masterProcessingPanel):
         # Query values
         
         #self.text_colourLower = TextCtrl(self, id=wx.ID_ANY, value="0.9", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT) 
-        self.text_colourLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('col_lower', 'HRPLOT'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_colourLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('col_lower', 'HRPLOT', .7), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_colourLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #self.text_colourUpper = TextCtrl(self, id=wx.ID_ANY, value="2.3", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
-        self.text_colourUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('col_upper', 'HRPLOT'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_colourUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('col_upper', 'HRPLOT', 2), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_colourUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #self.text_magLower = TextCtrl(self, id=wx.ID_ANY, value="5.5", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT) 
         #self.text_magLower = TextCtrl(self, id=wx.ID_ANY, value="5", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
-        self.text_magLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mag_lower', 'HRPLOT'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_magLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mag_lower', 'HRPLOT', 4.7), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_magLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #self.text_magUpper = TextCtrl(self, id=wx.ID_ANY, value="9.5", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT) 
         #self.text_magUpper = TextCtrl(self, id=wx.ID_ANY, value="8.5", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
-        self.text_magUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mag_upper', 'HRPLOT'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_magUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mag_upper', 'HRPLOT', 8.7), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_magUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #self.text_magRange = TextCtrl(self, id=wx.ID_ANY, value="0.3", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
-        self.text_magRange = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mag_range', 'HRPLOT'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_magRange = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('mag_range', 'HRPLOT', 0.4), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_magRange, 0, wx.ALIGN_LEFT|wx.ALL, 5)
                 
         fgsizer.AddSpacer(1)
@@ -4808,53 +4829,57 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.static_yAverage, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Axis limits
-        self.spin_bins = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=100,initial=int(gl_cfg.getItem('no_bins','KINETIC')))  
+        self.spin_bins = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=100,initial=int(gl_cfg.getItem('no_bins','KINETIC', 5)))  
         fgsizer.Add(self.spin_bins, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_bins.SetToolTip("Integer umber of bins to divide x-scale into.")
         
-        self.textctrl_xLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_lower','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.textctrl_xLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_lower','KINETIC', .0001), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_xLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_xLower.SetToolTip("Lower end of x-scale.")
-        self.textctrl_xUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_upper','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.textctrl_xUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_upper','KINETIC', .1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_xUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_xUpper.SetToolTip("Upper end of x-scale.")
-        self.textctrl_yLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_lower','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.textctrl_yLower = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_lower','KINETIC', .1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_yLower.SetToolTip("Lower end of y-scale.")
-        self.textctrl_yUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_upper','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.textctrl_yUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_upper','KINETIC', 5), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_yUpper.SetToolTip("Upper end of y-scale.")
         
         # Outlier values
-        self.text_x_TopLeft = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_topLeft','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_x_TopLeft = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_topLeft','KINETIC', .004), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT) 
+        self.text_x_TopLeft.SetToolTip("Top left x of outlier line.") 
         fgsizer.Add(self.text_x_TopLeft, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.text_y_TopLeft = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_topLeft','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_y_TopLeft = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_topLeft','KINETIC', 4), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_y_TopLeft.SetToolTip("Top left y of outlier line.") 
         fgsizer.Add(self.text_y_TopLeft, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.text_x_BottomRight = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_bottomRight','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_x_BottomRight = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_bottomRight','KINETIC', .1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_x_BottomRight.SetToolTip("Bottom right x of outlier line.") 
         fgsizer.Add(self.text_x_BottomRight, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.text_y_BottomRight = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_bottomRight','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_y_BottomRight = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_bottomRight','KINETIC', 1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_y_BottomRight.SetToolTip("Bottom right y of outlier line.") 
         fgsizer.Add(self.text_y_BottomRight, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Upper cutoff
-        self.text_upperCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('upper_cutoff','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_upperCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('upper_cutoff','KINETIC', 4), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_upperCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_upperCutoff.SetToolTip("Value of y-scale above which values will be ignored.")
         
         # v x err reporting threshold
-        self.text_vxerrCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('v_dv_cutoff','KINETIC'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
+        self.text_vxerrCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('v_dv_cutoff','KINETIC', 0), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         self.text_vxerrCutoff.SetToolTip("v/v_error reporting threshold.")
         fgsizer.Add(self.text_vxerrCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Lower bin cutoff textctrl
-        self.lowerBinCutoffTextCtrl = SpinCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=99,initial=int(gl_cfg.getItem('lower_bin_cutoff','KINETIC')))   
+        self.lowerBinCutoffTextCtrl = SpinCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=99,initial=int(gl_cfg.getItem('lower_bin_cutoff','KINETIC', 5)))   
         self.lowerBinCutoffTextCtrl.SetToolTip("Enter number below which occupancy not to display bins.")
         fgsizer.Add(self.lowerBinCutoffTextCtrl, 0, wx.ALL, 2)
         
         self.combo_yLog = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['log','normal'], value='')
-        self.combo_yLog.SetSelection(int(gl_cfg.getItem('y_scale','KINETIC')))
+        self.combo_yLog.SetSelection(int(gl_cfg.getItem('y_scale','KINETIC', 0)))
         fgsizer.Add(self.combo_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.combo_yAvg = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['rms','mean'], value='')
-        self.combo_yAvg.SetSelection(int(gl_cfg.getItem('y_avg','KINETIC')))
+        self.combo_yAvg.SetSelection(int(gl_cfg.getItem('y_avg','KINETIC', 0)))
         fgsizer.Add(self.combo_yAvg, 0, wx.ALIGN_LEFT|wx.ALL, 5)
                 
         # Create show bins check box
@@ -6137,7 +6162,7 @@ class TFDataPlotting(masterProcessingPanel):
         for i in range(numTFBins):
             if math.isnan(xLog10[i]):
                 continue
-            yHat_i=self.XreturnY(xLog10[i])
+            yHat_i=self.XreturnY(xLog10[i], self.slope, self.offset)
             yMinusYhatSum=yMinusYhatSum+(yLog10[i]-yHat_i)**2
             xMinusXbarSum=xMinusXbarSum+(xLog10[i]-xMeanLog10)**2
         rowCnt += 1 #Next row
@@ -6145,7 +6170,7 @@ class TFDataPlotting(masterProcessingPanel):
         self.summaryList.SetItem(rowCnt, 1, f"{math.sqrt((yMinusYhatSum/xMinusXbarSum)/(n-2)):,.2f}")
                 
         xdataLMS=[dataTFBins.binUpperBounds[0],dataTFBins.binLowerBounds[numTFBins-1]]
-        ydataLMS=[10**self.XreturnY(math.log10(dataTFBins.binUpperBounds[0])),10**self.XreturnY(math.log10(dataTFBins.binLowerBounds[numTFBins-1]))]
+        ydataLMS=[10**self.XreturnY(math.log10(dataTFBins.binUpperBounds[0]), self.slope, self.offset),10**self.XreturnY(math.log10(dataTFBins.binLowerBounds[numTFBins-1]), self.slope,self.offset )]
         
         self.lineLMS, = self.TulleyFPlot.axes.plot(xdataLMS, ydataLMS, 'bo-', linewidth=2, markersize=1)
         
@@ -6188,10 +6213,10 @@ class TFDataPlotting(masterProcessingPanel):
 
         self.parent.StatusBarNormal('Completed OK')
         
-    def XreturnY(self, X):
-        # Return lower outlier range.
-        Y=self.slope*float(X) + self.offset
-        return Y
+    #def XreturnY(self, X):
+    #    # Return lower outlier range.
+    #    Y=self.slope*float(X) + self.offset
+    #    return Y
 class NumberDensityPlotting(masterProcessingPanel):
 
 #Plot Density of stars by distance from Sol.
@@ -6820,10 +6845,10 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.plot_but.Enable()
         
     
-    def XreturnY(self, X):
-        # Return lower outlier range.
-        Y=self.slope*float(X) + self.offset
-        return Y
+    #def XreturnY(self, X):
+    #    # Return lower outlier range.
+    #    Y=self.slope*float(X) + self.offset
+    #    return Y
 class AladinView(wx.Panel):
 
 #Plot Actual motion in the 1d plane of the sky vs separation of binaries and compare with Newtonian motion.
