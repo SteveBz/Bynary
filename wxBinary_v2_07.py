@@ -3563,7 +3563,7 @@ class dataFilter(masterProcessingPanel):
        
         self.loadData.Disable() #Disable the button to avoid being pressed twice
         
-        print(self.parent.status)
+        #print(self.parent.status)
         self.parent.export=[]
         self.listctrl.DeleteAllItems() # clear the control
         self.parent.star_rows=pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/star_rows.saved') # Pick up most recent starlist if changed.
@@ -3609,10 +3609,10 @@ class dataFilter(masterProcessingPanel):
         star_rows=star_rows.convert_dtypes()
         
         #print(star_rows)
-        print(self.parent.status)
+        #print(self.parent.status)
         concat_df = pd.concat([self.parent.status,self.parent.status]).sort_values(by=['pairnumber']).reset_index(drop=True)
         #Select currently included rows only
-        print(concat_df)
+        #print(concat_df)
         indexStatus = concat_df.index
         condition = concat_df.include == True
         statusIndices = indexStatus[condition]
@@ -3815,6 +3815,9 @@ class dataFilter(masterProcessingPanel):
             if odd and self.parent.status.include[idxBin]:
                 primaryPointer=self.parent.starSystemList.binaryList[str(idxBin+1)].primary
                 star2Pointer=self.parent.starSystemList.binaryList[str(idxBin+1)].star2
+                #print(primaryPointer)
+                #primaryPointer=pd.DataFrame(primaryPointer)
+                #star2Pointer=pd.DataFrame(primaryPointer)
                 #print(primaryPointer)
                 exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
                     'ra1':float(primaryPointer.RA_),
@@ -4557,6 +4560,8 @@ class HRDataPlotting(masterProcessingPanel):
                 continue
                 primaryPointer=self.parent.starSystemList.binaryList[str(index+1)].primary
                 star2Pointer=self.parent.starSystemList.binaryList[str(index+1)].star2
+                #primaryPointer=pd.DataFrame(primaryPointer)
+                #star2Pointer=pd.DataFrame(primaryPointer)
                 exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.SOURCE_ID),
                     'ra1':float(primaryPointer.RA_),
                     'dec1':float(primaryPointer.DEC_),
@@ -5158,6 +5163,8 @@ class kineticDataPlotting(masterProcessingPanel):
                     else:
                         primaryPointer=self.parent.starSystemList.binaryList[str(i+1)].primary
                         star2Pointer=self.parent.starSystemList.binaryList[str(i+1)].star2
+                        #primaryPointer=pd.DataFrame(primaryPointer)
+                        #star2Pointer=pd.DataFrame(primaryPointer)
                         exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
                             'ra1':float(primaryPointer.RA_),
                             'dec1':float(primaryPointer.DEC_),
@@ -5804,6 +5811,8 @@ class TFDataPlotting(masterProcessingPanel):
             
             primaryPointer=self.parent.starSystemList.binaryList[str(i+1)].primary
             star2Pointer=self.parent.starSystemList.binaryList[str(i+1)].star2
+            #primaryPointer=pd.DataFrame(primaryPointer)
+            #star2Pointer=pd.DataFrame(primaryPointer)
             exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
                 'ra1':float(primaryPointer.RA_),
                 'dec1':float(primaryPointer.DEC_),

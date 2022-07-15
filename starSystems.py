@@ -78,50 +78,52 @@ class binaryStarSystems():
             self.star_rows[idx]['PARALLAX']=row.parallax
         else:
             self.star_rows[idx]['PARALLAX']=0
+            row.parallax=0
         if not pd.isna(row.parallax_error):
             self.star_rows[idx]['PARALLAX_ERROR']=row.parallax_error
         else:
             self.star_rows[idx]['PARALLAX_ERROR']=0
-            
+            row.parallax_error=0
         if not pd.isna(row.phot_g_mean_mag):
             self.star_rows[idx]['PHOT_G_MEAN_MAG']=row.phot_g_mean_mag
         else:
             self.star_rows[idx]['PHOT_G_MEAN_MAG']=0
-            
+            row.phot_g_mean_mag=0
         if not pd.isna(row.phot_g_mean_flux_over_error):
             self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=row.phot_g_mean_flux_over_error
         else:
             self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=0
-            
+            row.phot_g_mean_flux_over_error=0
         if not pd.isna(row.phot_bp_mean_flux_over_error):
             self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=row.phot_bp_mean_flux_over_error
         else:
             self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=0
-            
+            row.phot_bp_mean_flux_over_error=0
         if not pd.isna(row.phot_rp_mean_flux_over_error):
             self.star_rows[idx]['PHOT_RP_MEAN_FLUX_OVER_ERROR']=row.phot_rp_mean_flux_over_error
         else:
             self.star_rows[idx]['PHOT_RP_MEAN_FLUX_OVER_ERROR']=0
-            
+            row.phot_rp_mean_flux_over_error=0
         if not pd.isna(row.bp_rp):
             self.star_rows[idx]['BP_RP']=row.bp_rp
         else:
             self.star_rows[idx]['BP_RP']=0
-            
+            row.bp_rp=0            
         if not pd.isna(row.radial_velocity):
             self.star_rows[idx]['RADIAL_VELOCITY']=row.radial_velocity
         else:
             self.star_rows[idx]['RADIAL_VELOCITY']=0
-            
-        if not pd.isna(row.radial_velocity):
+            row.radial_velocity=0            
+        if not pd.isna(row.mass_flame):
             self.star_rows[idx]['mass_flame']=row.mass_flame
         else:
             self.star_rows[idx]['mass_flame']=0
-            
-        if not pd.isna(row.radial_velocity):
+            row.mass_flame=0
+        if not pd.isna(row.age_flame):
             self.star_rows[idx]['age_flame']=row.age_flame
         else:
             self.star_rows[idx]['age_flame']=0
+            row.age_flame=0
         #self.star_rows[idx]['PHOT_G_MEAN_MAG']=row.phot_g_mean_mag,
         #self.star_rows[idx]['PHOT_G_MEAN_FLUX_OVER_ERROR']=row.phot_g_mean_flux_over_error
         #self.star_rows[idx]['PHOT_BP_MEAN_FLUX_OVER_ERROR']=row.phot_bp_mean_flux_over_error
@@ -132,10 +134,12 @@ class binaryStarSystems():
         label=''
         if str(ccdm) in self.binaryList.keys():
             binary=self.binaryList[str(ccdm)]
+            #(R, V, Verr, M) =binary.binaryStarSystem(self.star_rows[idx], str(ccdm))
             (R, V, Verr, M) =binary.binaryStarSystem(row, str(ccdm))
             BIN=1
         else:
             BIN=0
+            #unary = starSystem(self.star_rows[idx], rfactor=0)
             unary = starSystem(row, rfactor=0)
             self.binaryList[str(ccdm)]=unary
         
