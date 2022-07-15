@@ -3334,7 +3334,7 @@ class dataFilter(masterProcessingPanel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=10, hgap=0, rows=3, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=11, hgap=0, rows=3, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
         fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
@@ -3375,6 +3375,9 @@ class dataFilter(masterProcessingPanel):
         self.static_OutDist = StaticText(self, label='Outer Limit') 
         fgsizer.Add(self.static_OutDist, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         
+        self.static_minSepn = StaticText(self, label='Min Sepn') 
+        fgsizer.Add(self.static_minSepn, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        
         # Values (ie row 2)
         # Signal to noise ratio for Px
         self.spin_parallax_SN = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=1000,initial=int(gl_cfg.getItem('pxsn_gt','FILTER', 0)))
@@ -3409,11 +3412,13 @@ class dataFilter(masterProcessingPanel):
         #Max RUWE.
         self.text_ruwe = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('ruwe_lt','FILTER', 1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_ruwe, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.text_ruwe.setValidRoutine(self.text_ruwe.Validate_Float)
         self.text_ruwe.SetToolTip("Maximum RUWE in either star.  Enter decimal x for RUWE < x")
         
         #Binary probability.
         self.text_binProbability = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('bin_probability_lt','FILTER', 0.1), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_binProbability, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.text_binProbability.setValidRoutine(self.text_binProbability.Validate_Float)
         self.text_binProbability.SetToolTip("Maximum probability in either star.  Enter decimal x for probability < x")
         
         #self.combo_InOut = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['Inner','Outer'], value='')
@@ -3424,14 +3429,18 @@ class dataFilter(masterProcessingPanel):
         #Inner Distance cutoff.
         self.spin_distInnerCutoff = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=333,initial=int(gl_cfg.getItem('cutoff-inner','FILTER', 1))) 
         self.spin_distInnerCutoff.SetToolTip("Inner limit of distance for stars to be included.")
-        
         fgsizer.Add(self.spin_distInnerCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+
         #Outer Distance cutoff.
         self.spin_distCutoff = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=0, max=333,initial=int(gl_cfg.getItem('cutoff-outer','FILTER',100))) 
         self.spin_distCutoff.SetToolTip("Outer limit of distance for stars to be included.")
-        
         fgsizer.Add(self.spin_distCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        #self.spin_distCutoff.SetToolTip("Distance cutoff in pc.")
+
+        #Min Sepn cutoff.
+        self.text_Min_Sepn = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('min-sepn','FILTER', '1e-5'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        fgsizer.Add(self.text_Min_Sepn, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.text_Min_Sepn.setValidRoutine(self.text_Min_Sepn.Validate_Float)
+        self.text_Min_Sepn.SetToolTip("Minimum separation of binary pair.  Enter decimal parsecs")
         
         self.SetSizer(self.sizer_v)
                 
@@ -3540,7 +3549,7 @@ class dataFilter(masterProcessingPanel):
         self.parent.StatusBarProcessing('Filter processing commenced')
         
         wx.Yield()
-        attributes=[self.text_ruwe, self.text_binProbability]
+        attributes=[self.text_ruwe, self.text_binProbability, self.text_Min_Sepn]
         for attribute in attributes:
             attribute.setValidRoutine(attribute.Validate_Float)
             if not attribute.runValidRoutine():
@@ -3559,6 +3568,7 @@ class dataFilter(masterProcessingPanel):
         #gl_cfg.setItem('io',self.combo_InOut.GetSelection(),'FILTER')
         gl_cfg.setItem('cutoff-outer',self.spin_distCutoff.GetValue(),'FILTER')
         gl_cfg.setItem('cutoff-inner',self.spin_distInnerCutoff.GetValue(),'FILTER')
+        gl_cfg.setItem('min-sepn',self.text_Min_Sepn.GetValue(),'FILTER')
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
        
         self.loadData.Disable() #Disable the button to avoid being pressed twice
@@ -3599,6 +3609,7 @@ class dataFilter(masterProcessingPanel):
         sn_bp_limit=float(self.spin_blue_mag_SN.GetValue())
         sn_pm_limit=float(self.spin_pmsnratio.GetValue())
         distCutoff_limit=float(self.spin_distCutoff.GetValue())
+        minSepn_limit=float(self.text_Min_Sepn.GetValue())
         distInnerCutoff_limit=float(self.spin_distInnerCutoff.GetValue())
         #outerShell=bool(self.combo_InOut.GetSelection())
         ruwe_limit=float(self.text_ruwe.GetValue())
@@ -3722,7 +3733,6 @@ class dataFilter(masterProcessingPanel):
                 excludeTxt=f'rv=0'
                 self.parent.status.radialvelocity[idxBin]=radialvelocity
                 
-            
             try:
                 ruwe=float(row.RUWE)
             except Exception:
@@ -3766,15 +3776,21 @@ class dataFilter(masterProcessingPanel):
                         excludeTxt=f'SN_Bp={int(sn_row)}'
                         self.parent.StatusBarProcessing(excludeTxt)
                         include=0
-                #Cut off inner or outer stars iside or outside limits
+                #Cut off stars outside outer limits
                 dist_row=abs(float(row.DIST))
                 if include and dist_row>distCutoff_limit:
                     excludeTxt=f'Exceeds outer cutoff'
                     self.parent.StatusBarProcessing(excludeTxt)
                     include=0
-                    
+                #Cut off inside  inner limits
                 if  include and dist_row<distInnerCutoff_limit:
                     excludeTxt=f'Less than inner cutoff'
+                    self.parent.StatusBarProcessing(excludeTxt)
+                    include=0
+                #print(row)
+                #Exclude separations less than minimum separation
+                if  include and self.parent.binaryDetail.r[idxBin]<minSepn_limit:
+                    excludeTxt=f'Less than minimum Separation'
                     self.parent.StatusBarProcessing(excludeTxt)
                     include=0
                     
