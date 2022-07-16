@@ -1923,7 +1923,7 @@ class masterProcessingPanel(wx.Panel):
         XY=self.parent.status['include']*self.parent.X[col]
         XY1 = pd.DataFrame({'X':self.parent.status['include']*self.parent.X[col], 'Y':self.parent.status['include']*self.parent.Y[col]})
         XYcount=XY1[(XY1['X'] > 0) & (XY1['Y'] > 0)].count()
-        totalSelected=self.parent.status['include'].sum()*2
+        totalSelected=self.parent.status['include'].sum()
         
         return round(XYcount['X']/totalSelected,2)
         
@@ -3334,7 +3334,7 @@ class dataFilter(masterProcessingPanel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=11, hgap=0, rows=3, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=13, hgap=0, rows=3, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
         fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
@@ -3377,6 +3377,13 @@ class dataFilter(masterProcessingPanel):
         
         self.static_minSepn = StaticText(self, label='Min Sepn') 
         fgsizer.Add(self.static_minSepn, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        
+        self.static_ageDiffMax = StaticText(self, label='Max Age Diff') 
+        fgsizer.Add(self.static_ageDiffMax, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
+        
+        # Activate age comparison (both stars must have and 'age')
+        forceAgeCompStaticText = StaticText(self, id=wx.ID_ANY, label="Age Comparison?")
+        fgsizer.Add(forceAgeCompStaticText, 0, wx.ALL, 2)
         
         # Values (ie row 2)
         # Signal to noise ratio for Px
@@ -3437,10 +3444,22 @@ class dataFilter(masterProcessingPanel):
         fgsizer.Add(self.spin_distCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
 
         #Min Sepn cutoff.
-        self.text_Min_Sepn = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('min-sepn','FILTER', '1e-5'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        self.text_Min_Sepn = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('min-sepn','FILTER', '0'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_Min_Sepn, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.text_Min_Sepn.setValidRoutine(self.text_Min_Sepn.Validate_Float)
         self.text_Min_Sepn.SetToolTip("Minimum separation of binary pair.  Enter decimal parsecs")
+        
+        #Max Age diff cutoff.
+        self.text_ageDiffMax = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('age-diff-max','FILTER', '15'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT)  
+        fgsizer.Add(self.text_ageDiffMax, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.text_ageDiffMax.setValidRoutine(self.text_ageDiffMax.Validate_Float)
+        self.text_ageDiffMax.SetToolTip("Maximum difference binary ages.  Enter decimal age in giga-annum (Ga).  The default is 15 Ga to allow all pairs through.")
+        
+        # Activate age comparison (both stars must have an 'age')
+        self.activateAgeCompCheckBox = CheckBox(self)
+        self.activateAgeCompCheckBox.SetToolTip("Activate age comparison (both stars must have an 'age').")
+        self.activateAgeCompCheckBox.SetValue(gl_cfg.getBoolean('activate-age-comp', 'FILTER'))
+        fgsizer.Add(self.activateAgeCompCheckBox, 0, wx.ALL, 2)
         
         self.SetSizer(self.sizer_v)
                 
@@ -3549,7 +3568,7 @@ class dataFilter(masterProcessingPanel):
         self.parent.StatusBarProcessing('Filter processing commenced')
         
         wx.Yield()
-        attributes=[self.text_ruwe, self.text_binProbability, self.text_Min_Sepn]
+        attributes=[self.text_ruwe, self.text_binProbability, self.text_Min_Sepn, self.text_ageDiffMax]
         for attribute in attributes:
             attribute.setValidRoutine(attribute.Validate_Float)
             if not attribute.runValidRoutine():
@@ -3570,7 +3589,9 @@ class dataFilter(masterProcessingPanel):
         gl_cfg.setItem('cutoff-inner',self.spin_distInnerCutoff.GetValue(),'FILTER')
         gl_cfg.setItem('min-sepn',self.text_Min_Sepn.GetValue(),'FILTER')
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
-       
+        gl_cfg.setItem('age-diff-max',self.text_ageDiffMax.GetValue(),'FILTER')
+        gl_cfg.setItem('activate-age-comp',self.activateAgeCompCheckBox.GetValue(),'FILTER')
+        
         self.loadData.Disable() #Disable the button to avoid being pressed twice
         
         #print(self.parent.status)
@@ -3601,6 +3622,8 @@ class dataFilter(masterProcessingPanel):
         }
         rv=0
         rv1=0
+        age_flame=0
+        age_flame1=0
         radialvelocity=1
         ROWCOUNTMATRIX['ADQL']=lenArray /2  # Number of binaries
         sn_px_limit=float(self.spin_parallax_SN.GetValue())
@@ -3610,6 +3633,8 @@ class dataFilter(masterProcessingPanel):
         sn_pm_limit=float(self.spin_pmsnratio.GetValue())
         distCutoff_limit=float(self.spin_distCutoff.GetValue())
         minSepn_limit=float(self.text_Min_Sepn.GetValue())
+        ageDiffMax_limit=float(self.text_ageDiffMax.GetValue())
+        activate_ageDiffMax=float(self.activateAgeCompCheckBox.GetValue())
         distInnerCutoff_limit=float(self.spin_distInnerCutoff.GetValue())
         #outerShell=bool(self.combo_InOut.GetSelection())
         ruwe_limit=float(self.text_ruwe.GetValue())
@@ -3662,6 +3687,15 @@ class dataFilter(masterProcessingPanel):
                         self.parent.StatusBarProcessing(excludeTxt)
                         radialvelocity=0
                     rv1=rv
+                    if activate_ageDiffMax:
+                        if row.age_flame:
+                            age_flame=float(row.age_flame)
+                        else:
+                            age_flame=0
+                            include=0
+                            excludeTxt='age_flame=0'
+                            self.parent.StatusBarProcessing(excludeTxt)
+                        age_flame1=age_flame
                 else:
                     #print('Here 2')
                     # ...  or secondary
@@ -3681,6 +3715,24 @@ class dataFilter(masterProcessingPanel):
                             sn_row=abs(float(rv1-rv))
                             if sn_row>rv_diff_limit:
                                 excludeTxt=f'RV diff={int(sn_row)}'
+                                self.parent.StatusBarProcessing(excludeTxt)
+                                include=0
+                            
+                        if activate_ageDiffMax:
+                            if row.age_flame:
+                                age_flame=float(row.age_flame)
+                            else:
+                                age_flame=0
+                                include=0
+                                excludeTxt='age_flame=0'
+                                self.parent.StatusBarProcessing(excludeTxt)
+                            age_flame1=age_flame
+                        
+                        # Must all exist
+                        if  activate_ageDiffMax and ageDiffMax_limit and age_flame and age_flame1:
+                            ageDiff=abs(float(age_flame1-age_flame))
+                            if ageDiff>ageDiffMax_limit:
+                                excludeTxt=f'ageDiff > {float(ageDiff)}'
                                 self.parent.StatusBarProcessing(excludeTxt)
                                 include=0
                     else:
