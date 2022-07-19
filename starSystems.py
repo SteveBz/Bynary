@@ -178,14 +178,14 @@ class starSystem():
         #Solar mass = 1
         Mo=1
         #Calculate magnitudes of primary and secondary stars.
-        if not pd.isnull(self.primary.mass_flame):
+        if not pd.isnull(self.primary.mass_flame) and self.primary.mass_flame:
             Mass1=self.primary.mass_flame
         else:
             Mag1=float(self.primary.phot_g_mean_mag-5*math.log10(self.primary.DIST/10))
             #Calculate and return combined mass of binary
             Mass1=10**(.0725*(4.76-Mag1))*Mo
         
-        if not pd.isnull(self.star2.mass_flame):
+        if not pd.isnull(self.star2.mass_flame) and self.star2.mass_flame:
             Mass2=self.star2.mass_flame
         else:
             Mag2=float(self.star2.phot_g_mean_mag-5*math.log10(self.star2.DIST/10))
