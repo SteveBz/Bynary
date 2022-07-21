@@ -4,7 +4,7 @@ import math
 import pandas as pd
 class binaryStarSystems():
 
-    def __init__(self, numberStars):
+    def __init__(self, numberStars, Mass_Correction):
         self.binaryList={}
         #column_names = ["SOURCE_ID", "RA_", "RA_ERROR", "DEC_", "DEC_ERROR",
         #        "PARALLAX", "PARALLAX_ERROR", "PHOT_G_MEAN_MAG", "BP_RP", "RADIAL_VELOCITY",
@@ -15,6 +15,7 @@ class binaryStarSystems():
         self.star_rows = {}
         self.index=0 #  zero-based index
         self.numberStars=numberStars
+        self.Mass_Correction=float(Mass_Correction)
     
     def getIndex(self):
         #  zero-based index
@@ -140,7 +141,7 @@ class binaryStarSystems():
         else:
             BIN=0
             #unary = starSystem(self.star_rows[idx], rfactor=0)
-            unary = starSystem(row, rfactor=0)
+            unary = starSystem(row, self.Mass_Correction, rfactor=0)
             self.binaryList[str(ccdm)]=unary
         
         return (ccdm, R, V, Verr, M, BIN)
@@ -151,7 +152,8 @@ class binaryStarSystems():
 
 class starSystem():
     
-    def __init__(self, row, rfactor=0):
+    def __init__(self, row, mass_correction, rfactor=0):
+        self.mass_correction=mass_correction
         self.primary=row
         self.selectedCount=0
         self.rfactor=rfactor
@@ -161,36 +163,55 @@ class starSystem():
             if float(self.primary.phot_g_mean_mag)>float(row.phot_g_mean_mag):
                 self.star2=self.primary
                 self.primary=row
+                row.mass_calc=self.primary.mass_calc
             else:
                 self.star2=row
+                row.mass_calc=self.star2.mass_calc
         except Exception:
             self.star2=row
             
         self.R=float(self.calcR())
         # V and Verr are 2 D vectors.
         (self.V,self.Verr)=self.calcV()
-        self.M=self.calcM()
-        self.deselect()
+        (self.M, self.mass_flame_1,self.mass_flame_2,self.mass_calc_1,self.mass_calc_2)=self.calcM()
+        #self.deselect()
         return (self.R, self.V, self.Verr, self.M)
     
     def calcM(self):
-        
+        #global gl_cfg, Mass_Correction
         #Solar mass = 1
         Mo=1
-        #Calculate magnitudes of primary and secondary stars.
+        #Mass_Correction=float(gl_cfg.getItem('mass-adjust','RETRIEVAL', '0.05'))  #  0.05 correction to allow for low mass dispersion
+        
+        #Calculate magnitudes and masses of primary stars.
+        Mag1=float(self.primary.phot_g_mean_mag-5*math.log10(self.primary.DIST/10))
+        Mass_Calc=10**(.0725*(4.76-Mag1))*Mo
+        if Mass_Calc < 0.7:
+            Mass_Calc=Mass_Calc+self.mass_correction  
+            
+        self.primary.mass_calc=Mass_Calc
+        
+        #If available use FLAME mass for primary star, otherwise use calculated mass
         if not pd.isnull(self.primary.mass_flame) and self.primary.mass_flame:
             Mass1=self.primary.mass_flame
         else:
-            Mag1=float(self.primary.phot_g_mean_mag-5*math.log10(self.primary.DIST/10))
-            #Calculate and return combined mass of binary
-            Mass1=10**(.0725*(4.76-Mag1))*Mo
+            Mass1=Mass_Calc
         
+        #Calculate magnitudes and masses of secondary stars.
+        Mag2=float(self.star2.phot_g_mean_mag-5*math.log10(self.star2.DIST/10))
+        Mass_Calc=10**(.0725*(4.76-Mag2))*Mo
+        if Mass_Calc < 0.7:
+            Mass_Calc=Mass_Calc+self.mass_correction  
+        self.star2.mass_calc=Mass_Calc
+        
+        #If available use FLAME mass for secondary star, otherwise use calculated mass
         if not pd.isnull(self.star2.mass_flame) and self.star2.mass_flame:
             Mass2=self.star2.mass_flame
         else:
-            Mag2=float(self.star2.phot_g_mean_mag-5*math.log10(self.star2.DIST/10))
-            Mass2=10**(.0725*(4.76-Mag2))*Mo
-        return Mass1+Mass2
+            Mass2=Mass_Calc
+            
+        #Return combined mass of binary
+        return (Mass1+Mass2, self.primary.mass_flame, self.star2.mass_flame, self.primary.mass_calc, self.star2.mass_calc)
     
     def calcR(self):
         try:
@@ -225,19 +246,19 @@ class starSystem():
         #Return Velocity array and error array
         return ([VelRA,VelDec],[VAlphaErr,VDeltaErr])
     
-    def deselect(self):
-        if self.rfactor:
-            if abs(self.primary.DIST - self.star2.DIST) > self.R*int(self.rfactor):
-                self.V = math.nan
-        
-        #if self.primary.source_id  in self.selected:
-        #    self.selectedCount=self.selectedCount+1
-        #    print(self.selectedCount)
-        pass
-    
-    def printDetails(self, ccdm):
-        if not hasattr(self, 'star2'):
-            pass
-            #print (ccdm)
+    #def deselect(self):
+    #    if self.rfactor:
+    #        if abs(self.primary.DIST - self.star2.DIST) > self.R*int(self.rfactor):
+    #            self.V = math.nan
+    #    
+    #    #if self.primary.source_id  in self.selected:
+    #    #    self.selectedCount=self.selectedCount+1
+    #    #    print(self.selectedCount)
+    #    pass
+    #
+    #def printDetails(self, ccdm):
+    #    if not hasattr(self, 'star2'):
+    #        pass
+    #        #print (ccdm)
         
 #        #################################  Table Header (Start) #####################################################################
