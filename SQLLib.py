@@ -330,7 +330,7 @@ class sqlSelect(sql):
             
         loc_SQL_string = loc_SELECT_txt + loc_TABLE_txt + loc_WHERE_txt + loc_GROUPBY_txt + loc_HAVING_txt + loc_ORDER_BY_txt
         
-        print (loc_SQL_string)
+        #print (loc_SQL_string)
         
         return loc_SQL_string
 
