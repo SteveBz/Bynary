@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import traceback
 import os
 import time
 #import  wx.lib.scrolledpanel as scrolled
@@ -1972,71 +1972,85 @@ class masterProcessingPanel(wx.Panel):
     def createExportRecord(self, primaryPointer, star2Pointer, idxBin):
         try:
             exportRecord={
-                'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
-                'ra1':float(primaryPointer.ra),
-                'dec1':float(primaryPointer.dec),
-                'mag1':primaryPointer.mag,
-                'MAG1':self.parent.X.mag[idxBin],
-                'PARALLAX1':float(primaryPointer.PARALLAX),
-                'parallax_error1':float(primaryPointer.parallax_error),
-                'DIST1':float(primaryPointer.DIST),
-                'RUWE1':primaryPointer.RUWE,
-                'PMRA1':float(primaryPointer.PMRA),
-                'PMRA_ERROR1':float(primaryPointer.PMRA_ERROR),
-                'PMDEC1':float(primaryPointer.PMDEC),
-                'PMDEC_ERROR1':float(primaryPointer.PMDEC_ERROR),
-                'BminusR1':float(primaryPointer.BminusR),
-                'mass_calc1':primaryPointer.mass_calc,
-                'mass_flame1':primaryPointer.mass_flame,
-                'mass_flame_upper1':primaryPointer.mass_flame_upper,
-                'mass_flame_lower1':primaryPointer.mass_flame_lower,
-                'age_flame1':primaryPointer.age_flame,
-                'age_flame_upper1':primaryPointer.age_flame_upper,
-                'age_flame_lower1':primaryPointer.age_flame_lower,
+                'SOURCE_ID_PRIMARY':str(primaryPointer['source_id']),
+                'ra1':float(primaryPointer['ra']),
+                'dec1':float(primaryPointer['dec']),
+                'mag1':primaryPointer['mag'],
+                'MAG1':primaryPointer['mag'],
+                'PARALLAX1':float(primaryPointer['PARALLAX']),
+                'parallax_error1':float(primaryPointer['parallax_error']),
+                'DIST1':float(primaryPointer['DIST']),
+                'RUWE1':primaryPointer['RUWE'],
+                'PMRA1':float(primaryPointer['PMRA']),
+                'PMRA_ERROR1':float(primaryPointer['PMRA_ERROR']),
+                'PMDEC1':float(primaryPointer['PMDEC']),
+                'PMDEC_ERROR1':float(primaryPointer['PMDEC_ERROR']),
+                'BminusR1':float(primaryPointer['BminusR']),
+                'mass_calc1':primaryPointer['mass_calc'],
+                'mass_flame1':primaryPointer['mass_flame'],
+                'mass_flame_upper1':primaryPointer['mass_flame_upper'],
+                'mass_flame_lower1':primaryPointer['mass_flame_lower'],
+                'age_flame1':primaryPointer['age_flame'],
+                'age_flame_upper1':primaryPointer['age_flame_upper'],
+                'age_flame_lower1':primaryPointer['age_flame_lower'],
                 #'classprob_dsc_specmod_binarystar1':Xclassprob_dsc_specmod_binarystar,
-                'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
-                'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
-                'ra2':float(star2Pointer.ra),
-                'dec2':float(star2Pointer.dec),
-                'mag2':star2Pointer.mag,
-                'MAG2':self.parent.Y.mag[idxBin],
-                'PARALLAX2':float(star2Pointer.PARALLAX),
-                'parallax_error2':float(star2Pointer.parallax_error),
-                'DIST2':float(star2Pointer.DIST),
-                'RUWE2':star2Pointer.RUWE,
-                'PMRA2':float(star2Pointer.PMRA),
-                'PMRA_ERROR2':float(star2Pointer.PMRA_ERROR),
-                'PMDEC2':float(star2Pointer.PMDEC),
-                'PMDEC_ERROR2':float(star2Pointer.PMDEC_ERROR),
-                'BminusR2':float(star2Pointer.BminusR),
-                'mass_calc2':star2Pointer.mass_calc,
-                'mass_flame2':star2Pointer.mass_flame,
-                'mass_flame_upper2':star2Pointer.mass_flame_upper,
-                'mass_flame_lower2':star2Pointer.mass_flame_lower,
-                'age_flame2':star2Pointer.age_flame,
-                'age_flame_upper2':star2Pointer.age_flame_upper,
-                'age_flame_lower2':star2Pointer.age_flame_lower,
-                'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
-                'vRA':abs(self.parent.binaryDetail.vRA[idxBin]),
-                'vRAerr':abs(self.parent.binaryDetail.vRAerr[idxBin]),
-                'vDEC':abs(self.parent.binaryDetail.vDEC[idxBin]),
-                'vDECerr':abs(self.parent.binaryDetail.vDECerr[idxBin]),                  
-                'V2D':math.sqrt(self.parent.binaryDetail.vRA[idxBin]**2+self.parent.binaryDetail.vDEC[idxBin]**2),
-                'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
-                'RA_MEAN':(float(primaryPointer.ra)+float(star2Pointer.ra))/2,
-                'DEC_MEAN':(float(primaryPointer.dec)+float(star2Pointer.dec))/2,
-                'Log10vRA':np.log10(self.parent.binaryDetail.vRA[idxBin]),
-                'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[idxBin]),
-                'Log10r':np.log10(self.parent.binaryDetail.r[idxBin]),
-                #'M':M,
-                'r':self.parent.binaryDetail.r[idxBin]
+                'PROB1':primaryPointer['classprob_dsc_specmod_binarystar'],
+                'SOURCE_ID_SECONDARY':str(star2Pointer['source_id']),
+                'ra2':float(star2Pointer['ra']),
+                'dec2':float(star2Pointer['dec']),
+                'mag2':star2Pointer['mag'],
+                'MAG2':star2Pointer['mag'],
+                'PARALLAX2':float(star2Pointer['PARALLAX']),
+                'parallax_error2':float(star2Pointer['parallax_error']),
+                'DIST2':float(star2Pointer['DIST']),
+                'RUWE2':star2Pointer['RUWE'],
+                'PMRA2':float(star2Pointer['PMRA']),
+                'PMRA_ERROR2':float(star2Pointer['PMRA_ERROR']),
+                'PMDEC2':float(star2Pointer['PMDEC']),
+                'PMDEC_ERROR2':float(star2Pointer['PMDEC_ERROR']),
+                'BminusR2':float(star2Pointer['BminusR']),
+                'mass_calc2':star2Pointer['mass_calc'],
+                'mass_flame2':star2Pointer['mass_flame'],
+                'mass_flame_upper2':star2Pointer['mass_flame_upper'],
+                'mass_flame_lower2':star2Pointer['mass_flame_lower'],
+                'age_flame2':star2Pointer['age_flame'],
+                'age_flame_upper2':star2Pointer['age_flame_upper'],
+                'age_flame_lower2':star2Pointer['age_flame_lower'],
+                'PROB2':star2Pointer['classprob_dsc_specmod_binarystar'],
+                'DIST':(float(primaryPointer['DIST'])+float(star2Pointer['DIST']))/2,
+                'RA_MEAN':(float(primaryPointer['ra'])+float(star2Pointer['ra']))/2,
+                'DEC_MEAN':(float(primaryPointer['dec'])+float(star2Pointer['dec']))/2
             }
-        except Exception:
-            print(i)
+        except Exception as e:
+            traceback.print_exc()
+            print(idxBin)
             print(primaryPointer)
             print(star2Pointer)
             print(self.parent.binaryDetail)
-            return
+            exit()
+        try:
+            exportRecord['vRA']=abs(self.parent.binaryDetail.vRA[idxBin])
+            exportRecord['vRAerr']=abs(self.parent.binaryDetail.vRAerr[idxBin])
+            exportRecord['vDEC']=abs(self.parent.binaryDetail.vDEC[idxBin])
+            exportRecord['vDECerr']=abs(self.parent.binaryDetail.vDECerr[idxBin]),                 
+            exportRecord['V2D']=math.sqrt(self.parent.binaryDetail.vRA[idxBin]**2+self.parent.binaryDetail.vDEC[idxBin]**2)
+            exportRecord['Log10vRA']=np.log10(self.parent.binaryDetail.vRA[idxBin])
+            exportRecord['Log10vDEC']=np.log10(self.parent.binaryDetail.vDEC[idxBin])
+            exportRecord['Log10r']=np.log10(self.parent.binaryDetail.r[idxBin])
+            exportRecord['r']=self.parent.binaryDetail.r[idxBin]
+            exportRecord['M']=self.parent.binaryDetail.M[idxBin]
+        except Exception:
+            #This is before self.parent.binaryDetail has been converted to a dataframe.
+            exportRecord['vRA']=abs(self.parent.binaryDetail[idxBin][1])
+            exportRecord['vRAerr']=abs(self.parent.binaryDetail[idxBin][2])
+            exportRecord['vDEC']=abs(self.parent.binaryDetail[idxBin][3])
+            exportRecord['vDECerr']=abs(self.parent.binaryDetail[idxBin][4]),                 
+            exportRecord['V2D']=math.sqrt(self.parent.binaryDetail[idxBin][1]**2+self.parent.binaryDetail[idxBin][3]**2)
+            exportRecord['Log10vRA']=np.log10(self.parent.binaryDetail[idxBin][1])
+            exportRecord['Log10vDEC']=np.log10(self.parent.binaryDetail[idxBin][3])
+            exportRecord['Log10r']=np.log10(self.parent.binaryDetail[idxBin][4])
+            exportRecord['r']=self.parent.binaryDetail[idxBin][1]
+            exportRecord['M']=self.parent.binaryDetail[idxBin][5]
         
         self.parent.export.append(exportRecord)
         return 
@@ -3033,70 +3047,9 @@ class dataRetrieval(masterProcessingPanel):
             self.parent.binaryDetail.append([abs(R), abs(V[0]), abs(Verr[0]), abs(V[1]), abs(Verr[1]), abs(M)])
             
             if include:
-                #primaryPointer=self.parent.starSystemList.binaryList[str(index+1)].primary
-                #star2Pointer=self.parent.starSystemList.binaryList[str(index+1)].star2
-                exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
-                    'ra1':float(primaryPointer.RA_),
-                    'dec1':float(primaryPointer.DEC_),
-                    'mag1':primaryPointer.phot_g_mean_mag,
-                    'MAG1':self.parent.X[index]['mag'],
-                    'PARALLAX1':float(primaryPointer.parallax),
-                    'PARALLAX_ERROR1':float(primaryPointer.parallax_error),
-                    'DIST1':float(primaryPointer.DIST),
-                    'RUWE1':XRUWE,
-                    'PMRA1':float(primaryPointer.pmra),
-                    'PMRA_ERROR1':float(primaryPointer.pmra_error),
-                    'PMDEC1':float(primaryPointer.pmdec),
-                    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
-                    'BminusR1':float(XBminusR),
-                    'mass_calc1':Xmass_calc,
-                    'mass_flame1':Xmass_flame,
-                    'mass_flame_upper1':Xmass_flame_upper,
-                    'mass_flame_lower1':Xmass_flame_lower,
-                    'age_flame1':Xage_flame,
-                    'age_flame_upper1':Xage_flame_upper,
-                    'age_flame_lower1':Xage_flame_lower,
-                    'classprob_dsc_specmod_binarystar1':Xclassprob_dsc_specmod_binarystar,
-                    'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
-                    'ra2':float(star2Pointer.RA_),
-                    'dec2':float(star2Pointer.DEC_),
-                    'mag2':star2Pointer.phot_g_mean_mag,
-                    'MAG2':self.parent.Y[index]['mag'],
-                    'PARALLAX2':float(star2Pointer.parallax),
-                    'parallax_error2':float(star2Pointer.parallax_error),
-                    'DIST2':float(star2Pointer.DIST),
-                    'RUWE2':YRUWE,
-                    'PMRA2':float(star2Pointer.pmra),
-                    'PMRA_ERROR2':float(star2Pointer.pmra_error),
-                    'PMDEC2':float(star2Pointer.pmdec),
-                    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
-                    'BminusR2':float(YBminusR),
-                    'mass_calc2':Ymass_calc,
-                    'mass_flame2':Ymass_flame,
-                    'mass_flame_upper2':Ymass_flame_upper,
-                    'mass_flame_lower2':Ymass_flame_lower,
-                    'age_flame2':Yage_flame,
-                    'age_flame_upper2':Yage_flame_upper,
-                    'age_flame_lower2':Yage_flame_lower,
-                    'classprob_dsc_specmod_binarystar2':Yclassprob_dsc_specmod_binarystar,
-                    'vRA':abs(V[0]),
-                    'vRAerr':abs(Verr[0]),
-                    'vDEC':abs(V[1]),
-                    'vDECerr':abs(Verr[1]),
-                    'V2D':math.sqrt(V[0]**2+V[1]**2),
-                    'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
-                    'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
-                    'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                    'Log10vRA':np.log10(V[0]),
-                    'Log10vDEC':np.log10(V[1]),
-                    'Log10r':np.log10(R),
-                    #'M':M,
-                    'r':R
-                }
-            
-                self.parent.export.append(exportRecord)
-        #        
-        #print(f'X = {self.parent.X}')
+       
+                self.createExportRecord(self.parent.X[index], self.parent.Y[index], index)
+
 
         self.parent.export=pd.DataFrame(self.parent.export)
         self.dbload.SetLabel('Import')
@@ -3119,7 +3072,7 @@ class dataRetrieval(masterProcessingPanel):
         self.parent.Y=pd.DataFrame.from_dict(self.parent.Y, orient='index') #, columns=['ra','dec','BminusR', 'mag'])
         self.parent.star_rows=pd.DataFrame.from_dict(self.parent.starSystemList.getStar_rows(), orient='index') #, columns=column_names)
         
-        print(self.parent.X)
+        #print(self.parent.X)
         
         # Save pandas files as pickle files for next time.
         files=['selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
@@ -3976,8 +3929,7 @@ class dataFilter(masterProcessingPanel):
             if odd and self.parent.status.include[idxBin]:
                 primaryPointer=self.parent.X.iloc[idxBin]
                 star2Pointer=self.parent.Y.iloc[idxBin]
-                #print(primaryPointer)
-                exportRecord=self.createExportRecord(primaryPointer, star2Pointer, idxBin)
+                self.createExportRecord(primaryPointer, star2Pointer, idxBin)
             excludeArr.append(excludeTxt)
 
         exportPD=pd.DataFrame(self.parent.export)
@@ -4576,69 +4528,7 @@ class HRDataPlotting(masterProcessingPanel):
                 self.parent.status.include[index]=0
                 continue
 
-                #primaryPointer=self.parent.X1
-                #star2Pointer=self.parent.X2
-                self.createExportRecord(X1, X2, index)
-                #exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.SOURCE_ID),
-                #    'ra1':float(primaryPointer.RA_),
-                #    'dec1':float(primaryPointer.DEC_),
-                #    'mag1':primaryPointer.phot_g_mean_mag,
-                #    'MAG1':self.parent.X.mag[index],
-                #    'PARALLAX1':float(primaryPointer.PARALLAX),
-                #    'parallax_error1':float(primaryPointer.parallax_error),
-                #    'DIST1':float(primaryPointer.DIST),
-                #    'RUWE1':primaryPointer.RUWE,
-                #    'RUWE1':primaryPointer.ruwe,
-                #    'PMRA1':float(primaryPointer.pmra),
-                #    'PMRA_ERROR1':float(primaryPointer.pmra_error),
-                #    'PMDEC1':float(primaryPointer.pmdec),
-                #    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
-                #    'BminusR1':float(primaryPointer.bp_rp),
-                #    'mass_flame1':primaryPointer.mass_flame,
-                #    'mass_flame_upper1':primaryPointer.mass_flame_upper,
-                #    'mass_flame_lower1':primaryPointer.mass_flame_lower,
-                #    'age_flame1':primaryPointer.age_flame,
-                #    'age_flame_upper1':primaryPointer.age_flame_upper,
-                #    'age_flame_lower1':primaryPointer.age_flame_lower,
-                #    'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
-                #    'SOURCE_ID_SECONDARY':str(star2Pointer.SOURCE_ID),
-                #    'ra2':float(star2Pointer.RA_),
-                #    'dec2':float(star2Pointer.DEC_),
-                #    'mag2':star2Pointer.phot_g_mean_mag,
-                #    'MAG2':self.parent.Y.mag[index],
-                #    'PARALLAX2':float(star2Pointer.PARALLAX),
-                #    'parallax_error2':float(star2Pointer.parallax_error),
-                #    'DIST2':float(star2Pointer.DIST),
-                #    'RUWE2':star2Pointer.ruwe,
-                #    'PMRA2':float(star2Pointer.pmra),
-                #    'PMRA_ERROR2':float(star2Pointer.pmra_error),
-                #    'PMDEC2':float(star2Pointer.pmdec),
-                #    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
-                #    'BminusR2':float(star2Pointer.bp_rp),
-                #    'mass_flame2':star2Pointer.mass_flame,
-                #    'mass_flame_upper2':star2Pointer.mass_flame_upper,
-                #    'mass_flame_lower2':star2Pointer.mass_flame_lower,
-                #    'age_flame2':star2Pointer.age_flame,
-                #    'age_flame_upper2':star2Pointer.age_flame_upper,
-                #    'age_flame_lower2':star2Pointer.age_flame_lower,
-                #    'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
-                #    'vRA':abs(self.parent.binaryDetail.vRA[index]),
-                #    'vRAerr':abs(self.parent.binaryDetail.vRAerr[index]),
-                #    'vDEC':abs(self.parent.binaryDetail.vDEC[index]), 
-                #    'vDECerr':abs(self.parent.binaryDetail.vDECerr[index]),                      
-                #    'V2D':math.sqrt(self.parent.binaryDetail.vRA[index]**2+self.parent.binaryDetail.vDEC[index]**2),
-                #    'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
-                #    'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
-                #    'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                #    'Log10vRA':np.log10(self.parent.binaryDetail.vRA[index]),
-                #    'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[index]),
-                #    'Log10r':np.log10(self.parent.binaryDetail.r[index]),
-                #    #'M':M,
-                #    'r':self.parent.binaryDetail.r[index]
-                #}
-                #
-                #self.parent.export.append(exportRecord)
-        
+            self.createExportRecord(X1, X2, index)
         exportPD=pd.DataFrame(self.parent.export)
         exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')   
         self.parent.printArrays()
@@ -5178,74 +5068,9 @@ class kineticDataPlotting(masterProcessingPanel):
                     if excludeRA and excludeDec:
                         self.parent.status.include[i]=0
                     else:
-                        #primaryPointer=self.parent.starSystemList.binaryList[str(i+1)].primary
-                        #star2Pointer=self.parent.starSystemList.binaryList[str(i+1)].star2
-                        #primaryPointer=self.parent.X[str(i+1)]
-                        #star2Pointer=self.parent.Y[str(i+1)]
-                        #primaryPointer=pd.DataFrame(primaryPointer)
-                        #star2Pointer=pd.DataFrame(primaryPointer)
                         primaryPointer=self.parent.X.iloc[i]
                         star2Pointer=self.parent.Y.iloc[i]
                         self.createExportRecord(primaryPointer, star2Pointer, i)
-                        #exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
-                        #    'ra1':float(primaryPointer.RA_),
-                        #    'dec1':float(primaryPointer.DEC_),
-                        #    'mag1':primaryPointer.phot_g_mean_mag,
-                        #    'MAG1':self.parent.X.mag[i],
-                        #    'PARALLAX1':float(primaryPointer.parallax),
-                        #    'parallax_error1':float(primaryPointer.parallax_error),
-                        #    'DIST1':float(primaryPointer.DIST),
-                        #    'RUWE1':primaryPointer.ruwe,
-                        #    'RUWE1':primaryPointer.ruwe,
-                        #    'PMRA1':float(primaryPointer.pmra),
-                        #    'PMRA_ERROR1':float(primaryPointer.pmra_error),
-                        #    'PMDEC1':float(primaryPointer.pmdec),
-                        #    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
-                        #    'BminusR1':float(primaryPointer.bp_rp),
-                        #    'mass_flame1':primaryPointer.mass_flame,
-                        #    'mass_flame_upper1':primaryPointer.mass_flame_upper,
-                        #    'mass_flame_lower1':primaryPointer.mass_flame_lower,
-                        #    'age_flame1':primaryPointer.age_flame,
-                        #    'age_flame_upper1':primaryPointer.age_flame_upper,
-                        #    'age_flame_lower1':primaryPointer.age_flame_lower,
-                        #    'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
-                        #    'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
-                        #    'ra2':float(star2Pointer.RA_),
-                        #    'dec2':float(star2Pointer.DEC_),
-                        #    'mag2':star2Pointer.phot_g_mean_mag,
-                        #    'MAG2':self.parent.Y.mag[i],
-                        #    'PARALLAX2':float(star2Pointer.parallax),
-                        #    'parallax_error2':float(star2Pointer.parallax_error),
-                        #    'DIST2':float(star2Pointer.DIST),
-                        #    'RUWE2':star2Pointer.ruwe,
-                        #    'PMRA2':float(star2Pointer.pmra),
-                        #    'PMRA_ERROR2':float(star2Pointer.pmra_error),
-                        #    'PMDEC2':float(star2Pointer.pmdec),
-                        #    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
-                        #    'BminusR2':float(star2Pointer.bp_rp),
-                        #    'mass_flame2':star2Pointer.mass_flame,
-                        #    'mass_flame_upper2':star2Pointer.mass_flame_upper,
-                        #    'mass_flame_lower2':star2Pointer.mass_flame_lower,
-                        #    'age_flame2':star2Pointer.age_flame,
-                        #    'age_flame_upper2':star2Pointer.age_flame_upper,
-                        #    'age_flame_lower2':star2Pointer.age_flame_lower,
-                        #    'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
-                        #    'vRA':abs(self.parent.binaryDetail.vRA[i]),
-                        #    'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
-                        #    'vDEC':abs(self.parent.binaryDetail.vDEC[i]), 
-                        #    'vDECerr':abs(self.parent.binaryDetail.vDECerr[i]),                         
-                        #    'V2D':math.sqrt(self.parent.binaryDetail.vRA[i]**2+self.parent.binaryDetail.vDEC[i]**2),
-                        #    'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
-                        #    'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
-                        #    'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-                        #    'Log10vRA':np.log10(self.parent.binaryDetail.vRA[i]),
-                        #    'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[i]),
-                        #    'Log10r':np.log10(self.parent.binaryDetail.r[i]),
-                        #    #'M':M,
-                        #    'r':self.parent.binaryDetail.r[i]
-                        #}
-                        #
-                        #self.parent.export.append(exportRecord)
                         
             xdata3ra=dataRABins.getBinXArray('centre')
             ydata3ra=dataRABins.getBinYArray(self.combo_yAvg.GetValue())
@@ -5470,7 +5295,6 @@ class kineticDataPlotting(masterProcessingPanel):
         avgAge=self.CalcPercentPairNotNull('age_flame')
         self.summaryList.SetItem(rowCnt, 1, f"{avgAge*100:,} %")
         
-        ##print(self.parent.binaryDetail)
         if self.showBinsCheckBox.GetValue():  
             #Mean binned binary RMS 1D relative velocity  in RA
             rowCnt += 1 #Next row
@@ -5831,78 +5655,13 @@ class TFDataPlotting(masterProcessingPanel):
                 return
             wx.Yield()
             
-            #primaryPointer=self.parent.starSystemList.binaryList[str(i+1)].primary
-            #star2Pointer=self.parent.starSystemList.binaryList[str(i+1)].star2
-            #primaryPointer=self.parent.X[str(i+1)]
-            #star2Pointer=self.parent.Y[str(i+1)]
-            #primaryPointer=pd.DataFrame(primaryPointer)
-            #star2Pointer=pd.DataFrame(primaryPointer)
             primaryPointer=self.parent.X.iloc[i]
             star2Pointer=self.parent.Y.iloc[i]
-            #exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
-            #    'ra1':float(primaryPointer.RA_),
-            #    'dec1':float(primaryPointer.DEC_),
-            #    'mag1':primaryPointer.phot_g_mean_mag,
-            #    'MAG1':self.parent.X.mag[i],
-            #    'PARALLAX1':float(primaryPointer.parallax),
-            #    'parallax_error1':float(primaryPointer.parallax_error),
-            #    'DIST1':float(primaryPointer.DIST),
-            #    'RUWE1':primaryPointer.ruwe,
-            #    'RUWE1':primaryPointer.ruwe,
-            #    'PMRA1':float(primaryPointer.pmra),
-            #    'PMRA_ERROR1':float(primaryPointer.pmra_error),
-            #    'PMDEC1':float(primaryPointer.pmdec),
-            #    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
-            #    'BminusR1':float(primaryPointer.bp_rp),
-            #    'mass_flame1':primaryPointer.mass_flame,
-            #    'mass_flame_upper1':primaryPointer.mass_flame_upper,
-            #    'mass_flame_lower1':primaryPointer.mass_flame_lower,
-            #    'age_flame1':primaryPointer.age_flame,
-            #    'age_flame_upper1':primaryPointer.age_flame_upper,
-            #    'age_flame_lower1':primaryPointer.age_flame_lower,
-            #    'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
-            #    'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
-            #    'ra2':float(star2Pointer.RA_),
-            #    'dec2':float(star2Pointer.DEC_),
-            #    'mag2':star2Pointer.phot_g_mean_mag,
-            #    'MAG2':self.parent.Y.mag[i],
-            #    'PARALLAX2':float(star2Pointer.parallax),
-            #    'parallax_error2':float(star2Pointer.parallax_error),
-            #    'DIST2':float(star2Pointer.DIST),
-            #    'RUWE2':star2Pointer.ruwe,
-            #    'PMRA2':float(star2Pointer.pmra),
-            #    'PMRA_ERROR2':float(star2Pointer.pmra_error),
-            #    'PMDEC2':float(star2Pointer.pmdec),
-            #    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
-            #    'BminusR2':float(star2Pointer.bp_rp),
-            #    'mass_flame2':star2Pointer.mass_flame,
-            #    'mass_flame_upper2':star2Pointer.mass_flame_upper,
-            #    'mass_flame_lower2':star2Pointer.mass_flame_lower,
-            #    'age_flame2':star2Pointer.age_flame,
-            #    'age_flame_upper2':star2Pointer.age_flame_upper,
-            #    'age_flame_lower2':star2Pointer.age_flame_lower,
-            #    'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
-            #    'vRA':self.parent.binaryDetail.vRA[i],
-            #    'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
-            #    'vDEC':self.parent.binaryDetail.vDEC[i],
-            #    'vDECerr':abs(self.parent.binaryDetail.vDECerr[i]),   
-            #    'V2D':math.sqrt(self.parent.binaryDetail.vRA[i]**2+self.parent.binaryDetail.vDEC[i]**2),
-            #    'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
-            #    'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
-            #    'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-            #    'Log10vRA':np.log10(self.parent.binaryDetail.vRA[i]),
-            #    'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[i]),
-            #    'Log10r':np.log10(abs(self.parent.binaryDetail.r[i])),
-            #    #'rerr'(abs(self.parent.binaryDetail.r[i]),
-            #    'M':M,
-            #    'r':self.parent.binaryDetail.r[i]
-            #}
             #
             # Check Separation limits
             if self.combo_LtGt.GetSelection()==0:
                 # Ie 'Outer' shell
                 if r>float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
-                    #self.parent.export.append(exportRecord)
                     self.createExportRecord(primaryPointer, star2Pointer, i)
                     if self.V1D_CheckBox.GetValue()==True:
                         if dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, value=0) :
@@ -5919,7 +5678,6 @@ class TFDataPlotting(masterProcessingPanel):
             else:
                 # Ie 'Inner' shell
                 if r<float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
-                    #self.parent.export.append(exportRecord)
                     self.createExportRecord(primaryPointer, star2Pointer, i)
                     if self.V1D_CheckBox.GetValue()==True:
                         if dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, value=0):
@@ -6466,22 +6224,7 @@ class MassPlotting(masterProcessingPanel):
             
             if math.isnan(self.parent.status.include[i]) or not int(self.parent.status.include[i]):
                 continue
-            #else:
-            #    include=int(self.parent.status.include[i])
-            #Set up local variables to avoid repeated PD access and for clarity
-            #if math.isnan(self.parent.binaryDetail.vRA[i]) :
-            #    self.parent.StatusBarProcessing(f'i={i}, vRA = {self.parent.binaryDetail.vRA[i]}')
-            #if math.isnan(self.parent.binaryDetail.vDEC[i]) :
-            #    self.parent.StatusBarProcessing(f'i={i}, vDEC = {self.parent.binaryDetail.vDEC[i]}')
-            #vRA=float(self.parent.binaryDetail.vRA[i])
-            #vDEC=float(self.parent.binaryDetail.vDEC[i])
-            #V2D=math.sqrt(vRA**2+vDEC**2)
-            
-            #r=float(self.parent.binaryDetail.r[i])
-            #vRAerr=float(self.parent.binaryDetail.vRAerr[i])
-            #vDECerr=float(self.parent.binaryDetail.vDECerr[i])
-            #Verr=math.sqrt((vRA*vRAerr)**2+(vDEC*vDECerr)**2)/V2D
-            #M=float(self.parent.binaryDetail.M[i])
+
             # Go through and bin
             label=float(100.0 * i /lenArray)
             self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -6494,88 +6237,21 @@ class MassPlotting(masterProcessingPanel):
 
             primaryPointer=self.parent.X.iloc[i]
             star2Pointer=self.parent.Y.iloc[i]
-            #primaryPointer=self.parent.starSystemList.binaryList[str(i+1)].primary
-            #star2Pointer=self.parent.starSystemList.binaryList[str(i+1)].star2
-            #primaryPointer=self.parent.X[str(i+1)]
-            #star2Pointer=self.parent.Y[str(i+1)]
-            #print(primaryPointer)
-            #primaryPointer=pd.DataFrame(primaryPointer)
-            #star2Pointer=pd.DataFrame(primaryPointer)
-            ydata1.append(primaryPointer.mass_flame)
-            ydata2.append(star2Pointer.mass_flame)
-            xdata1.append(primaryPointer.mass_calc)
-            xdata2.append(star2Pointer.mass_calc)
-            #exportRecord={'SOURCE_ID_PRIMARY':str(primaryPointer.source_id),
-            #    'ra1':float(primaryPointer.RA_),
-            #    'dec1':float(primaryPointer.DEC_),
-            #    'mag1':primaryPointer.phot_g_mean_mag,
-            #    'MAG1':self.parent.X.mag[i],
-            #    'PARALLAX1':float(primaryPointer.parallax),
-            #    'parallax_error1':float(primaryPointer.parallax_error),
-            #    'DIST1':float(primaryPointer.DIST),
-            #    'RUWE1':primaryPointer.ruwe,
-            #    'RUWE1':primaryPointer.ruwe,
-            #    'PMRA1':float(primaryPointer.pmra),
-            #    'PMRA_ERROR1':float(primaryPointer.pmra_error),
-            #    'PMDEC1':float(primaryPointer.pmdec),
-            #    'PMDEC_ERROR1':float(primaryPointer.pmdec_error),
-            #    'BminusR1':float(primaryPointer.bp_rp),
-            #    'mass_flame1':primaryPointer.mass_flame,
-            #    'mass_flame_upper1':primaryPointer.mass_flame_upper,
-            #    'mass_flame_lower1':primaryPointer.mass_flame_lower,
-            #    'mass_calc1':primaryPointer.mass_calc,          
-            #    'age_flame1':primaryPointer.age_flame,
-            #    'age_flame_upper1':primaryPointer.age_flame_upper,
-            #    'age_flame_lower1':primaryPointer.age_flame_lower,
-            #    'PROB1':primaryPointer.classprob_dsc_specmod_binarystar,
-            #    'SOURCE_ID_SECONDARY':str(star2Pointer.source_id),
-            #    'ra2':float(star2Pointer.RA_),
-            #    'dec2':float(star2Pointer.DEC_),
-            #    'mag2':star2Pointer.phot_g_mean_mag,
-            #    'MAG2':self.parent.Y.mag[i],
-            #    'PARALLAX2':float(star2Pointer.parallax),
-            #    'parallax_error2':float(star2Pointer.parallax_error),
-            #    'DIST2':float(star2Pointer.DIST),
-            #    'RUWE2':star2Pointer.ruwe,
-            #    'PMRA2':float(star2Pointer.pmra),
-            #    'PMRA_ERROR2':float(star2Pointer.pmra_error),
-            #    'PMDEC2':float(star2Pointer.pmdec),
-            #    'PMDEC_ERROR2':float(star2Pointer.pmdec_error),
-            #    'BminusR2':float(star2Pointer.bp_rp),
-            #    'mass_flame2':star2Pointer.mass_flame,
-            #    'mass_flame_upper2':star2Pointer.mass_flame_upper,
-            #    'mass_flame_lower2':star2Pointer.mass_flame_lower,
-            #    'mass_calc2':star2Pointer.mass_calc,               
-            #    'age_flame2':star2Pointer.age_flame,
-            #    'age_flame_upper2':star2Pointer.age_flame_upper,
-            #    'age_flame_lower2':star2Pointer.age_flame_lower,
-            #    'PROB2':star2Pointer.classprob_dsc_specmod_binarystar,
-            #    'vRA':self.parent.binaryDetail.vRA[i],
-            #    'vRAerr':abs(self.parent.binaryDetail.vRAerr[i]),
-            #    'vDEC':self.parent.binaryDetail.vDEC[i],
-            #    'vDECerr':abs(self.parent.binaryDetail.vDECerr[i]),   
-            #    'V2D':math.sqrt(self.parent.binaryDetail.vRA[i]**2+self.parent.binaryDetail.vDEC[i]**2),
-            #    'DIST':(float(primaryPointer.DIST)+float(star2Pointer.DIST))/2,
-            #    'RA_MEAN':(float(primaryPointer.RA_)+float(star2Pointer.RA_))/2,
-            #    'DEC_MEAN':(float(primaryPointer.DEC_)+float(star2Pointer.DEC_))/2,
-            #    'Log10vRA':np.log10(self.parent.binaryDetail.vRA[i]),
-            #    'Log10vDEC':np.log10(self.parent.binaryDetail.vDEC[i]),
-            #    'Log10r':np.log10(abs(self.parent.binaryDetail.r[i])),
-            #    #'rerr'(abs(self.parent.binaryDetail.r[i]),
-            #    #'M':M,
-            #    'r':self.parent.binaryDetail.r[i]
-            #}
+            if (primaryPointer.mass_flame and star2Pointer.mass_flame):
+                ydata1.append(primaryPointer.mass_flame)
+                ydata2.append(star2Pointer.mass_flame)
+                xdata1.append(primaryPointer.mass_calc)
+                xdata2.append(star2Pointer.mass_calc)
+            
             #
             # Ie 'Outer' shell
-            if float(primaryPointer.mass_flame) or float(star2Pointer.mass_flame):
-                #self.parent.export.append(exportRecord)
-                exportRecord=self.createExportRecord(primaryPointer, star2Pointer, i)
+            if float(primaryPointer.mass_flame):
+                self.createExportRecord(primaryPointer, star2Pointer, i)
                 if dataBins.binAddDataPoint(x=primaryPointer.mass_calc, y=primaryPointer.mass_flame, dy=(primaryPointer.age_flame_upper-primaryPointer.age_flame_lower)/2.0, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (a)" x={primaryPointer.mass_calc}, y={primaryPointer.mass_flame}')
 
             if float(star2Pointer.mass_flame):
-                #self.parent.export.append(exportRecord)
-                exportRecord=self.createExportRecord(primaryPointer, star2Pointer, i)
+                self.createExportRecord(primaryPointer, star2Pointer, i)
                 if dataBins.binAddDataPoint(x=star2Pointer.mass_calc, y=star2Pointer.mass_flame, dy=(star2Pointer.age_flame_upper-star2Pointer.age_flame_lower)/2.0, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (b)" x={star2Pointer.mass_calc}, y={star2Pointer.mass_flame}')
         #print(self.parent.export)
@@ -6618,9 +6294,7 @@ class MassPlotting(masterProcessingPanel):
         M=self.parent.binaryDetail.loc[(self.parent.binaryDetail['include'] > 0)]
         
         self.parent.starSystemList.binaryList[str(i+1)].primary
-        
-        #print(self.parent.starSystemList.binaryList)
-        
+                
         c='white'
         if prntVersion:
             c='black'
@@ -7309,8 +6983,7 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.summaryList.InsertItem(0, 'Gaia DB')
         self.summaryList.SetItem(0, 1, f"{ROWCOUNTMATRIX['ADQL']:,}")
         #Set bold
-        item = self.summaryList.GetItem(0,0)
-        #print "itemText", item.GetText()       
+        item = self.summaryList.GetItem(0,0)  
         # Get its font, change it, and put it back:
         font = item.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
@@ -7329,8 +7002,7 @@ class NumberDensityPlotting(masterProcessingPanel):
         total=ROWCOUNTMATRIX['ADQL']-ROWCOUNTMATRIX['GRP']-ROWCOUNTMATRIX['V0']
         self.summaryList.SetItem(3, 1, f"{total:,}")
         #Set bold
-        item = self.summaryList.GetItem(3,0)
-        #print "itemText", item.GetText()       
+        item = self.summaryList.GetItem(3,0) 
         # Get its font, change it, and put it back:
         font = item.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
@@ -7346,7 +7018,6 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.summaryList.SetItem(rowCnt, 1, f"{ROWCOUNTMATRIX['BIN']:,}")
         #Set bold
         item = self.summaryList.GetItem(rowCnt,0)
-        #print "itemText", item.GetText()       
         # Get its font, change it, and put it back:
         font = item.GetFont()
         font.SetWeight(wx.FONTWEIGHT_BOLD)
@@ -7357,7 +7028,6 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.summaryList.InsertItem(rowCnt, 'Error and noise metrics')
         #Set bold
         item = self.summaryList.GetItem(rowCnt,0)
-        #print "itemText", item.GetText()       
         # Get its font, change it, and put it back:
         font = item.GetFont()
         font.MakeBold().MakeUnderlined()
