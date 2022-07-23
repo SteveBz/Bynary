@@ -56,7 +56,7 @@ This will take a long time depending on the spec of your PC.  A 2020 PC should t
 
 Use tab 1 of the application to download lists of stars and their attributes from Gaia (eg RA/DEC, Parallax, proper motion, magnitudes at different wavelengths, RUWE, binary probablility, mass and age calculated from the Gaia FLAME spectrometer etc etc etc).
 
-This is stored on your loacl database in SQLite.
+This is stored on your local database in SQLite.
 ## Import lists of binary pairs from Gaia
 Use tab 2 of the application.  This is also stored on your local datbase in a catalogue.  You can create and download many catalogues according to different selection criteria.
 ## Load to memory
