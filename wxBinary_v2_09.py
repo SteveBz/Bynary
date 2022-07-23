@@ -2053,7 +2053,29 @@ class masterProcessingPanel(wx.Panel):
             exportRecord['M']=self.parent.binaryDetail[idxBin][5]
         
         self.parent.export.append(exportRecord)
-        return 
+        return
+    def saveConfFiles(self, statusKey):
+        
+        exportPD=pd.DataFrame(self.parent.export)
+        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')
+        if statusKey:
+            self.parent.status[statusKey]=self.parent.status['include']
+        # Save pandas status file as pickle files for next time.
+        try:
+            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
+        except Exception:
+            self.parent.StatusBarProcessing('Error directory failed to save')
+            print (self.parent.status)
+
+        # adding exception handling
+        try:
+            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
+        except IOError as e:
+            print("Unable to copy file. %s" % e)
+            #exit(1)
+        except:
+            print("Unexpected error:", sys.exc_info())
+            exit(1)
         
 class dataRetrieval(masterProcessingPanel):
     
@@ -2061,23 +2083,7 @@ class dataRetrieval(masterProcessingPanel):
         wx.Panel.__init__(self, parent)
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
-        
-        ##Try to find existing files, if not, create blank one
-        #files=['selectedStarIDs','selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
-        #for file in files:
-        #    try:
-        #        setattr(self.parent,file, pd.read_pickle('bindata/'+file+'.saved'))
-        #    except Exception:
-        #        setattr(self.parent,file, pd.DataFrame())
-        #
-        #try:
-        #    file_to_read = open('bindata/starSystemList.pickle', 'rb') #File containing example object
-        #    self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
-        #    file_to_read.close()
-        #except Exception:
-        #    self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
-        
-        
+         
         #Try to find existing files, if not, create blank one
         files=['selectedStarBinaryMappings','binaryDetail','star_rows','X','Y','status','export']
         if len (sys.argv)>1:
@@ -3932,32 +3938,20 @@ class dataFilter(masterProcessingPanel):
                 self.createExportRecord(primaryPointer, star2Pointer, idxBin)
             excludeArr.append(excludeTxt)
 
-        exportPD=pd.DataFrame(self.parent.export)
-        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')
         self.restoreListCtrl(txtArr=excludeArr)
         self.loadData.SetLabel(f'100%')
-        self.parent.status['populateOut']=self.parent.status['include']
         self.parent.status['hrOut']=self.parent.status['include']
         self.parent.status['kineticOut']=self.parent.status['include']
         self.parent.status['massVmassOut']=self.parent.status['include']
         self.parent.status['tfOut']=self.parent.status['include']
         # Save pandas status file as pickle files for next time.
-        self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
 
-        # adding exception handling
-        try:
-            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
-        except IOError as e:
-            print("Unable to copy file. %s" % e)
-            #exit(1)
-        except:
-            print("Unexpected error:", sys.exc_info())
-            exit(1)
-
+        self.saveConfFiles('populateOut')
+        
         populateOut=self.parent.status['populateOut'].sum()
         self.dataInTotal.SetLabel(f'{populateOut:,}')
         self.loadData.Enable()
-        self.parent.printArrays()
+        #self.parent.printArrays()
         
         self.parent.StatusBarNormal('Completed OK')
         
@@ -4051,7 +4045,6 @@ class skyDataPlotting(masterProcessingPanel):
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
@@ -4182,7 +4175,7 @@ class skyDataPlotting(masterProcessingPanel):
             self.skyGraph.axes.set_xlabel('Right Ascension (deg)', fontsize=FONTSIZE)
         self.skyGraph.axes.set_yscale('linear')
         self.skyGraph.axes.set_xscale('linear')
-        self.skyGraph.set_limits([360,0],[-90, 90])
+        self.skyGraph.set_limits([-180,180],[-90, 90])
         
         try:
             self.line.remove()
@@ -4221,6 +4214,8 @@ class skyDataPlotting(masterProcessingPanel):
                 l=[]
                 b=[]
                 for i in range(len(xdata2.ra)):
+                    #if self.parent.status.include.iloc[i]:
+                    #    continue
                     # Convert to Galactic Coords.
                     sc = SkyCoord(ra=xdata2.ra[i]*u.deg,dec=ydata2.dec[i]*u.deg)
                     gal_l=str(sc.galactic.l)
@@ -4230,6 +4225,7 @@ class skyDataPlotting(masterProcessingPanel):
                         self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
                         deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
                     gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
+                    gal_l=(gal_l+180) % 360 -180
                     l.append(gal_l)
                     
                     gal_b=str(sc.galactic.b)
@@ -4281,6 +4277,8 @@ class skyDataPlotting(masterProcessingPanel):
             l=[]
             b=[]
             for i in range(len(xdata1.ra)):
+                #if not self.parent.status.include.iloc[i]:
+                #    continue
                 # Convert to Galactic Coords.
                 sc = SkyCoord(ra=xdata1.ra[i]*u.deg,dec=ydata1.dec[i]*u.deg)
                 gal_l=str(sc.galactic.l)
@@ -4290,6 +4288,7 @@ class skyDataPlotting(masterProcessingPanel):
                     self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
                     deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
                 gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
+                gal_l=(gal_l+180) % 360 -180
                 l.append(gal_l)
                 
                 gal_b=str(sc.galactic.b)
@@ -4319,7 +4318,6 @@ class skyDataPlotting(masterProcessingPanel):
         except Exception:
             pass
         self.Layout()
-        self.parent.printArrays()
 
         self.plot_but.Enable()
         
@@ -4331,7 +4329,6 @@ class HRDataPlotting(masterProcessingPanel):
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
@@ -4529,29 +4526,12 @@ class HRDataPlotting(masterProcessingPanel):
                 continue
 
             self.createExportRecord(X1, X2, index)
-        exportPD=pd.DataFrame(self.parent.export)
-        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')   
-        self.parent.printArrays()
-
-        self.parent.status['hrOut']=self.parent.status['include']
-        self.parent.status['kineticOut']=self.parent.status['include']
         
-        # Save pandas status file as pickle files for next time.
-        try:
-            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
-        except Exception:
-            self.parent.StatusBarProcessing('Error directory failed to save')
-            print (self.parent.status)
-
-        # adding exception handling
-        try:
-            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
-        except IOError as e:
-            print("Unable to copy file. %s" % e)
-            #exit(1)
-        except:
-            print("Unexpected error:", sys.exc_info())
-            exit(1)
+        self.parent.status['kineticOut']=self.parent.status['include']
+        self.parent.status['massVmassOut']=self.parent.status['include']
+        self.parent.status['tfOut']=self.parent.status['include']
+        self.parent.status['numberOut']=self.parent.status['include']
+        self.saveConfFiles('hrOut')
         self.OnPlot()
         label=int(100)
         self.Filter_but.SetLabel(f'{label:,.1f}%')
@@ -4677,7 +4657,10 @@ class HRDataPlotting(masterProcessingPanel):
             pass
         self.Layout()
 
-        self.parent.printArrays()
+        self.parent.status['massVmassOut']=self.parent.status['include']
+        self.parent.status['tfOut']=self.parent.status['include']
+        self.parent.status['numberOut']=self.parent.status['include']
+        self.saveConfFiles('hrOut')
         
         self.plot_but.Enable()
 
@@ -5126,8 +5109,6 @@ class kineticDataPlotting(masterProcessingPanel):
             
             self.velocityGraph.draw(self.line3dec, xdata3dec, ydata3dec, False, [] )
         
-        exportPD=pd.DataFrame(self.parent.export)
-        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')   
         xdata1 = self.parent.binaryDetail.r * self.parent.status['include']
         ydata1ra = self.parent.binaryDetail.vRA * self.parent.status['include']
         ydata1dec = self.parent.binaryDetail.vDEC * self.parent.status['include']
@@ -5307,25 +5288,11 @@ class kineticDataPlotting(masterProcessingPanel):
             self.summaryList.InsertItem(rowCnt, 'Mean binned RMS 1D velocity in DEC')        
             ydata3decpd=pd.DataFrame(ydata3dec, columns=['V'])
             self.summaryList.SetItem(rowCnt, 1, f"{ydata3decpd.V.mean():,.4f}")
-        
-        self.parent.status['kineticOut']=self.parent.status['include']
-        # Save pandas status file as pickle files for next time.
-        try:
-            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
-        except Exception:
-            self.parent.StatusBarProcessing('Error directory failed to save')
-            print (self.parent.status)
-
-        # adding exception handling
-        try:
-            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
-        except IOError as e:
-            print("Unable to copy file. %s" % e)
-            #exit(1)
-        except:
-            print("Unexpected error:", sys.exc_info())
-            exit(1)
-        self.parent.printArrays()
+                
+        self.parent.status['massVmassOut']=self.parent.status['include']
+        self.parent.status['tfOut']=self.parent.status['include']
+        self.parent.status['numberOut']=self.parent.status['include']
+        self.saveConfFiles('kineticOut')
 
         self.plot_but.Enable()
 
@@ -5333,11 +5300,10 @@ class kineticDataPlotting(masterProcessingPanel):
         
 class TFDataPlotting(masterProcessingPanel):
 
-#Plot Actual motion in the 1d plane of the sky vs separation of binaries and compare with Newtonian motion.
+#Plot mass of binary in solar masses and compare with in the plane velocity (1D or 2D).
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
@@ -5690,8 +5656,7 @@ class TFDataPlotting(masterProcessingPanel):
                             self.parent.StatusBarProcessing(f'Exclude "verr" x={M}, y={V2D}')
                 else:
                     self.parent.status.include[i]=0
-        exportPD=pd.DataFrame(self.parent.export)
-        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')   
+
         xdata3TF=dataTFBins.getBinXArray(type='centre')
         ydata3TF=dataTFBins.getBinYArray(self.combo_yAvg.GetValue())
         rerrbin3TF=dataTFBins.getBinXVarArray()
@@ -5986,23 +5951,8 @@ class TFDataPlotting(masterProcessingPanel):
             pass
         self.Layout()
         
-        # Save pandas status file as pickle files for next time.
-        try:
-            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
-        except Exception:
-            self.parent.StatusBarProcessing('Error directory failed to save')
-            print (self.parent.status)
-
-        # adding exception handling
-        try:
-            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
-        except IOError as e:
-            print("Unable to copy file. %s" % e)
-            #exit(1)
-        except:
-            print("Unexpected error:", sys.exc_info())
-            exit(1)
-        self.parent.printArrays()
+        self.parent.status['numberOut']=self.parent.status['include']
+        self.saveConfFiles('tfOut')
 
         self.plot_but.Enable()
 
@@ -6014,7 +5964,6 @@ class MassPlotting(masterProcessingPanel):
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
@@ -6054,11 +6003,9 @@ class MassPlotting(masterProcessingPanel):
         self.textctrl_xUpper.SetToolTip("Upper end of mass-scale.")
         self.textctrl_xUpper.setValidRoutine(self.textctrl_xUpper.Validate_Float)
         
-        
         # Lower bin cutoff textctrl
         self.lowerBinCutoffTextCtrl = SpinCtrl(self, id=wx.ID_ANY, value='', pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=100,initial=int(gl_cfg.getItem('lower_bin_cutoff','GAIAMASS', '5')))  
         self.lowerBinCutoffTextCtrl.SetToolTip("Enter number below which not to display bins.")
-
         fgsizer.Add(self.lowerBinCutoffTextCtrl, 0, wx.ALL, 2)
         
         # Create show raw data check box
@@ -6106,13 +6053,13 @@ class MassPlotting(masterProcessingPanel):
         fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
-        try:
-            self.MassPlot = matplotlibPanel(parent=self, size=(750, 750))
-            self.MassPlot.axes.set_yscale('linear', nonpositive='clip')
-            self.MassPlot.axes.set_xscale('linear', nonpositive='clip')
-            fg2sizer.Add(self.MassPlot)
-        except Exception:
-            pass
+        #try:
+        self.MassPlot = matplotlibPanel(parent=self, size=(750, 750))
+        self.MassPlot.axes.set_yscale('linear')
+        self.MassPlot.axes.set_xscale('linear')
+        fg2sizer.Add(self.MassPlot)
+        #except Exception:
+        #    pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
@@ -6122,10 +6069,10 @@ class MassPlotting(masterProcessingPanel):
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
         self.summaryList.SetColumnWidth(1, 120)
         self.SetSizer(self.sizer_v)
-        try:
-            self.MassPlot.Layout()
-        except Exception:
-            pass
+        #try:
+        self.MassPlot.Layout()
+        #except Exception:
+        #    pass
         self.Layout()
 
     def OnReset(self, event=0):
@@ -6254,9 +6201,8 @@ class MassPlotting(masterProcessingPanel):
                 self.createExportRecord(primaryPointer, star2Pointer, i)
                 if dataBins.binAddDataPoint(x=star2Pointer.mass_calc, y=star2Pointer.mass_flame, dy=(star2Pointer.age_flame_upper-star2Pointer.age_flame_lower)/2.0, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (b)" x={star2Pointer.mass_calc}, y={star2Pointer.mass_flame}')
-        #print(self.parent.export)
-        exportPD=pd.DataFrame(self.parent.export)
-        exportPD.to_pickle(f'bindata/{RELEASE}/{CATALOG}/export.saved')   
+
+        
         xdata3=dataBins.getBinXArray(type='mean')
         ydata3=dataBins.getBinYArray(type='mean')
         mCalcerrbin3=dataBins.getBinXVarArray()
@@ -6465,24 +6411,8 @@ class MassPlotting(masterProcessingPanel):
             pass
         self.Layout()
         
-        # Save pandas status file as pickle files for next time.
-        try:
-            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
-        except Exception:
-            self.parent.StatusBarProcessing('Error directory failed to save')
-            print (self.parent.status)
-
-        # adding exception handling
-        try:
-            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
-        except IOError as e:
-            print("Unable to copy file. %s" % e)
-            #exit(1)
-        except:
-            print("Unexpected error:", sys.exc_info())
-            exit(1)
-        self.parent.printArrays()
-
+        self.parent.status['numberOut']=self.parent.status['include']
+        self.saveConfFiles('massVmassOut')
         self.plot_but.Enable()
 
         self.parent.StatusBarNormal('Completed OK')
@@ -6497,7 +6427,6 @@ class NumberDensityPlotting(masterProcessingPanel):
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
@@ -7074,24 +7003,8 @@ class NumberDensityPlotting(masterProcessingPanel):
         except Exception:
             pass
         self.Layout()
-        self.parent.printArrays()
         
-        # Save pandas status file as pickle files for next time.
-        try:
-            self.parent.status.to_pickle(f'bindata/{RELEASE}/{CATALOG}/status.saved')
-        except Exception:
-            self.parent.StatusBarProcessing('Error directory failed to save')
-            print (self.parent.status)
-
-        # adding exception handling
-        try:
-            cp('binClient.conf', f'bindata/{RELEASE}/{CATALOG}/binClient.conf')
-        except IOError as e:
-            print("Unable to copy file. %s" % e)
-            #exit(1)
-        except:
-            print("Unexpected error:", sys.exc_info())
-            exit(1)
+        self.saveConfFiles('numberOut')
              
         self.parent.StatusBarNormal('Completed OK')
         self.plot_but.Enable()
@@ -7107,7 +7020,6 @@ class AladinView(wx.Panel):
 
     def __init__(self, parent, mainPanel):
         wx.Panel.__init__(self, parent)
-        self.mainPanel= mainPanel
         self.mainPanel=mainPanel
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
