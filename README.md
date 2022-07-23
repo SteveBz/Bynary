@@ -4,7 +4,7 @@ Bynary is a python-based suite of modules that will allow you to connect and dow
 
 Firstly we need a vitual environment so that any exiting python programs aren't disrupted by the modules for this program.  Eg Bynary makes heavy use of `matplotlib`, if you use an earlier or later version in another module, that could create issues.  By installing  `matplotlibin` in our own virtual environment we avoid that issue.
 
-You will need a subscription to the Gaia website if you want to download new data from ESA.
+You will need a subscription to the Gaia website to download data from ESA.
 
 You will also need a Linux-based computer running a currently supported version of Linux with Python 3.8+. We are both using Kubuntu 20.04.  It needs a solid state hard disk with about 20GB free and at least 16GB of memory, 32GB is better.  One of us uses an i7 the other uses an i9x2.  Both are adequate.  The i9x2 is good.  However, downloading stuff from Gaia still take an appreciable time, maybe several hours per download (to execute on Gaia and download).  
 
