@@ -71,8 +71,6 @@ import SQLLib
 import db              # For star/observing database.
 dbiStro=db.db()
 database = gl_cfg.getItem('database','SETTINGS')
-#databaseid = gl_cfg.getItem('databaseuserid','SETTINGS')
-#databasepwd = gl_cfg.getItem('databasepwd','SETTINGS')
 iStro=dbiStro.conSQLite(database) 
 
 from sqlalchemy import create_engine # pip3 install sqlalchemy
@@ -4175,7 +4173,11 @@ class skyDataPlotting(masterProcessingPanel):
             self.skyGraph.axes.set_xlabel('Right Ascension (deg)', fontsize=FONTSIZE)
         self.skyGraph.axes.set_yscale('linear')
         self.skyGraph.axes.set_xscale('linear')
-        self.skyGraph.set_limits([-180,180],[-90, 90])
+        
+        if self.showGalacticCoordsCheckBox.GetValue():
+            self.skyGraph.set_limits([-180,180],[-90, 90])
+        else:
+            self.skyGraph.set_limits([360,0],[-90, 90])            
         
         try:
             self.line.remove()
