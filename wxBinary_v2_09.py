@@ -2114,7 +2114,7 @@ class dataRetrieval(masterProcessingPanel):
             print(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle loaded')
         except Exception:
             print(f'Error in reading bindata/{RELEASE}/{CATALOG}/starSystemList.pickle')
-            self.parent.starSystemList=binaryStarSystems(len(self.parent.status))
+            self.parent.starSystemList=binaryStarSystems(lenArray, gl_cfg.getItem('mass-adjust','RETRIEVAL', '0.05'))
         #print(self.parent.star_rows)
         self.sizer_main_divider=wx.BoxSizer(wx.HORIZONTAL)
         self.sizer_main=wx.BoxSizer(wx.VERTICAL)
