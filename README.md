@@ -51,9 +51,18 @@ python3 wxBinary_v2_09.py
 deactivate
 ```
 Now doubleclick and make sure you can read the details.
-## Import stars
+## Import stars and star attributes from Gaia
 This will take a long time depending on the spec of your PC.  A 2020 PC should take a few hours. A 2015 laptop may take a few days, in fact after a week we gave up.
 
-Use tab 1 of the application
-## Import binaries
-Use tab 2 of the application
+Use tab 1 of the application to download lists of stars and their attributes from Gaia (eg RA/DEC, Parallax, proper motion, magnitudes at different wavelengths, RUWE, binary probablility, mass and age calculated from the Gaia FLAME spectrometer etc etc etc).
+
+This is stored on your loacl database in SQLite.
+## Import lists of binary pairs from Gaia
+Use tab 2 of the application.  This is also stored on your local datbase in a catalogue.  You can create and download many catalogues according to different selection criteria.
+## Load to memory
+Use tab 3 of the application to load a catalogue into memory.  Bynary uses Pandas dataframes to speed up the processing af large amounts of data.  Much processing takes place at dataframe level and not at item (star or binary pair) level.
+## Filter to clean up catalogues.
+Use tab 4 of the application to apply various filters (eg signal to noise ratios) to your catalogue.  You can quickly reduce a catalogue of several million pairs to a few hundred very clean pairs.
+
+## Remaining tabs
+The remaining tabs allow you to create various plots and even more second order filters to obtain further information about the downloaded selection of binaries.  The final tab links to Aladin Lite in Strasborg to view a specified, selected binary to validate assumptions.  For instance, you can see if the stellar neighbourhood is clear and uninfluenced by other stars or is a busy area in the plane of the Milky Way or star cluster.
