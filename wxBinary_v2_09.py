@@ -2900,6 +2900,11 @@ class dataRetrieval(masterProcessingPanel):
             except:
                 Ymass_calc=0
         
+            Xgal_l=float(self.parent.starSystemList.binaryList[str(index+1)].primary.gal_l)
+            Xgal_b=float(self.parent.starSystemList.binaryList[str(index+1)].primary.gal_b)
+            Ygal_l=float(self.parent.starSystemList.binaryList[str(index+1)].star2.gal_l)
+            Ygal_b=float(self.parent.starSystemList.binaryList[str(index+1)].star2.gal_b)
+        
             try:
                 Xmass_flame_upper=float(self.parent.starSystemList.binaryList[str(index+1)].primary.mass_flame_upper)
             except:
@@ -2976,8 +2981,10 @@ class dataRetrieval(masterProcessingPanel):
                     'age_flame':Xage_flame,
                     'age_flame_upper':Xage_flame_upper,
                     'age_flame_lower':Xage_flame_lower,
+                    'gal_l':Xgal_l,
+                    'gal_b':Xgal_b,
                     'classprob_dsc_specmod_binarystar':Xclassprob_dsc_specmod_binarystar
-                    }
+                }
             except Exception:
                     self.parent.StatusBarProcessing (f'Skipped record {index}')
                     #row=row.transpose()
@@ -3023,6 +3030,8 @@ class dataRetrieval(masterProcessingPanel):
                     'age_flame':Yage_flame,
                     'age_flame_upper':Yage_flame_upper,
                     'age_flame_lower':Yage_flame_lower,
+                    'gal_l':Ygal_l,
+                    'gal_b':Ygal_b,
                     'classprob_dsc_specmod_binarystar':Yclassprob_dsc_specmod_binarystar
                     }
             except Exception:
@@ -4124,11 +4133,11 @@ class skyDataPlotting(masterProcessingPanel):
         
         # Draw velocity map
         
-        try:
-            self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750))
-            fg2sizer.Add(self.skyGraph)
-        except Exception:
-            pass
+        #try:
+        self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
+        fg2sizer.Add(self.skyGraph)
+        #except Exception:
+        #    pass
         
         self.Layout()
         
@@ -4213,33 +4222,9 @@ class skyDataPlotting(masterProcessingPanel):
                 ydata2.dec = ydata2.dec * self.parent.status['radialvelocity']
             
             if self.showGalacticCoordsCheckBox.GetValue():
-                l=[]
-                b=[]
-                for i in range(len(xdata2.ra)):
-                    #if self.parent.status.include.iloc[i]:
-                    #    continue
-                    # Convert to Galactic Coords.
-                    sc = SkyCoord(ra=xdata2.ra[i]*u.deg,dec=ydata2.dec[i]*u.deg)
-                    gal_l=str(sc.galactic.l)
-                    try:
-                        deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_l)
-                    except:
-                        self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
-                        deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
-                    gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
-                    gal_l=(gal_l+180) % 360 -180
-                    l.append(gal_l)
-                    
-                    gal_b=str(sc.galactic.b)
-                    try:
-                        deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
-                    except:
-                        self.parent.StatusBarProcessing(f'Missing decimal point in gal_b={gal_b}')
-                        deg, minutes, seconds, fraction  =  re.split('[dms]', gal_b)
-                    gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
-                    b.append(gal_b)
-                xdata2.ra=l
-                ydata2.dec=b
+                #l=[]
+                xdata2.ra = self.parent.X.gal_l
+                ydata2.dec = self.parent.X.gal_b 
             
             marker = ','
             markersize=1
@@ -4276,33 +4261,35 @@ class skyDataPlotting(masterProcessingPanel):
             markersize=1.5
             
         if self.showGalacticCoordsCheckBox.GetValue():
-            l=[]
-            b=[]
-            for i in range(len(xdata1.ra)):
-                #if not self.parent.status.include.iloc[i]:
-                #    continue
-                # Convert to Galactic Coords.
-                sc = SkyCoord(ra=xdata1.ra[i]*u.deg,dec=ydata1.dec[i]*u.deg)
-                gal_l=str(sc.galactic.l)
-                try:
-                    deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_l)
-                except:
-                    self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
-                    deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
-                gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
-                gal_l=(gal_l+180) % 360 -180
-                l.append(gal_l)
-                
-                gal_b=str(sc.galactic.b)
-                try:
-                    deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
-                except:
-                    self.parent.StatusBarProcessing(f'Missing decimal point in gal_b={gal_b}')
-                    deg, minutes, seconds, fraction  =  re.split('[dms]', gal_b)
-                gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
-                b.append(gal_b)
-            xdata1.ra=l
-            ydata1.dec=b
+            #l=[]
+            #b=[]
+            #for i in range(len(xdata1.ra)):
+            #    #if not self.parent.status.include.iloc[i]:
+            #    #    continue
+            #    # Convert to Galactic Coords.
+            #    sc = SkyCoord(ra=xdata1.ra[i]*u.deg,dec=ydata1.dec[i]*u.deg)
+            #    gal_l=str(sc.galactic.l)
+            #    try:
+            #        deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_l)
+            #    except:
+            #        self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
+            #        deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
+            #    gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
+            #    gal_l=(gal_l+180) % 360 -180
+            #    l.append(gal_l)
+            #    
+            #    gal_b=str(sc.galactic.b)
+            #    try:
+            #        deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
+            #    except:
+            #        self.parent.StatusBarProcessing(f'Missing decimal point in gal_b={gal_b}')
+            #        deg, minutes, seconds, fraction  =  re.split('[dms]', gal_b)
+            #    gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
+            #    b.append(gal_b)
+            #xdata1.ra=l
+            #ydata1.dec=b
+            xdata1.ra = self.parent.X.gal_l  * self.parent.status['include']
+            ydata1.dec = self.parent.X.gal_b  * self.parent.status['include']
         try:
             self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
         except Exception as e:
@@ -6896,10 +6883,13 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.NumberDensityPlot.axes.grid(visible=1, which='both', axis='both')     
         
         
-        if not prntVersion:
-            self.NumberDensityPlot.axes.legend(legend1, legend2)
         if prntVersion:
-            self.NumberDensityPlot.axes.get_legend().remove()
+            legend = self.NumberDensityPlot.axes.get_legend()
+            if legend:
+                legend.remove()
+        else:
+            self.NumberDensityPlot.axes.legend(legend1, legend2)
+            
         self.NumberDensityPlot.axes.xaxis.set_major_locator(ticker.AutoLocator())
         self.NumberDensityPlot.axes.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
         
@@ -7297,13 +7287,16 @@ class AladinView(wx.Panel):
             self.parent.StatusBarProcessing(hostname+' not available!')
 
 class matplotlibPanel(wx.Panel):
-    def __init__(self, parent, size):
+    def __init__(self, parent, size, projection=''):
         wx.Panel.__init__(self, parent, size=size)
         self.parent=parent
 
         self.figure = Figure(figsize=(8,5)) # Inches!?Figure(figsize=(5,2.5))
         
         # Axes & labels
+        #if projection:
+        #    self.axes = self.figure.add_subplot(111, projection=projection)
+        #else:
         self.axes = self.figure.add_subplot(111)
         self.frames=[] 
         self.axes.set_ylabel('1D relative velocity in plane of sky (km/s)', fontsize=FONTSIZE)

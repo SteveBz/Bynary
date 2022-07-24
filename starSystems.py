@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+from astropy.coordinates import Galactic, SkyCoord # pip3 install astropy
+import astropy.units as u
+import re
 import math
 import pandas as pd
 class binaryStarSystems():
@@ -159,24 +162,48 @@ class starSystem():
         self.rfactor=rfactor
         
     def binaryStarSystem(self, row, ccdm):
+        #This is only called when both binary stars are defined.
         try:
             if float(self.primary.phot_g_mean_mag)>float(row.phot_g_mean_mag):
                 self.star2=self.primary
                 self.primary=row
-                row.mass_calc=self.primary.mass_calc
+                #row.mass_calc=self.primary.mass_calc
             else:
                 self.star2=row
-                row.mass_calc=self.star2.mass_calc
+                #row.mass_calc=self.star2.mass_calc
         except Exception:
             self.star2=row
             
+        (self.primary.gal_l, self.primary.gal_b)=self.calcGal(self.primary.RA_, self.primary.DEC_)
+        (self.star2.gal_l, self.star2.gal_b)=self.calcGal(self.star2.RA_, self.star2.DEC_)
         self.R=float(self.calcR())
         # V and Verr are 2 D vectors.
         (self.V,self.Verr)=self.calcV()
-        (self.M, self.mass_flame_1,self.mass_flame_2,self.mass_calc_1,self.mass_calc_2)=self.calcM()
-        #self.deselect()
+        (self.M)=self.calcM() # , self.mass_flame_1,self.mass_flame_2,self.mass_calc_1,self.mass_calc_2
+        
         return (self.R, self.V, self.Verr, self.M)
-    
+    def calcGal(self, ra, dec):
+        
+        # Convert to Galactic Coords.
+        sc = SkyCoord(ra=ra*u.deg,dec=dec*u.deg)
+        gal_l=str(sc.galactic.l)
+        try:
+            deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_l)
+        except:
+            #self.parent.StatusBarProcessing(f'Missing decimal point in gal_l={gal_l}')
+            deg, minutes, seconds, fraction  =  re.split('[dms]', gal_l)
+        gal_l=float(deg) + float(minutes)/60  + float(seconds)/3600
+        gal_l=(gal_l+180) % 360 -180
+        
+        gal_b=str(sc.galactic.b)
+        try:
+            deg, minutes, seconds, fraction  =  re.split('[dm.]', gal_b)
+        except:
+            #self.parent.StatusBarProcessing(f'Missing decimal point in gal_b={gal_b}')
+            deg, minutes, seconds, fraction  =  re.split('[dms]', gal_b)
+        gal_b=float(deg) + float(minutes)/60 + float(seconds)/3600
+        return (gal_l, gal_b)
+        
     def calcM(self):
         #global gl_cfg, Mass_Correction
         #Solar mass = 1
@@ -211,7 +238,7 @@ class starSystem():
             Mass2=Mass_Calc
             
         #Return combined mass of binary
-        return (Mass1+Mass2, self.primary.mass_flame, self.star2.mass_flame, self.primary.mass_calc, self.star2.mass_calc)
+        return (Mass1+Mass2) #, self.primary.mass_flame, self.star2.mass_flame, self.primary.mass_calc, self.star2.mass_calc)
     
     def calcR(self):
         try:
