@@ -4159,6 +4159,12 @@ class skyDataPlotting(masterProcessingPanel):
         
         self.parent.StatusBarProcessing('Sky plotting commenced')
         
+        #self.skyGraph.sizer.destroy()
+        #
+        #self.skyGraph.toolbar.destroy()
+        #
+        #self.skyGraph.destroy()
+        
         prntVersion=self.prntVersionCheckBox.GetValue()
         gl_cfg.setItem('prntversion',prntVersion, 'SKYPLOT') # save setting in config file
         gl_cfg.setItem('largepoints',self.largePointsCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
@@ -7381,6 +7387,113 @@ class matplotlibPanel(wx.Panel):
         
     def formatPrint(self):
         self.axes.patch.set_facecolor('1')  # White
+        
+import matplotlib.pyplot as plt
+class matplotlibPanel2(wx.Panel):
+    
+    def __init__(self, parent, size, projection='', data=[]):
+        
+        wx.Panel.__init__(self, parent, size=size)
+        self.parent=parent
+
+
+        fig = plt.figure(figsize=(8,5))
+        ax = fig.add_subplot(111, projection="aitoff")
+        if len(data):
+            ax.scatter(data[0][0], data[0][1],marker='o', color='s')
+            ax.scatter(data[1][0], data[1][1],marker='o', color='k')
+        # Axes & labels
+        #if projection:
+        #    self.axes = self.figure.add_subplot(111, projection=projection)
+        #else:
+        #self.axes = self.figure.add_subplot(111)
+        #self.axes = plt.subplot(projection="aitoff") #  # or mollweide, hammer, aitoff, or lambert.
+        self.frames=[]
+        
+
+        #self.axes.set_ylabel('1D relative velocity in plane of sky (km/s)', fontsize=FONTSIZE)
+        #self.axes.set_xlabel('2D separation (pc)', fontsize=FONTSIZE)
+        #self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
+        self.axes.patch.set_facecolor('0.25')  # Grey shade
+        self.axes.grid(visible=1, which='major', axis='both')
+        self.axes.set_autoscale_on(True)
+        self.axes.margins(1)
+        #self.axes.set_yscale('log', nonpositive='clip')
+        #self.axes.set_xscale('log', nonpositive='clip')
+        
+        self.figure.tight_layout(h_pad=1, w_pad=1)
+        self.canvas = FigureCanvas(self, -1, self.figure)
+
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
+        self.SetSizer(self.sizer)
+
+        #### Hidden toolbar
+        self.toolbar = NavigationToolbar2Wx(self.canvas)
+        self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
+        #self.toolbar.Hide()
+    
+    #def set_limits(self, xLimits,yLimits):
+    #
+    #    return
+    #    self.axes.set_xlim(xLimits)
+    #    self.axes.set_ylim(yLimits)    
+    #
+    #def draw(self, line, xdata, ydata, error, errorData):
+    #    self.axes.scatter(xdata,ydata, marker='o', color='y')
+    #    #if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue()=='log':
+    #    #    self.axes.set_yscale('log', nonpositive='clip')
+    #    #else:
+    #    #    self.axes.set_yscale('linear')
+    #    #self.axes.relim()
+    #    ##self.axes.autoscale_view(True,True,True)
+    #    ##
+    #    #
+    #    #ANGLE=0
+    #    #for tick in self.axes.xaxis.get_major_ticks():
+    #    #    tick.label.set_fontsize(FONTSIZE) 
+    #    #    tick.label.set_rotation(ANGLE)
+    #    #for tick in self.axes.yaxis.get_major_ticks():
+    #    #    tick.label.set_fontsize(FONTSIZE) 
+    #    #    tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
+    #    #for tick in self.axes.xaxis.get_minor_ticks():
+    #    #    tick.label.set_fontsize(FONTSIZE) 
+    #    #    tick.label.set_rotation(ANGLE)
+    #    #for tick in self.axes.yaxis.get_minor_ticks():
+    #    #    tick.label.set_fontsize(FONTSIZE) 
+    #    #    tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
+    #    #self.figure.canvas.draw()
+    #    #self.figure.canvas.flush_events()
+    #    
+    #def drawLinear(self):
+    #
+    #    #if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue()=='log':
+    #    #    self.axes.set_yscale('log', nonpositive='clip')
+    #    #else:
+    #    self.axes.set_xscale('linear')
+    #    self.axes.set_yscale('linear')
+    #    self.axes.relim()
+    #    self.axes.autoscale_view(True,True,True)
+    #    #
+    #    
+    #    ANGLE=0
+    #    for tick in self.axes.xaxis.get_major_ticks():
+    #        tick.label.set_fontsize(FONTSIZE) 
+    #        tick.label.set_rotation(ANGLE)
+    #    for tick in self.axes.yaxis.get_major_ticks():
+    #        tick.label.set_fontsize(FONTSIZE) 
+    #        tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
+    #    for tick in self.axes.xaxis.get_minor_ticks():
+    #        tick.label.set_fontsize(FONTSIZE) 
+    #        tick.label.set_rotation(ANGLE)
+    #    for tick in self.axes.yaxis.get_minor_ticks():
+    #        tick.label.set_fontsize(FONTSIZE) 
+    #        tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
+    #    self.figure.canvas.draw()
+    #    self.figure.canvas.flush_events()
+    #    
+    #def formatPrint(self):
+    #    self.axes.patch.set_facecolor('1')  # White
         
 
 if __name__ == '__main__':
