@@ -4134,7 +4134,7 @@ class skyDataPlotting(masterProcessingPanel):
         # Draw velocity map
         
         #try:
-        self.skyGraph = matplotlibPanel2(parent=self, size=(1350, 750), projection='aitoff')
+        self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
         self.fg2sizer.Add(self.skyGraph)
         #except Exception:
         #    pass
@@ -4163,7 +4163,7 @@ class skyDataPlotting(masterProcessingPanel):
         #
         #self.skyGraph.toolbar.destroy()
         
-        self.skyGraph.Destroy()
+        #self.skyGraph.Destroy()
         
         prntVersion=self.prntVersionCheckBox.GetValue()
         gl_cfg.setItem('prntversion',prntVersion, 'SKYPLOT') # save setting in config file
@@ -4173,6 +4173,7 @@ class skyDataPlotting(masterProcessingPanel):
         gl_cfg.setItem('suppressgroups',self.suppressGroupsCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
         gl_cfg.setItem('suppressrvzero',self.suppressRVZeroCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
         gl_cfg.setItem('galacticCoords',self.showGalacticCoordsCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
+        gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         #
         #print(self.parent.X.ra)
         
@@ -4180,28 +4181,28 @@ class skyDataPlotting(masterProcessingPanel):
         ydata1 = pd.DataFrame(self.parent.X.dec * self.parent.status['include'], columns=['dec'])
         xdata2 = pd.DataFrame(self.parent.X.ra, columns=['ra'])
         ydata2 = pd.DataFrame(self.parent.X.dec, columns=['dec'])
-        #if self.showGalacticCoordsCheckBox.GetValue():
-        #    self.skyGraph.axes.set_ylabel("Galactic 'l' (deg)", fontsize=FONTSIZE)
-        #    self.skyGraph.axes.set_xlabel("Galactic 'b' (deg)", fontsize=FONTSIZE)
-        #else:
-        #    self.skyGraph.axes.set_ylabel('Declination (deg)', fontsize=FONTSIZE)
-        #    self.skyGraph.axes.set_xlabel('Right Ascension (deg)', fontsize=FONTSIZE)
-        #self.skyGraph.axes.set_yscale('linear')
-        #self.skyGraph.axes.set_xscale('linear')
-        #
-        #if self.showGalacticCoordsCheckBox.GetValue():
-        #    self.skyGraph.set_limits([-180,180],[-90, 90])
-        #else:
-        #    self.skyGraph.set_limits([360,0],[-90, 90])            
+        if self.showGalacticCoordsCheckBox.GetValue():
+            self.skyGraph.axes.set_ylabel("Galactic 'l' (deg)", fontsize=FONTSIZE)
+            self.skyGraph.axes.set_xlabel("Galactic 'b' (deg)", fontsize=FONTSIZE)
+        else:
+            self.skyGraph.axes.set_ylabel('Declination (deg)', fontsize=FONTSIZE)
+            self.skyGraph.axes.set_xlabel('Right Ascension (deg)', fontsize=FONTSIZE)
+        self.skyGraph.axes.set_yscale('linear')
+        self.skyGraph.axes.set_xscale('linear')
         
-        #try:
-        #    self.line.remove()
-        #except Exception:
-        #    pass
-        #try:
-        #    self.line2.remove()
-        #except Exception:
-        #    pass
+        if self.showGalacticCoordsCheckBox.GetValue():
+            self.skyGraph.set_limits([-180,180],[-90, 90])
+        else:
+            self.skyGraph.set_limits([360,0],[-90, 90])            
+        
+        try:
+            self.line.remove()
+        except Exception:
+            pass
+        try:
+            self.line2.remove()
+        except Exception:
+            pass
         
         legend1=[] 
         legend2=[] 
@@ -4245,7 +4246,7 @@ class skyDataPlotting(masterProcessingPanel):
                        'linestyle':'none',
                        'linewidth':0,
                        'markersize':markersize}
-                #self.line2, = self.skyGraph.axes.plot(xdata2.ra.to_list(), ydata2.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
+                self.line2, = self.skyGraph.axes.plot(xdata2.ra.to_list(), ydata2.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             except Exception as e:
                 self.parent.StatusBarProcessing (f'self.skyGraph.axes.plot Crash 1) "{e}"')
                 print(xdata2)
@@ -4254,18 +4255,18 @@ class skyDataPlotting(masterProcessingPanel):
                 self.plot_but.Enable()
                 return
             
-            #legend1.append(self.line2)
-            #legend2.append('unselected')
-            #self.skyGraph.draw(self.line2, xdata2, ydata2, False, [] )
+            legend1.append(self.line2)
+            legend2.append('unselected')
+            self.skyGraph.draw(self.line2, xdata2, ydata2, False, [] )
 
-        #if prntVersion:
-        #    c='black'
-        #    self.skyGraph.axes.set_title("")
-        #    self.skyGraph.axes.patch.set_facecolor('1')  # Grey shade
-        #else:
-        #    self.skyGraph.axes.set_title(f"Binary distribution showing {self.parent.status['include'].sum():,} selected and {unselectedBins:,} unselected from {len(self.parent.status):,}", fontsize=FONTSIZE)
-        #    self.skyGraph.axes.patch.set_facecolor('0.25')  # Grey shade
-        #    c='white'
+        if prntVersion:
+            c='black'
+            self.skyGraph.axes.set_title("")
+            self.skyGraph.axes.patch.set_facecolor('1')  # Grey shade
+        else:
+            self.skyGraph.axes.set_title(f"Binary distribution showing {self.parent.status['include'].sum():,} selected and {unselectedBins:,} unselected from {len(self.parent.status):,}", fontsize=FONTSIZE)
+            self.skyGraph.axes.patch.set_facecolor('0.25')  # Grey shade
+            c='white'
             
         marker = ','
         markersize=1
@@ -4304,14 +4305,14 @@ class skyDataPlotting(masterProcessingPanel):
             xdata1.ra = self.parent.X.gal_l  * self.parent.status['include']
             ydata1.dec = self.parent.X.gal_b  * self.parent.status['include']
         try:
-            data1={'x':xdata1.ra.to_list(),
-                   'y':ydata1.dec.to_list(),
-                   'color':c,
-                   'marker':marker,
-                   'linestyle':'none',
-                   'linewidth':0,
-                   'markersize':markersize}
-            #self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
+            #data1={'x':xdata1.ra.to_list(),
+            #       'y':ydata1.dec.to_list(),
+            #       'color':c,
+            #       'marker':marker,
+            #       'linestyle':'none',
+            #       'linewidth':0,
+            #       'markersize':markersize}
+            self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
         except Exception as e:
             self.parent.StatusBarProcessing (f'self.skyGraph.axes.plot Crash 2) "{e}"')
             print(xdata1)
@@ -4319,10 +4320,19 @@ class skyDataPlotting(masterProcessingPanel):
             self.plot_but.SetBackgroundColour(Colour(150,20,20))
             self.plot_but.Enable()
             return
-        self.skyGraph = matplotlibPanel2(parent=self, size=(1350, 750), projection='aitoff', data=[data0, data1])
-        self.fg2sizer.Add(self.skyGraph)
-        #self.skyGraph.draw(self.line, xdata1, ydata1, True,[] )
-        #        
+        #self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750)) #, projection='aitoff', data=[data0, data1]
+        #self.fg2sizer.Add(self.skyGraph)
+        
+        
+        legend1.append(self.line)
+        legend2.append('selected')
+        self.skyGraph.axes.legend(legend1, legend2)
+        if prntVersion:
+            self.skyGraph.axes.get_legend().remove()
+            
+        self.skyGraph.draw(self.line, xdata1, ydata1, True,[] )
+        #
+        
         try:   
             self.skyGraph.Layout()
         except Exception:
