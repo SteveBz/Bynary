@@ -6093,7 +6093,7 @@ class MassPlotting(masterProcessingPanel):
                 
         # Draw velocity map
         #try:
-        self.MassPlot = matplotlibPanel(parent=self, size=(750, 750))
+        self.MassPlot = matplotlibPanel(parent=self, size=(900, 650))
         self.MassPlot.axes.set_yscale('linear')
         self.MassPlot.axes.set_xscale('linear')
         self.fg2sizer.Add(self.MassPlot)
