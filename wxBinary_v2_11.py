@@ -445,10 +445,10 @@ class gaiaStarRetrieval(wx.Panel):
         self.button1.Bind(wx.EVT_LEFT_DOWN, self.read_GaiaStars)
         self.sizer_v2.Add(self.button1, 0,wx.ALIGN_LEFT|wx.ALL , 5)
         
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel import or status update.")
-        self.sizer_v2.Add(self.button2, 0, wx.LEFT | wx.RIGHT , 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel import or status update.")
+        self.sizer_v2.Add(self.cancel, 0, wx.LEFT | wx.RIGHT , 5)
         
         self.deleteSelection = Button(self, id=wx.ID_ANY, label="Delete", pos=wx.DefaultPosition,size=wx.DefaultSize)
         #self.deleteSelection.Bind(wx.EVT_BUTTON, self.OnDeleteSelection)
@@ -1170,10 +1170,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.button1.Bind(wx.EVT_LEFT_DOWN, self.read_GaiaBinaries)
         self.sizer_v2.Add(self.button1, 0,wx.ALIGN_LEFT|wx.ALL , 5)
                 
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel import or status update.")
-        self.sizer_v2.Add(self.button2, 0, wx.LEFT | wx.RIGHT , 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel import or status update.")
+        self.sizer_v2.Add(self.cancel, 0, wx.LEFT | wx.RIGHT , 5)
         
         self.button3 = Button(self, wx.ID_ANY, u"Clear jobs")
         self.button3.Bind(wx.EVT_LEFT_DOWN, self.OnClear)
@@ -2298,10 +2298,10 @@ class dataRetrieval(masterProcessingPanel):
         self.sizer_v2.Add(self.restore, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel import or status update.")
-        self.sizer_v2.Add(self.button2, 0, wx.LEFT | wx.RIGHT , 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel import or status update.")
+        self.sizer_v2.Add(self.cancel, 0, wx.LEFT | wx.RIGHT , 5)
         
         # Status processing prompt
         
@@ -2489,7 +2489,8 @@ class dataRetrieval(masterProcessingPanel):
     def OnCancel(self, event=0):
 
         global CANCEL
-        self.ungroup.Enable()
+        #
+        self.rvnull.Enable()
         self.dbload.Enable()
         CANCEL= True
         self.parent.StatusBarNormal('Completed OK')
@@ -3089,7 +3090,7 @@ class dataRetrieval(masterProcessingPanel):
 
 
         self.parent.export=pd.DataFrame(self.parent.export)
-        self.dbload.SetLabel('Import')
+        self.dbload.SetLabel(u"DB Load")
         
         ROWCOUNTMATRIX['ADQL']=len(self.parent.selectedStarBinaryMappings)
         self.static_Total.SetLabel(f'{int(len(self.parent.star_rows)/2):,}')
@@ -3565,10 +3566,10 @@ class dataFilter(masterProcessingPanel):
         fgsizer.Add(self.loadData, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel filter.")
-        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel filter.")
+        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         # Filter Reset button
         
@@ -4466,10 +4467,10 @@ class HRDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.Filter_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel H-R filter.")
-        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel H-R filter.")
+        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         # H-R Filter Reset button
         
@@ -4895,10 +4896,10 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         try:
@@ -5605,10 +5606,10 @@ class TFDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         try:
@@ -6184,10 +6185,10 @@ class MassPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         #try:
@@ -6661,10 +6662,10 @@ class NumberDensityPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
-        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.button2.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
+        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.cancel.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         try:
