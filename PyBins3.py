@@ -88,7 +88,7 @@ class binOrganiser():
                 self.errors[i].append(dy)
                 self.indices[i].append(idx)
                 return 1
-        return 0
+        return 1
     def splitBin(self):
         
         #Filter out currently inluded rows only
