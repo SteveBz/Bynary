@@ -2131,7 +2131,7 @@ class dataRetrieval(masterProcessingPanel):
                     print(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle loaded')
                 except Exception:
                     print(f'Error in reading bindata/{RELEASE}/{CATALOG}/starSystemList.pickle')
-                    self.parent.starSystemList=binaryStarSystems(len(self.parent.status), gl_cfg.getItem('mass-adjust','RETRIEVAL', '0.05'))
+                    self.parent.starSystemList=binaryStarSystems(0, gl_cfg.getItem('mass-adjust','RETRIEVAL', '0.05'))
         else:
             for file in files:
                 setattr(self.parent,file, pd.DataFrame())
@@ -3094,7 +3094,7 @@ class dataRetrieval(masterProcessingPanel):
         
         ROWCOUNTMATRIX['ADQL']=len(self.parent.selectedStarBinaryMappings)
         self.static_Total.SetLabel(f'{int(len(self.parent.star_rows)/2):,}')
-        self.parent.StatusBarProcessing('End')
+        self.parent.StatusBarProcessing('End DB Load')
         
         #self.parent.selectedStarIDs=pd.DataFrame(self.parent.selectedStarIDs, columns=['source_id'])
         self.parent.selectedStarBinaryMappings=pd.DataFrame.from_dict(self.parent.selectedStarBinaryMappings, orient='index')#, columns=['i', 'SOURCE_ID_PRIMARY', 'SOURCE_ID_SECONDARY'
@@ -3149,7 +3149,7 @@ class dataRetrieval(masterProcessingPanel):
         self.parent.printArrays()
         self.dbload.Enable()
         
-        self.parent.StatusBarNormal('Completed OK')
+        self.parent.StatusBarNormal('DB Load completed OK')
         
     def resetStatus(self, event):
         
@@ -5121,13 +5121,14 @@ class kineticDataPlotting(masterProcessingPanel):
                 # Check RA limits
                 if self.parent.status.include[i]:
                     #Exclude point if v/dv > vxerrCutoff6
-                    #Add vDEC datapoint and add vRA to calculate Pythagorian value.
+                    #Add vDEC datapoint and vRA to calculate Pythagorian value.
                     y=math.sqrt(vRA**2+vDEC**2)
                     excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, value=vxerrCutoff, idx=i)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeTot:
                         self.parent.status.include[i]=0
                      
+            #Remove top 'n' percent of each bin
             if int(self.combo_binReduction.GetValue()):   
                 for binNum in range(numRABins):
                     indices=dataTotalBins.binCalculateDataPoints(binNum, int(self.combo_binReduction.GetValue()))

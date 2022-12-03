@@ -39,13 +39,16 @@ class binOrganiser():
         #Calculate array of indices to remove top 'percent' of values.
         #Return array
         indices=[]
-        # How long is bin array?
+        #If no percentage, don't bother
+        if not percent:
+            return indices
+        # How many items does bin array have?
         binLength=len(self.xBins[binNum])
         if binLength==0:
             return []
         
-        # Round percentage up so that always remove at least 1 and then zero-base it (the -1)
-        removeNValues=int((binLength+(percent-1))*percent/100) -1
+        # Round percentage up so that always remove at least 1 (except for percent=0) and then zero-base it (the -1)
+        removeNValues=int(round(binLength*percent/100.0 + 0.5,0)) -1
         
         #Find value of threshold bin value
         dummyArray=sorted(self.yBins[binNum], key=float, reverse=True)
