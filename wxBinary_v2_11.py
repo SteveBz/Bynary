@@ -2283,18 +2283,18 @@ class dataRetrieval(masterProcessingPanel):
         self.button2.SetToolTip("Export selected data from active TF tab to csv file")
         self.button2.Bind(wx.EVT_LEFT_DOWN, self.write_csv)
         
-        #Save catalogue in a directory
-        
-        self.save = Button(self, id=wx.ID_ANY, label="&Save", pos=wx.DefaultPosition,size=wx.DefaultSize)
-        self.save.Bind(wx.EVT_BUTTON, self.catalogSave)
-        self.save.SetToolTip("Save catalogue in a directory")
-        self.sizer_v2.Add(self.save, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        ##Save catalogue in a directory
+        #
+        #self.save = Button(self, id=wx.ID_ANY, label="&Save", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        #self.save.Bind(wx.EVT_BUTTON, self.catalogSave)
+        #self.save.SetToolTip("Save catalogue in a directory")
+        #self.sizer_v2.Add(self.save, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Restore catalogue from a diretory
         
         self.restore = Button(self, id=wx.ID_ANY, label="&Restore", pos=wx.DefaultPosition,size=wx.DefaultSize)
         self.restore.Bind(wx.EVT_BUTTON, self.catalogRestore)
-        self.restore.SetToolTip("Restore catalogue from a diretory")
+        self.restore.SetToolTip("Restore catalogue from diretory")
         self.sizer_v2.Add(self.restore, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         
@@ -4158,11 +4158,11 @@ class skyDataPlotting(masterProcessingPanel):
         
         # Draw velocity map
         
-        #try:
-        self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
-        self.fg2sizer.Add(self.skyGraph)
-        #except Exception:
-        #    pass
+        try:
+            self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
+            self.fg2sizer.Add(self.skyGraph)
+        except Exception:
+            pass
         
         self.Layout()
         
