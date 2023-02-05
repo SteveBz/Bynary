@@ -6208,10 +6208,10 @@ class MassPlotting(masterProcessingPanel):
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
         self.summaryList.SetColumnWidth(1, 120)
         self.SetSizer(self.sizer_v)
-        #try:
-        self.MassPlot.Layout()
-        #except Exception:
-        #    pass
+        try:
+            self.MassPlot.Layout()
+        except Exception:
+            pass
         self.Layout()
 
     def OnReset(self, event=0):
