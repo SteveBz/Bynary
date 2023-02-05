@@ -33,13 +33,18 @@ Next download the source files from git and run install (enter user name and pas
 git clone https://github.com/SteveBz/Bynary.git <dir name>
 cd <dir name>
 ```
+## Update binClinet.conf with the name of your directory.
+```
+kate binClient.conf (or editor of your choice)
+replace '/home/image/x-Stronomy' with you new directory
+save and exit
+```
 ## Now create a virtual environment, enter it and run install.
 ```
 python3 -m venv venv
 . venv/bin/activate
 . install.sh
 ```
-
 ## To execute the application:
 ```
 cd <dir name>
