@@ -6192,13 +6192,13 @@ class MassPlotting(masterProcessingPanel):
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
-        #try:
-        self.MassPlot = matplotlibPanel(parent=self, size=(900, 650))
-        self.MassPlot.axes.set_yscale('linear')
-        self.MassPlot.axes.set_xscale('linear')
-        self.fg2sizer.Add(self.MassPlot)
-        #except Exception:
-        #    pass
+        try:
+            self.MassPlot = matplotlibPanel(parent=self, size=(900, 650))
+            self.MassPlot.axes.set_yscale('linear')
+            self.MassPlot.axes.set_xscale('linear')
+            self.fg2sizer.Add(self.MassPlot)
+        except Exception:
+            pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
