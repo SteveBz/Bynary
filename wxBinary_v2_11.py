@@ -4,7 +4,7 @@ import os
 import time
 #import  wx.lib.scrolledpanel as scrolled
 
-import wx.html2 # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
+#import wx.html2 # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
 import pandas as pd
 import ashla.data_access as da
 import sys, inspect, math
