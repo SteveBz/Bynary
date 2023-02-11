@@ -5,10 +5,10 @@
 . venv/bin/activate
 ## Create data directories.
 mkdir bindata
-cd bindata
-mkdir eDR3
-cd eDR3
-cd ../..
+#cd bindata
+#mkdir DR3
+#cd DR3
+#cd ..
 ## Install python modules:
 ### Un comment your version of wx
 #pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/debian-8  wxPython
