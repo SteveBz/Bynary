@@ -17,11 +17,11 @@ We want pip3 for python3 modules and git to access github files
 ```
 sudo apt-get install -y python3-venv
 sudo apt-get install -y python3-pip
-sudo apt-get install -y git
+sudo apt-get install -y git libsdl2-dev
 sudo apt-get install -y libwebkit2gtk-4.0-dev
 #sudo apt-get install -y unixodbc
 sudo apt-get install -y sqlite3
-sudo apt-get install python3-pip make gcc libgtk-3-dev libgstreamer-gl1.0-0 freeglut3 freeglut3-dev python3-gst-1.0 libglib2.0-dev ubuntu-restricted-extras libgstreamer-plugins-base1.0-dev
+sudo apt-get install make gcc libgtk-3-dev libgstreamer-gl1.0-0 freeglut3 freeglut3-dev python3-gst-1.0 libglib2.0-dev ubuntu-restricted-extras libgstreamer-plugins-base1.0-dev
 ```
 
 Let's make sure we have rust installed for astroquery.  Only do this if you have problems.
