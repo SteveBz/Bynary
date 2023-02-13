@@ -29,7 +29,11 @@ class Choice(wx.Choice):
             itemCount=itemCount+1
             
     def GetValue(self):
-        return self.GetString(self.GetSelection())
+        try:
+            retval=self.GetString(self.GetSelection())
+        except Exception
+            retval=''
+        return retval
 
     def SetValue(self, value):
         itemCount=0
