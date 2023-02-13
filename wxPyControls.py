@@ -31,7 +31,7 @@ class Choice(wx.Choice):
     def GetValue(self):
         try:
             retval=self.GetString(self.GetSelection())
-        except Exception
+        except Exception:
             retval=''
         return retval
 
