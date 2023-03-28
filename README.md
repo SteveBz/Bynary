@@ -1,4 +1,4 @@
-# How to install Bynary
+# How to install Bynary on Kubuntu
 
 Bynary is a python-based suite of modules that will allow you to connect and download binary stars from Gaia based on an algorithm from Kareem El Badry at Berkley.  We have modified it slightly to make it more general, however you can add parameters as you like, or you can download the pre-processed catalogues.
 
