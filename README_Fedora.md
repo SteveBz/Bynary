@@ -17,11 +17,16 @@ We want pip3 for python3 modules and git to access github files
 ```
 sudo dnf install -y python3-venv
 sudo dnf install -y python3-pip
-sudo dnf install -y git libsdl2-devel
-sudo dnf install -y libwebkit2gtk-4.1-devel
-#sudo dnf install -y unixodbc
+sudo dnf install -y git 
+sudo dnf install -y SDL2-devel
 sudo dnf install -y sqlite
-sudo dnf install make gcc libgtk-3-devel libgstreamer-gl1.0-0 freeglut3 freeglut3-devel python3-gst-1.0 libglib2.0-dev ubuntu-restricted-extras libgstreamer-plugins-base1.0-dev
+sudo dnf groupinstall "Development Tools"
+sudo dnf install -y {dpkg,freeglut,gtk3,lib{jpeg,notify,SM,tiff},python3,SDL}{,-devel}
+sudo dnf install -y webkitgtk4{,-jsc}{,-devel}
+sudo dnf install -y gstreamer1-devel gstreamer1-plugins-base-tools gstreamer1-plugins-base-devel gstreamer1-plugins-good gstreamer1-plugins-good-extras   gstreamer1-plugins-bad-free gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras
+pip3 install -v --user wxPython
+
+
 ```
 
 Let's make sure we have rust installed for astroquery.  Only do this if you have problems.
