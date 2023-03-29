@@ -674,17 +674,18 @@ class gaiaStarRetrieval(wx.Panel):
         if int(self.spin_Bp_err.GetValue()):
             commentBp=''
             
-        self.parent.StatusBarProcessing(f'Delete old records for RA {lowerRA} to {upperRA} degrees')
-
-        TBL_OBJECTS = SQLLib.sqlDelete(iStro, "TBL_OBJECTS")
-        #TBL_OBJECTS.setWhereValueLTFloat('RA_', i+1)
-        #TBL_OBJECTS.setWhereValueGEFloat('RA_', i)
-        TBL_OBJECTS.setWhereAndList('RA_', [f'>={lowerRA}',f'<{upperRA}'])
-        TBL_OBJECTS.setWhereValueString('RELEASE_', release)
-        try:
-            TBL_OBJECTS.deleteRecordSet()
-        except Exception:
-            self.parent.StatusBarProcessing(f'Delete failed')
+        if not downloadOnly:
+            self.parent.StatusBarProcessing(f'Delete old records for RA {lowerRA} to {upperRA} degrees')
+    
+            TBL_OBJECTS = SQLLib.sqlDelete(iStro, "TBL_OBJECTS")
+            #TBL_OBJECTS.setWhereValueLTFloat('RA_', i+1)
+            #TBL_OBJECTS.setWhereValueGEFloat('RA_', i)
+            TBL_OBJECTS.setWhereAndList('RA_', [f'>={lowerRA}',f'<{upperRA}'])
+            TBL_OBJECTS.setWhereValueString('RELEASE_', release)
+            try:
+                TBL_OBJECTS.deleteRecordSet()
+            except Exception:
+                self.parent.StatusBarProcessing(f'Delete failed')
 
         
         if self.deactivateIndicesCheckBox.GetValue():
@@ -1661,22 +1662,24 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         #print(f'delete old records for healix {HPSlower} to {HPSupper}')
         t=time.strftime("%Y/%m/%d/ %H:%M:%S")
-        self.parent.StatusBarProcessing(f'Delete old records for healix {HPSlower} to {HPSupper}')
-        wx.Yield()
-        TBL_BINARIES = SQLLib.sqlDelete(iStro, "TBL_BINARIES");
-        #TBL_BINARIES.setWhereValueLTFloat('HEALPIX', HPSupper)
-        #TBL_BINARIES.setWhereValueGEFloat('HEALPIX', HPSlower)
-        TBL_BINARIES.setWhereAndList('HEALPIX', [f'>={HPSlower}',f'<{HPSupper}'])
-        TBL_BINARIES.setWhereValueString('CATALOG', catalogue)
-        TBL_BINARIES.setWhereValueString('RELEASE_', release)
-        print(TBL_BINARIES.getSQL())
-        try:
-            TBL_BINARIES.deleteRecordSet()
-        except Exception:
-            t=time.strftime("%Y/%m/%d/ %H:%M:%S")
-            self.parent.StatusBarProcessing(f'Delete failed')
+        
+        if not downloadOnly:
+            self.parent.StatusBarProcessing(f'Delete old records for healix {HPSlower} to {HPSupper}')
             wx.Yield()
-            pass
+            TBL_BINARIES = SQLLib.sqlDelete(iStro, "TBL_BINARIES");
+            #TBL_BINARIES.setWhereValueLTFloat('HEALPIX', HPSupper)
+            #TBL_BINARIES.setWhereValueGEFloat('HEALPIX', HPSlower)
+            TBL_BINARIES.setWhereAndList('HEALPIX', [f'>={HPSlower}',f'<{HPSupper}'])
+            TBL_BINARIES.setWhereValueString('CATALOG', catalogue)
+            TBL_BINARIES.setWhereValueString('RELEASE_', release)
+            print(TBL_BINARIES.getSQL())
+            try:
+                TBL_BINARIES.deleteRecordSet()
+            except Exception:
+                t=time.strftime("%Y/%m/%d/ %H:%M:%S")
+                self.parent.StatusBarProcessing(f'Delete failed')
+                wx.Yield()
+                pass
         
         if self.deactivateIndicesCheckBox.GetValue():
             #Deactivate 9 indices on TBL_BINARIES
