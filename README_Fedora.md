@@ -6,7 +6,7 @@ Firstly we need a vitual environment so that any exiting python programs aren't 
 
 You will need a subscription to the Gaia website to download data from ESA.
 
-You will also need a Linux-based computer running a currently supported version of Linux with Python 3.8+. We are both using Kubuntu 20.04.  It needs a solid state hard disk with about 20GB free and at least 16GB of memory, 32GB is better.  One of us uses an i7 the other uses an i9x2.  Both are adequate.  The i9x2 is good.  However, downloading stuff from Gaia still take an appreciable time, maybe several hours per download (to execute on Gaia and download).  
+You will also need a Linux-based computer running a currently supported version of Linux with Python 3.8+. We are both using Kubuntu 22.04.  It needs a solid state hard disk with about 20GB free and at least 16GB of memory, 32GB is better.  One of us uses an i7 the other uses an i9x2.  Both are adequate.  The i9x2 is good.  However, downloading stuff from Gaia still take an appreciable time, maybe several hours per download (to execute on Gaia and download).  ThisREADME file is about how to install on Fedora.  
 
 # How to install virtualenv:
 
@@ -40,20 +40,20 @@ cd <dir name>
 ## Update binClient.conf with the name of your directory.
 ```
 nano binClient.conf # (or editor of your choice)
-# replace '/home/image/x-Stronomy' with you new directory
+# replace '/home/image/x-Stronomy' with your new directory (eg <user>/<Bynary> or something)
 # save and exit
 ```
 ## Now create a virtual environment, enter it and run install.
 ```
 python3 -m venv venv
 . venv/bin/activate
-. install.sh
+. install_fedora.sh
 ```
 ## To execute the application:
 ```
 cd <dir name>
 . venv/bin/activate
-python3 wxBinary_v2_11.py
+python3 wxBinary_v3_01.py
 ```
 ### (NB to deactivate the virtual environment, if necessary):
 ```
