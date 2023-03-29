@@ -2,7 +2,7 @@
 
 ## Activate your virtual environment:
 
-. venv/bin/activate
+. venv2/bin/activate
 ## Create data directories.
 #mkdir bindata
 #cd bindata
