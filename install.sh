@@ -29,4 +29,5 @@ python3 -m pip install -r requirements.txt
 pip3 install astropy_healpix
 pip3 install healpy
 pip3 install astropy
-pip3 install sqlalchemy
+#pip3 install sqlalchemy
+pip3 install SQLAlchemy==1.4.46
