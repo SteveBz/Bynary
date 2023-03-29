@@ -5126,7 +5126,7 @@ class kineticDataPlotting(masterProcessingPanel):
                     #Exclude point if v/dv > vxerrCutoff6
                     #Add vDEC datapoint and vRA to calculate Pythagorian value.
                     y=math.sqrt(vRA**2+vDEC**2)
-                    excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, threshold_value_value=vxerrCutoff, idx=i)
+                    excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, threshold_value=vxerrCutoff, idx=i)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeTot:
                         self.parent.status.include[i]=0
@@ -5186,9 +5186,9 @@ class kineticDataPlotting(masterProcessingPanel):
                 # Check RA limits
                 if self.parent.status.include[i]:
                     #Exclude point if v/dv > vxerrCutoff
-                    excludeRA = dataRABins.binAddDataPoint(x=r, y=vRA, dy=vRAerr, threshold_value_value=vxerrCutoff)
+                    excludeRA = dataRABins.binAddDataPoint(x=r, y=vRA, dy=vRAerr, threshold_value=vxerrCutoff)
                     #Add vDEC datapoint and add vRA to calculate Pythagorian value.
-                    excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threshold_value_value=vxerrCutoff)
+                    excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threshold_value=vxerrCutoff)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeRA or not excludeDec:
                         self.parent.status.include[i]=0
@@ -5772,13 +5772,13 @@ class TFDataPlotting(masterProcessingPanel):
                 if r>float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
                     self.createExportRecord(primaryPointer, star2Pointer, i)
                     if self.V1D_CheckBox.GetValue()==True:
-                        if not dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, threshold_value_value=0) :
+                        if not dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, threshold_value=0) :
                             self.parent.StatusBarProcessing(f'Exclude "vRAerr (a)" x={M}, y={vRA}')
-                        if not dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, threshold_value_value=0) :
+                        if not dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, threshold_value=0) :
                             self.parent.StatusBarProcessing(f'Exclude "vDECerr (a)" x={M}, y={vDEC}')
                         
                     else:
-                        if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threshold_value_value=0) :
+                        if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threshold_value=0) :
                             self.parent.status.include[i]=0
                             self.parent.StatusBarProcessing(f'Exclude "Verr" x={M}, y={V2D}')
                 else:
@@ -5788,12 +5788,12 @@ class TFDataPlotting(masterProcessingPanel):
                 if r<float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
                     self.createExportRecord(primaryPointer, star2Pointer, i)
                     if self.V1D_CheckBox.GetValue()==True:
-                        if not dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, threshold_value_value=0):
+                        if not dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, threshold_value=0):
                             self.parent.StatusBarProcessing(f'Exclude "vRAerr (b)" x={M}, y={vRA}')
-                        if not dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, threshold_value_value=0) :
+                        if not dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, threshold_value=0) :
                             self.parent.StatusBarProcessing(f'Exclude "vDECerr (b)" x={M}, y={vDEC}')
                     else:
-                        if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threshold_value_value=0) :
+                        if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threshold_value=0) :
                             self.parent.status.include[i]=0
                             self.parent.StatusBarProcessing(f'Exclude "verr" x={M}, y={V2D}')
                 else:
@@ -6336,12 +6336,12 @@ class MassPlotting(masterProcessingPanel):
             # Ie 'Outer' shell
             if float(primaryPointer.mass_flame):
                 self.createExportRecord(primaryPointer, star2Pointer, i)
-                if not dataBins.binAddDataPoint(x=primaryPointer.mass_calc, y=primaryPointer.mass_flame, dy=(primaryPointer.age_flame_upper-primaryPointer.age_flame_lower)/2.0, threshold_value_value=0) :
+                if not dataBins.binAddDataPoint(x=primaryPointer.mass_calc, y=primaryPointer.mass_flame, dy=(primaryPointer.age_flame_upper-primaryPointer.age_flame_lower)/2.0, threshold_value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (a)" x={primaryPointer.mass_calc}, y={primaryPointer.mass_flame}')
 
             if float(star2Pointer.mass_flame):
                 self.createExportRecord(primaryPointer, star2Pointer, i)
-                if not dataBins.binAddDataPoint(x=star2Pointer.mass_calc, y=star2Pointer.mass_flame, dy=(star2Pointer.age_flame_upper-star2Pointer.age_flame_lower)/2.0, threshold_value_value=0) :
+                if not dataBins.binAddDataPoint(x=star2Pointer.mass_calc, y=star2Pointer.mass_flame, dy=(star2Pointer.age_flame_upper-star2Pointer.age_flame_lower)/2.0, threshold_value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (b)" x={star2Pointer.mass_calc}, y={star2Pointer.mass_flame}')
 
         
@@ -6839,7 +6839,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins1.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value_value=0) :
+                if not dataNDBins1.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "vRAerr (c)" x={DIST}, y=1')
     
             xdata1ND=dataNDBins1.getBinXArray(type='centre')
@@ -6879,7 +6879,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins2.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value_value=0) :
+                if not dataNDBins2.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "vRAerr (d)" x={DIST}, y=1')
     
             xdata2ND=dataNDBins2.getBinXArray(type='centre')
@@ -6917,7 +6917,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins3.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value_value=0) :
+                if not dataNDBins3.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "vRAerr (e)" x={DIST}, y=1')
     
             xdata3ND=dataNDBins3.getBinXArray(type='centre')
@@ -6957,7 +6957,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins4.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value_value=0) :
+                if not dataNDBins4.binAddDataPoint(x=DIST, y=1, dy=.00011, threshold_value=0) :
                     self.parent.StatusBarProcessing(f'Exclude 1 pair "vRAerr (f)" Distance={DIST}')
     
             xdata4ND=dataNDBins4.getBinXArray(type='centre')
