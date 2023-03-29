@@ -4,11 +4,14 @@ import math
 
 class binOrganiser():
     def __init__(self, binCount, lowerBinContentCount=10):
+        #__init__: This is the constructor method, which is called when an object of this class is created.
+        #The constructor takes two arguments: binCount and lowerBinContentCount.
+        #binCount is the number of bins, while lowerBinContentCount is the minimum number of content count in each bin.
+        #The constructor also initializes several lists and variables.
         self.binCount=binCount
         self.xBins=[] 
         self.yBins=[] 
         self.yBinSquares=[]
-        #self.pairBinSquares=[]
         
         self.vxerrvSquares=[] 
         self.errvSquares=[] 
@@ -23,10 +26,11 @@ class binOrganiser():
         self.lowerBinContentCount=lowerBinContentCount
         
     def newBin(self, binLowerBound, binUpperBound):
+        #newBin: This method creates a new bin by adding its lower bound and upper bound to the list of bin lower bounds and bin upper bounds, respectively. It also calculates the midpoint of the bin and adds it to the list of bin midpoints.
+
         self.xBins.append([] )
         self.yBins.append([] )
         self.yBinSquares.append([] )
-        #self.pairBinSquares.append([] )
         self.vxerrvSquares.append([])
         self.errvSquares.append([])
         self.errors.append([] )
@@ -36,8 +40,10 @@ class binOrganiser():
         self.binMidPoints.append(math.sqrt(binLowerBound*binUpperBound))
         
     def binCalculateDataPoints(self, binNum, percent):
+        
+        #binCalculateDataPoints: This method calculates the indices of the top 'percent' of the values in a bin.
         #Calculate array of indices to remove top 'percent' of values.
-        #Return array
+
         indices=[]
         #If no percentage, don't bother
         if not percent:
@@ -59,21 +65,26 @@ class binOrganiser():
             if self.yBins[binNum][index]>=thresholdRemoval:
                 indices.append(index)
                 
-        ##print (f'binNum = {binNum}, binLength = {binLength}, percent = {percent}, indices = {indices}, removeNValues = {removeNValues}, thresholdRemoval = {thresholdRemoval}, dummyArray = {dummyArray}, self.pairBinSquares[binNum] = {self.pairBinSquares[binNum]}')
-        
         print(f'Remove: {len(indices)} from {binLength}')
         return indices
     
-    def binAddDataPoint(self, x, y, dy='', value=1, idx=0):
+    def binAddDataPoint(self, x, y, dy='', threshold_value=1, idx=0):
+        
+        # This method adds a data point (x, y, dy, threshold_value, idx) to the appropriate bin.
+        # It calculates the value of vOverErr (Signal to noise ratio for v)
+        # and adds the x, y, dy, vxverr2, verr2, y2, idx values to the corresponding lists for the bin.
+        # Only S/R greater than 'threshold_value' are added. 
         y=abs(y)
         x=abs(x)
         dy=abs(dy)
-        #print(y)
-        try:
-            vOverErr=float(y/dy)
-        except Exception:
+        if dy:
+            vOverErr = float(y / dy)
+        else:
+            # Handle the divide by zero case
+            print(f'Error: vOverErr = float(y / dy) -  divide by zero error, dy = 0 or null, x = {x}, y = {y}')
             return 0
-        if abs(vOverErr)<value:
+
+        if abs(vOverErr)<threshold_value:
             return 0
         for i in range(self.binCount):
             if x>self.binLowerBounds[i] and x<=self.binUpperBounds[i]:
@@ -91,7 +102,10 @@ class binOrganiser():
         return 1
     def splitBin(self):
         
+        #splitBin:
+        #This method filters out the rows in a given data frame that are currently included.
         #Filter out currently inluded rows only
+        
         indexStatus = self.parent.status.index
         condition = self.parent.status.include == True
         statusIndices = indexStatus[condition]
@@ -99,7 +113,7 @@ class binOrganiser():
         
         
     def getBinYLabelArray(self):
-        #return self.getBinYVarArray()
+        #getBinYLabelArray: This method returns the array of y-values (labels) for the bins.
  
         labels=[] 
         for i in range(self.binCount):
