@@ -39,9 +39,9 @@ cd <dir name>
 ```
 ## Update binClient.conf with the name of your directory.
 ```
-kate binClient.conf (or editor of your choice)
-replace '/home/image/x-Stronomy' with you new directory
-save and exit
+nano binClient.conf # (or editor of your choice)
+# replace '/home/image/x-Stronomy' with you new directory
+# save and exit
 ```
 ## Now create a virtual environment, enter it and run install.
 ```
