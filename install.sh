@@ -24,7 +24,7 @@ pip3 install pandas
 #Next line needs rust
 pip3 install astroquery
 pip3 install dask
-#pip3 install fdb
+pip3 install fdb
 python3 -m pip install -r requirements.txt
 pip3 install astropy_healpix
 pip3 install healpy
