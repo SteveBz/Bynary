@@ -24,8 +24,6 @@ sudo dnf groupinstall "Development Tools"
 sudo dnf install -y {dpkg,freeglut,gtk3,lib{jpeg,notify,SM,tiff},python3,SDL}{,-devel}
 sudo dnf install -y webkitgtk4{,-jsc}{,-devel}
 sudo dnf install -y gstreamer1-devel gstreamer1-plugins-base-tools gstreamer1-plugins-base-devel gstreamer1-plugins-good gstreamer1-plugins-good-extras   gstreamer1-plugins-bad-free gstreamer1-plugins-bad-free-devel gstreamer1-plugins-bad-free-extras
-pip3 install -v --user wxPython
-
 
 ```
 
