@@ -14,7 +14,10 @@ mkdir bindata
 #pip install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/debian-8  wxPython # debian-8
 #pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/debian-10  wxPython   # Linux debian-10
 #pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython  # Linux (K)ubuntu-20.04
-pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 wxPython  # Linux (K)ubuntu-22.04
+#pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 wxPython  # Linux (K)ubuntu-22.04
+
+pip3 install attrdict3
+pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-23.04 wxPython  # Linux (K)ubuntu-23.04
 #pip install -U wxPython # Windows and macOS
 
 #pip3 install numpy
