@@ -241,30 +241,87 @@ class starSystem():
         return (Mass1+Mass2) #, self.primary.mass_flame, self.star2.mass_flame, self.primary.mass_calc, self.star2.mass_calc)
     
     def calcR(self):
+        
+        #Step 1 - Separation (R) 
+        #Calculate Separation (R) of two binary stars. 
+        #
+        # 1.1) Calculate the cosine of the angle, theta, between the stars as seen from Earth.  Ie the very small angle between the distances d1 & d2 to the primary and secondary
+        #   stars.  All angles are in radians. 
+        #
+        #   cos(theta) = sin (DEC1) sin (DEC2) + cos (DEC1) cos (DEC2) cos (RA1 - RA2) 
+        #
+        #   [NB Watch out for RA1 - RA2 wraps around and gives a large number.  In this case subtract 2pi.] 
+        #
+        #   1.2) Calculate R, the 2D distance between the stars. 
+        #
+        #   R^2 = (d1 + d2) ^2 (1 - cos(theta))/2 
         try:
             cosTheta=math.sin(self.star2.DEC_*2*math.pi/360)* math.sin(self.primary.DEC_*2*math.pi/360) + math.cos(self.star2.DEC_*2*math.pi/360) *math.cos(self.primary.DEC_*2*math.pi/360) *math.cos(self.star2.RA_*2*math.pi/360 - self.primary.RA_*2*math.pi/360)
-            R=math.sqrt(2)/2*(float(self.primary.DIST)+(self.star2.DIST))*math.sqrt(1.0-cosTheta)
         except Exception:
-            R=0
+            return 0
+        try:
+            if 1:
+                d1=self.primary.DIST*self.star2.DIST_ERR**2
+                d2=self.star2.DIST*self.primary.DIST_ERR**2
+                e1=self.primary.DIST_ERR**2
+                e2=self.star2.DIST_ERR**2
+        
+                R=(d1+d2)*math.sqrt(2.0-2.0*cosTheta)/(e1+e2)
+            else:
+                R=math.sqrt(2)/2*(float(self.primary.DIST)+(self.star2.DIST))*math.sqrt(1.0-cosTheta)
+        except Exception:
+            return 0
         return R
     
     def calcV(self):
         const474=4.74
         #print(self.primary)
         try:
-            # V Calculation (See WM Smart pp16-21)
-            self.U1=-(const474*self.primary.pmra/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
-            self.V1=(const474*self.primary.pmra/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
-            self.W1=(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.DEC_/360)*2*math.pi)
-            MuAlphaS=self.primary.pmra-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*self.star2.parallax/const474
-            MuDeltaS=self.primary.pmdec-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*self.star2.parallax/const474
-            
-            meanParallax=(self.star2.parallax+self.primary.parallax)/2
-            VelRA=abs(float(const474*(self.star2.pmra/self.star2.parallax-self.primary.pmra/self.primary.parallax+MuAlphaS/meanParallax)))
-            VelDec=abs(float(const474*(self.star2.pmdec/self.star2.parallax-self.primary.pmdec/self.primary.parallax+MuDeltaS/meanParallax)))
-            # V Error calculation
-            VAlphaErr=float(const474*(self.star2.pmra_error/self.star2.parallax+self.primary.pmra_error/self.primary.parallax+abs(self.star2.pmra)*self.star2.parallax_error/self.star2.parallax**2+abs(self.primary.pmra)*self.primary.parallax_error/self.primary.parallax**2))
-            VDeltaErr=float(const474*(self.star2.pmdec_error/self.star2.parallax+self.primary.pmdec_error/self.primary.parallax+abs(self.star2.pmdec)*self.star2.parallax_error/self.star2.parallax**2+abs(self.primary.pmdec)*self.primary.parallax_error/self.primary.parallax**2))
+            ## UVW Calculation (See WM Smart pp16-21) Gaia PMRA is already multiplied by cos(dec) by Gaia.
+            #self.U1=-(const474*self.primary.pmra/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+            #self.V1=(const474*self.primary.pmra/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+            #self.W1=(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.DEC_/360)*2*math.pi)
+            ##Sperical Correction
+            #MuAlphaS=self.primary.pmra-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*self.star2.parallax/const474
+            #MuDeltaS=self.primary.pmdec-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*self.star2.parallax/const474
+
+            if 1:
+                p1=self.primary.parallax*self.star2.DIST_ERR**2
+                p2=self.star2.parallax*self.primary.DIST_ERR**2
+                e1=self.primary.DIST_ERR**2
+                e2=self.star2.DIST_ERR**2
+                meanParallax=(p1+p2)/(e1+e2)
+                    
+                # UVW Calculation (See WM Smart pp16-21) Gaia PMRA is already multiplied by cos(dec) by Gaia.
+                self.U1=-(const474*self.primary.pmra/meanParallax)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/meanParallax)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+                self.V1=(const474*self.primary.pmra/meanParallax)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/meanParallax)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+                self.W1=(const474*self.primary.pmdec/meanParallax)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.DEC_/360)*2*math.pi)
+                #Sperical Correction
+                MuAlphaS=self.primary.pmra-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*meanParallax/const474
+                MuDeltaS=self.primary.pmdec-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*meanParallax/const474
+                
+                                
+                VelRA=abs(float(const474*(self.star2.pmra-self.primary.pmra+MuAlphaS)/meanParallax))
+                VelDec=abs(float(const474*(self.star2.pmdec-self.primary.pmdec+MuDeltaS)/meanParallax))
+                # Velocity Error calculation
+                VAlphaErr=float(const474*(math.sqrt(self.star2.pmra_error**2+self.primary.pmra_error**2+(self.star2.pmra*self.star2.parallax_error/self.star2.parallax)**2+(self.primary.pmra*self.primary.parallax_error/self.primary.parallax)**2))/meanParallax)
+                VDeltaErr=float(const474*(math.sqrt(self.star2.pmdec_error**2+self.primary.pmdec_error**2+(self.star2.pmdec*self.star2.parallax_error/self.star2.parallax)**2+(self.primary.pmdec*self.primary.parallax_error/self.primary.parallax)**2))/meanParallax)
+            else:
+                
+                # UVW Calculation (See WM Smart pp16-21) Gaia PMRA is already multiplied by cos(dec) by Gaia.
+                self.U1=-(const474*self.primary.pmra/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.cos((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+                self.V1=(const474*self.primary.pmra/self.primary.parallax)*math.cos((self.primary.RA_/360)*2*math.pi)-(const474*self.primary.pmdec/self.primary.parallax)*math.sin((self.primary.RA_/360)*2*math.pi)*math.sin((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.RA_/360)*2*math.pi)*math.cos((self.primary.DEC_/360)*2*math.pi)
+                self.W1=(const474*self.primary.pmdec/self.primary.parallax)*math.cos((self.primary.DEC_/360)*2*math.pi)+self.primary.radial_velocity*math.sin((self.primary.DEC_/360)*2*math.pi)
+                #Sperical Correction
+                MuAlphaS=self.primary.pmra-(-self.U1*math.sin(self.star2.RA_*2*math.pi/360)+self.V1*math.cos(self.star2.RA_*2*math.pi/360))*self.star2.parallax/const474
+                MuDeltaS=self.primary.pmdec-(-self.U1*math.cos(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)-self.V1*math.sin(self.star2.RA_*2*math.pi/360)*math.sin(self.star2.DEC_*2*math.pi/360)+self.W1*math.cos(self.star2.DEC_*2*math.pi/360))*self.star2.parallax/const474
+                meanParallax=(self.star2.parallax+self.primary.parallax)/2
+                
+                VelRA=abs(float(const474*(self.star2.pmra/self.star2.parallax-self.primary.pmra/self.primary.parallax+MuAlphaS/meanParallax)))
+                VelDec=abs(float(const474*(self.star2.pmdec/self.star2.parallax-self.primary.pmdec/self.primary.parallax+MuDeltaS/meanParallax)))
+                # Velocity Error calculation
+                VAlphaErr=float(const474*(self.star2.pmra_error/self.star2.parallax+self.primary.pmra_error/self.primary.parallax+abs(self.star2.pmra)*self.star2.parallax_error/self.star2.parallax**2+abs(self.primary.pmra)*self.primary.parallax_error/self.primary.parallax**2))
+                VDeltaErr=float(const474*(self.star2.pmdec_error/self.star2.parallax+self.primary.pmdec_error/self.primary.parallax+abs(self.star2.pmdec)*self.star2.parallax_error/self.star2.parallax**2+abs(self.primary.pmdec)*self.primary.parallax_error/self.primary.parallax**2))
         except Exception:
             VelRA=0
             VAlphaErr=0
@@ -273,19 +330,3 @@ class starSystem():
         #Return Velocity array and error array
         return ([VelRA,VelDec],[VAlphaErr,VDeltaErr])
     
-    #def deselect(self):
-    #    if self.rfactor:
-    #        if abs(self.primary.DIST - self.star2.DIST) > self.R*int(self.rfactor):
-    #            self.V = math.nan
-    #    
-    #    #if self.primary.source_id  in self.selected:
-    #    #    self.selectedCount=self.selectedCount+1
-    #    #    print(self.selectedCount)
-    #    pass
-    #
-    #def printDetails(self, ccdm):
-    #    if not hasattr(self, 'star2'):
-    #        pass
-    #        #print (ccdm)
-        
-#        #################################  Table Header (Start) #####################################################################

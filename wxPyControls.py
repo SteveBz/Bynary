@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 
-import  wx # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
-import wx.html2  # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
-import wx.adv as adv # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
-import wx.lib.statbmp as SB # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-20.04 wxPython
+import  wx # pip3 install wxPython # # # # -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 wxPython
+#import wx.html2  # sudo apt install libwxgtk-webview3.0-gtk3-dev 
+import wx.adv as adv # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 wxPython
+import wx.lib.statbmp as SB # pip3 install -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-22.04 wxPython
 
 class ListCtrl(wx.ListCtrl):
     def __init__(self, parent, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=[] , value='', style=wx.LC_REPORT|wx.SUNKEN_BORDER|wx.LC_SINGLE_SEL):

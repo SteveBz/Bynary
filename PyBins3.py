@@ -128,12 +128,26 @@ class binOrganiser():
 
     def getBinXArray(self, type='centre'):
         data=[] 
-        if type=='mean':
+        if type=='ari-mean':
             for i in range(self.binCount):
-                # Mean of the data
-                if len(self.yBins[i])>=self.lowerBinContentCount:
+                # Arithmetic Mean of the data
+                if len(self.Bins[i])>=self.lowerBinContentCount:
                     mean = sum(self.xBins[i])/len(self.xBins[i])
                     data.append(mean) 
+                else:
+                    data.append(math.nan)
+        if type=='mean':
+            for i in range(self.binCount):
+                # Geometric Mean of the data
+                if len(self.yBins[i])>=self.lowerBinContentCount:
+                    # Geometric Mean of List
+                    # using loop + formula
+                    newlist = [x for x in self.xBins[i] if math.isnan(x) == False and x > 0]
+                    product = 0
+                    for j in range(0, len(newlist)):
+                        product = product + math.log10(newlist[j])
+                    geoMean = product / float(len(newlist))
+                    data.append(10**geoMean)
                 else:
                     data.append(math.nan)
         if type=='centre':
@@ -144,6 +158,7 @@ class binOrganiser():
                     data.append(product) 
                 else:
                     data.append(math.nan)
+        #print(f'type ({type}) =', data)
         return data
         
     def getBinYArray(self, type='rms'):
@@ -178,12 +193,12 @@ class binOrganiser():
         self.yData=data  
         return data
 
-    def getBinXVarArray(self, type='var'):
+    def getBinXVarArray(self, type='centre'):
         errbinM=[] 
         errbinP=[] 
+        array=self.getBinXArray(type)
         for i in range(self.binCount):
             if len(self.yBins[i])>=self.lowerBinContentCount:
-                array=self.getBinXArray('centre')
                 errorBarM = abs(array[i]-self.binLowerBounds[i])
                 errorBarP = abs(array[i]-self.binUpperBounds[i])
                 errbinM.append(errorBarM)
@@ -191,6 +206,7 @@ class binOrganiser():
             else:
                 errbinP.append(math.nan)
                 errbinM.append(math.nan)
+        #print(f'Error bars =', [errbinM,errbinP])
         return [errbinM,errbinP]
         
     def getBinYVarArray(self, type='qrms'):
@@ -214,10 +230,6 @@ class binOrganiser():
                     Ylist = [y for y in self.yBinSquares[i] if math.isnan(y) == False]
                     try:
                         error = math.sqrt(sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist)))
-                        #if i<2:
-                            #print(f'vxerrvSquares({i}) = {vxerrvList}')
-                            #print(f'yBinSquares({i}) = {Ylist}')
-                            #print(f'sum (v * Err) = {sum(vxerrvList)}')
                     except Exception:
                         error = math.nan
                     errbin.append(error) 
@@ -233,5 +245,28 @@ class binOrganiser():
                     errbin.append(variance) 
                 else:
                     errbin.append(math.nan)
+
+        if type=='var_qrms':
+            for i in range(self.binCount):
+                #Remove nans so length of list (n) is correct
+                vxerrvList = [vxerrv for vxerrv in self.vxerrvSquares[i] if math.isnan(vxerrv) == False]
+                Ylist = [y for y in self.yBinSquares[i] if math.isnan(y) == False]
+                try:
+                    error1 = math.sqrt(sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist)))
+                    #error1 = sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist))
+                except Exception:
+                    errbin.append(math.nan)
+                    continue
+                # Square deviations (ie variance)
+                if len(self.yBins[i])>=self.lowerBinContentCount:
+                    deviation = [(y - self.yData[i]) ** 2 for y in self.yBins[i]]
+                    # Variance
+                    error2 = sum(deviation) / len(self.yBins[i])
+                    #errbin.append(variance) 
+                else:
+                    errbin.append(math.nan)
+                    continue
+                error = math.sqrt(error1**2 / (len(self.yBins[i])-1) + error2**2)
+                errbin.append(error)
         return errbin
 

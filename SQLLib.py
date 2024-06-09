@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import fdb
+# mport fdb
 import inspect
 import time
 
