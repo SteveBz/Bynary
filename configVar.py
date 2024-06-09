@@ -41,6 +41,16 @@ class configVar:
         
         return retValue
 
+    def getInt(self, configItem, section='SETTINGS'):
+        
+        retValue = ""
+        try:
+            retValue=int(self.parser.get(section, configItem))
+        except:
+            retValue=False
+        
+        return retValue
+
     def getBoolean(self, configItem, section='SETTINGS'):
         
         retValue = ""
