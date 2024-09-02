@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import math
+import numpy as np
 
 class binOrganiser():
     def __init__(self, binCount, lowerBinContentCount=10):
@@ -216,20 +217,25 @@ class binOrganiser():
                 # Square deviations
                 if len(self.errvSquares[i])>=self.lowerBinContentCount:
                     #Remove nans so length of list (n) is correct
-                    errv2List = [errv2 for errv2 in self.errvSquares[i] if math.isnan(errv2) == False]
+                    errv2List = [math.sqrt(errv2) for errv2 in self.errvSquares[i] if math.isnan(errv2) == False]
                     # Variance
-                    meanerror = math.sqrt(sum(errv2List)) / len(errv2List)
+                    meanerror = sum(errv2List) / len(errv2List)
                     errbin.append(meanerror) 
                 else:
                     errbin.append(math.nan)
         if type=='qrms':
+            #Not sure that this is right!!!
+            #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            #Its the [sum of (v.dv)** 2]/ [n.sum of (v)** 2]
             for i in range(self.binCount):
                 if len(self.yBins[i])>=self.lowerBinContentCount:
                     #Remove nans so length of list (n) is correct
-                    vxerrvList = [vxerrv for vxerrv in self.vxerrvSquares[i] if math.isnan(vxerrv) == False]
-                    Ylist = [y for y in self.yBinSquares[i] if math.isnan(y) == False]
+                    # 1) List all the squares of the measurement errors. 
+                    vxerrv2List = [vxerrv2 for vxerrv2 in self.vxerrvSquares[i] if math.isnan(vxerrv) == False]
+                    # 2) List all the squares of the measurements (ie v_squared).
+                    Y2list = [y2 for y2 in self.yBinSquares[i] if math.isnan(y) == False]
                     try:
-                        error = math.sqrt(sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist)))
+                        error = math.sqrt(sum(vxerrv2List)/ (len(Y2list)*sum(Y2list)))
                     except Exception:
                         error = math.nan
                     errbin.append(error) 
@@ -237,9 +243,10 @@ class binOrganiser():
                     errbin.append(math.nan)
         if type=='var':
             for i in range(self.binCount):
-                # Square deviations
+                # List all square deviations from the mean
                 if len(self.yBins[i])>=self.lowerBinContentCount:
-                    deviation = [(y - self.yData[i]) ** 2 for y in self.yBins[i]]
+                    y_mean = np.mean(self.yBins[i])
+                    deviation = [(y - y_mean) ** 2 for y in self.yBins[i] if math.isnan(y) == False]
                     # Variance
                     variance = sum(deviation) / len(self.yBins[i])
                     errbin.append(variance) 
@@ -248,25 +255,28 @@ class binOrganiser():
 
         if type=='var_qrms':
             for i in range(self.binCount):
-                #Remove nans so length of list (n) is correct
-                vxerrvList = [vxerrv for vxerrv in self.vxerrvSquares[i] if math.isnan(vxerrv) == False]
-                Ylist = [y for y in self.yBinSquares[i] if math.isnan(y) == False]
-                try:
-                    error1 = math.sqrt(sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist)))
-                    #error1 = sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist))
-                except Exception:
-                    errbin.append(math.nan)
-                    continue
-                # Square deviations (ie variance)
                 if len(self.yBins[i])>=self.lowerBinContentCount:
-                    deviation = [(y - self.yData[i]) ** 2 for y in self.yBins[i]]
+                    #Remove nans so length of list (n) is correct
+                    # RMS of error, ie average of the square of the errors.
+                    # 1) List all the squares of the measurement errors (QRMS)
+                    errv2List = [errv2 for errv2 in self.errvSquares[i] if math.isnan(errv2) == False]
+                    try:
+                        qrms = sum(errv2List)/ len(errv2List)
+                        #qrms = sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist))
+                    except Exception:
+                        errbin.append(math.nan)
+                        continue
+                    # 2) List all square deviations from the mean
+                    y_mean = np.mean(self.yBins[i])
+                    deviation_sq = [(y - y_mean) ** 2 for y in self.yBins[i] if math.isnan(y) == False]
                     # Variance
-                    error2 = sum(deviation) / len(self.yBins[i])
+                    variance = sum(deviation_sq) / (2 * len(self.yBins[i]))
                     #errbin.append(variance) 
                 else:
                     errbin.append(math.nan)
                     continue
-                error = math.sqrt(error1**2 / (len(self.yBins[i])-1) + error2**2)
+                #qrms = 0
+                error = math.sqrt(qrms + variance / len(self.yBins[i]))
                 errbin.append(error)
         return errbin
 
