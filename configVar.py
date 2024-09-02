@@ -9,7 +9,7 @@ class configVar:
     def __init__(self, configFile):
 
 
-        self.parser = configparser.SafeConfigParser()
+        self.parser = configparser.ConfigParser()
         #config.read('archive.ini')
         #self.parser = SafeConfigParser()
         self.parser.read(configFile)
