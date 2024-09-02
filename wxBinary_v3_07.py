@@ -520,7 +520,21 @@ class gaiaStarRetrieval(wx.Panel):
                                                     "age_flame"	FLOAT, \
                                                     "age_flame_upper"	FLOAT, \
                                                     "age_flame_lower"	FLOAT, \
-                                                    "classprob_dsc_specmod_binarystar"	FLOAT, \
+                                                    "classprob_dsc_specmod_binarystar"	FLOAT,\
+                                                    "ra_dec_corr" REAL,\
+                                                    "ra_parallax_corr" REAL,\
+                                                    "ra_pmra_corr" REAL,\
+                                                    "ra_pmdec_corr" REAL,\
+                                                    "dec_parallax_corr" REAL,\
+                                                    "dec_pmra_corr" REAL,\
+                                                    "dec_pmdec_corr" REAL,\
+                                                    "parallax_pmra_corr" REAL,\
+                                                    "parallax_pmdec_corr" REAL,\
+                                                    "pmra_pmdec_corr" REAL,\
+                                                    "phot_bp_mean_flux" REAL,\
+                                                    "phot_rp_mean_flux" REAL,\
+                                                    "phot_bp_mean_flux_error" REAL,\
+                                                    "phot_rp_mean_flux_error" REAL, \
                                                     PRIMARY KEY("RELEASE_","source_id") \
                                                     );'
             )
