@@ -2758,7 +2758,10 @@ class dataRetrieval(masterProcessingPanel):
         # Calculate the ratio
         # Create a new DataFrame to store the ratio
         X_temp = pd.DataFrame()
-        X_temp['parallax_uncertainty'] = self.parent.X['parallax_error'] / self.parent.X['PARALLAX']
+        try:
+            X_temp['parallax_uncertainty'] = self.parent.X['parallax_error'] / self.parent.X['PARALLAX']
+        except:
+            print(self.parent.X)
         # Calculate the mean of the ratio
         mean_parallax_X_uncertainty = X_temp['parallax_uncertainty'].mean()
         # Calculate the ratio
