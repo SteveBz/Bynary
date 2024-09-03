@@ -556,16 +556,16 @@ class gaiaStarRetrieval(wx.Panel):
 
             TBL_OBJECTS  = SQLLib.sql(iStro, "TBL_OBJECTS ")
             #    #ALTER INDEX IDX_TBL_OBJECTS1 to 4 ACTIVE
-            if index_not_exists('IDX_TBL_OBJECTS1', 'TBL_OBJECTS', 'SOURCE_ID'):
+            if self.index_not_exists('IDX_TBL_OBJECTS1', 'TBL_OBJECTS', 'SOURCE_ID'):
                 SQL=f"CREATE INDEX IDX_TBL_OBJECTS1 ON TBL_OBJECTS (SOURCE_ID);"
                 TBL_OBJECTS .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_OBJECTS2', 'TBL_OBJECTS', 'PARALLAX'):
+            if self.index_not_exists('IDX_TBL_OBJECTS2', 'TBL_OBJECTS', 'PARALLAX'):
                 SQL=f"CREATE INDEX IDX_TBL_OBJECTS2 ON TBL_OBJECTS (PARALLAX);"
                 TBL_OBJECTS .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_OBJECTS3', 'TBL_OBJECTS', 'RA_'):
+            if self.index_not_exists('IDX_TBL_OBJECTS3', 'TBL_OBJECTS', 'RA_'):
                 SQL=f"CREATE INDEX IDX_TBL_OBJECTS3 ON TBL_OBJECTS (RA_);"
                 TBL_OBJECTS .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_OBJECTS4', 'TBL_OBJECTS', 'DEC_'):
+            if self.index_not_exists('IDX_TBL_OBJECTS4', 'TBL_OBJECTS', 'DEC_'):
                 SQL=f"CREATE INDEX IDX_TBL_OBJECTS4 ON TBL_OBJECTS (DEC_);"
                 TBL_OBJECTS .executeIAD(SQL)
                 
@@ -585,37 +585,37 @@ class gaiaStarRetrieval(wx.Panel):
             )
             
             TBL_BINARIES  = SQLLib.sql(iStro, "TBL_BINARIES ")
-            if index_not_exists('IDX_TBL_BINARIES1', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY'):
+            if self.index_not_exists('IDX_TBL_BINARIES1', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES1 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_PRIMARY);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES2', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_SECONDARY'):
+            if self.index_not_exists('IDX_TBL_BINARIES2', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_SECONDARY'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES2 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_SECONDARY);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES3', 'TBL_BINARIES', 'RELEASE_, CATALOG, NOT_GROUPED'):
+            if self.index_not_exists('IDX_TBL_BINARIES3', 'TBL_BINARIES', 'RELEASE_, CATALOG, NOT_GROUPED'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES3 ON TBL_BINARIES (RELEASE_, CATALOG, NOT_GROUPED);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES4', 'TBL_BINARIES', 'RELEASE_, CATALOG, HAS_RADIAL_VELOCITY'):
+            if self.index_not_exists('IDX_TBL_BINARIES4', 'TBL_BINARIES', 'RELEASE_, CATALOG, HAS_RADIAL_VELOCITY'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES4 ON TBL_BINARIES (RELEASE_, CATALOG, HAS_RADIAL_VELOCITY);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES5', 'TBL_BINARIES', 'NOT_GROUPED'):
+            if self.index_not_exists('IDX_TBL_BINARIES5', 'TBL_BINARIES', 'NOT_GROUPED'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES5 ON TBL_BINARIES (NOT_GROUPED);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES6', 'TBL_BINARIES', 'HAS_RADIAL_VELOCITY'):
+            if self.index_not_exists('IDX_TBL_BINARIES6', 'TBL_BINARIES', 'HAS_RADIAL_VELOCITY'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES6 ON TBL_BINARIES (HAS_RADIAL_VELOCITY);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES7', 'TBL_BINARIES', 'RELEASE_'):
+            if self.index_not_exists('IDX_TBL_BINARIES7', 'TBL_BINARIES', 'RELEASE_'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES7 ON TBL_BINARIES (RELEASE_);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES8', 'TBL_BINARIES', 'CATALOG'):
+            if self.index_not_exists('IDX_TBL_BINARIES8', 'TBL_BINARIES', 'CATALOG'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES8 ON TBL_BINARIES (CATALOG);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES9', 'TBL_BINARIES', 'HEALPIX'):
+            if self.index_not_exists('IDX_TBL_BINARIES9', 'TBL_BINARIES', 'HEALPIX'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES9 ON TBL_BINARIES (HEALPIX);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES10', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY, SOURCE_ID_SECONDARY, HAS_RADIAL_VELOCITY, NOT_GROUPED'):
+            if self.index_not_exists('IDX_TBL_BINARIES10', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY, SOURCE_ID_SECONDARY, HAS_RADIAL_VELOCITY, NOT_GROUPED'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES10 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_PRIMARY, SOURCE_ID_SECONDARY, HAS_RADIAL_VELOCITY, NOT_GROUPED);"
                 TBL_BINARIES .executeIAD(SQL)
-            if index_not_exists('IDX_TBL_BINARIES11', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY, HAS_RADIAL_VELOCITY, NOT_GROUPED'):
+            if self.index_not_exists('IDX_TBL_BINARIES11', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY, HAS_RADIAL_VELOCITY, NOT_GROUPED'):
                 SQL=f"CREATE INDEX IDX_TBL_BINARIES11 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_PRIMARY, HAS_RADIAL_VELOCITY, NOT_GROUPED);"
                 TBL_BINARIES .executeIAD(SQL)
                 
