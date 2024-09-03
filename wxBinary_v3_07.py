@@ -2757,7 +2757,7 @@ class dataRetrieval(masterProcessingPanel):
         #print(columns_list)
         # Calculate the ratio
         # Create a new DataFrame to store the ratio
-        X_temp = pd.DataFrame()
+        X_temp = pd.DataFrame(columns=['parallax_uncertainty'])
         try:
             X_temp['parallax_uncertainty'] = self.parent.X['parallax_error'] / self.parent.X['PARALLAX']
         except:
