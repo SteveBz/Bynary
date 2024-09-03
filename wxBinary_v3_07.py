@@ -2760,15 +2760,16 @@ class dataRetrieval(masterProcessingPanel):
         X_temp = pd.DataFrame(columns=['parallax_uncertainty'])
         try:
             X_temp['parallax_uncertainty'] = self.parent.X['parallax_error'] / self.parent.X['PARALLAX']
+            # Calculate the mean of the ratio
+            mean_parallax_X_uncertainty = X_temp['parallax_uncertainty'].mean()
+            # Calculate the ratio
+            Y_temp = pd.DataFrame()
+            Y_temp['parallax_uncertainty'] = self.parent.Y['parallax_error'] / self.parent.Y['PARALLAX']
+            # Calculate the mean of the ratio
+            mean_parallax_Y_uncertainty = Y_temp['parallax_uncertainty'].mean()
         except:
-            print(self.parent.X)
-        # Calculate the mean of the ratio
-        mean_parallax_X_uncertainty = X_temp['parallax_uncertainty'].mean()
-        # Calculate the ratio
-        Y_temp = pd.DataFrame()
-        Y_temp['parallax_uncertainty'] = self.parent.Y['parallax_error'] / self.parent.Y['PARALLAX']
-        # Calculate the mean of the ratio
-        mean_parallax_Y_uncertainty = Y_temp['parallax_uncertainty'].mean()
+            mean_parallax_X_uncertainty=0
+            mean_parallax_Y_uncertainty=0
         ROWCOUNTMATRIX['GRP']=(mean_parallax_X_uncertainty + mean_parallax_Y_uncertainty)/2
         self.static_Parallax_Uncertainty = StaticText(self, id=wx.ID_ANY, label=f'{ROWCOUNTMATRIX["GRP"]:,}')
         self.sizer_h2.Add(self.static_Parallax_Uncertainty, 0, wx.ALL, 5)
