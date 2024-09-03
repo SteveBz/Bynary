@@ -474,7 +474,7 @@ class gaiaStarRetrieval(wx.Panel):
         
         self.parent.StatusBarNormal('Completed OK')
     #
-    def index_not_exists(index_name, table_name, column_name):
+    def index_not_exists(self, index_name, table_name, column_name):
         check_index_sql = f"SELECT name FROM sqlite_master WHERE type='index' AND name='{index_name}';"
         cursor = iStro.cursor()
         cursor.execute(check_index_sql)
