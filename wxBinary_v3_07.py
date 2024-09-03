@@ -473,7 +473,20 @@ class gaiaStarRetrieval(wx.Panel):
         CANCEL= True
         
         self.parent.StatusBarNormal('Completed OK')
-    #    
+    #
+    def index_not_exists(index_name, table_name, column_name):
+        check_index_sql = f"SELECT name FROM sqlite_master WHERE type='index' AND name='{index_name}';"
+        cursor = iStro.cursor()
+        cursor.execute(check_index_sql)
+        result = cursor.fetchone()
+    
+        if result:
+            # Index exists, return False
+            return False
+        else:
+            # Index does not exist, return True
+            return True
+            
     #    
     def releaseRefresh(self, event=0):
         
@@ -491,53 +504,71 @@ class gaiaStarRetrieval(wx.Panel):
                                                     PRIMARY KEY("RELEASE_")\
                                                     );'
             )
-            TBL_RELEASE.executeIAD('CREATE TABLE IF NOT EXISTS "TBL_OBJECTS" ( \
-                                                    "RELEASE_"	TEXT, \
-                                                    "source_id"	BIGINT, \
-                                                    "index"	BIGINT, \
-                                                    "RA_"	FLOAT, \
-                                                    "ra_error"	FLOAT, \
-                                                    "DEC_"	FLOAT, \
-                                                    "dec_error"	FLOAT, \
-                                                    "parallax"	FLOAT, \
-                                                    "parallax_error"	FLOAT, \
-                                                    "phot_g_mean_mag"	FLOAT, \
-                                                    "bp_rp"	FLOAT, \
-                                                    "radial_velocity"	FLOAT, \
-                                                    "radial_velocity_error"	FLOAT, \
-                                                    "parallax_over_error"	FLOAT, \
-                                                    "phot_g_mean_flux_over_error"	FLOAT, \
-                                                    "phot_rp_mean_flux_over_error"	FLOAT, \
-                                                    "phot_bp_mean_flux_over_error"	FLOAT, \
-                                                    "pmra"	FLOAT, \
-                                                    "pmra_error"	FLOAT, \
-                                                    "pmdec"	FLOAT, \
-                                                    "pmdec_error"	FLOAT, \
-                                                    "ruwe"	FLOAT, \
-                                                    "mass_flame"	FLOAT, \
-                                                    "mass_flame_upper"	FLOAT, \
-                                                    "mass_flame_lower"	FLOAT, \
-                                                    "age_flame"	FLOAT, \
-                                                    "age_flame_upper"	FLOAT, \
-                                                    "age_flame_lower"	FLOAT, \
-                                                    "classprob_dsc_specmod_binarystar"	FLOAT,\
-                                                    "ra_dec_corr" REAL,\
-                                                    "ra_parallax_corr" REAL,\
-                                                    "ra_pmra_corr" REAL,\
-                                                    "ra_pmdec_corr" REAL,\
-                                                    "dec_parallax_corr" REAL,\
-                                                    "dec_pmra_corr" REAL,\
-                                                    "dec_pmdec_corr" REAL,\
-                                                    "parallax_pmra_corr" REAL,\
-                                                    "parallax_pmdec_corr" REAL,\
-                                                    "pmra_pmdec_corr" REAL,\
-                                                    "phot_bp_mean_flux" REAL,\
-                                                    "phot_rp_mean_flux" REAL,\
-                                                    "phot_bp_mean_flux_error" REAL,\
-                                                    "phot_rp_mean_flux_error" REAL, \
-                                                    PRIMARY KEY("RELEASE_","source_id") \
-                                                    );'
-            )
+            create_table_sql = '''
+                CREATE TABLE IF NOT EXISTS "TBL_OBJECTS" (
+                    "RELEASE_" TEXT,
+                    "source_id" BIGINT,
+                    "index" BIGINT,
+                    "RA_" FLOAT,
+                    "ra_error" FLOAT,
+                    "DEC_" FLOAT,
+                    "dec_error" FLOAT,
+                    "parallax" FLOAT,
+                    "parallax_error" FLOAT,
+                    "phot_g_mean_mag" FLOAT,
+                    "bp_rp" FLOAT,
+                    "radial_velocity" FLOAT,
+                    "radial_velocity_error" FLOAT,
+                    "parallax_over_error" FLOAT,
+                    "phot_g_mean_flux_over_error" FLOAT,
+                    "phot_rp_mean_flux_over_error" FLOAT,
+                    "phot_bp_mean_flux_over_error" FLOAT,
+                    "pmra" FLOAT,
+                    "pmra_error" FLOAT,
+                    "pmdec" FLOAT,
+                    "pmdec_error" FLOAT,
+                    "ruwe" FLOAT,
+                    "mass_flame" FLOAT,
+                    "mass_flame_upper" FLOAT,
+                    "mass_flame_lower" FLOAT,
+                    "age_flame" FLOAT,
+                    "age_flame_upper" FLOAT,
+                    "age_flame_lower" FLOAT,
+                    "classprob_dsc_specmod_binarystar" FLOAT,
+                    "ra_dec_corr" REAL,
+                    "ra_parallax_corr" REAL,
+                    "ra_pmra_corr" REAL,
+                    "ra_pmdec_corr" REAL,
+                    "dec_parallax_corr" REAL,
+                    "dec_pmra_corr" REAL,
+                    "dec_pmdec_corr" REAL,
+                    "parallax_pmra_corr" REAL,
+                    "parallax_pmdec_corr" REAL,
+                    "pmra_pmdec_corr" REAL,
+                    "phot_bp_mean_flux" REAL,
+                    "phot_rp_mean_flux" REAL,
+                    "phot_bp_mean_flux_error" REAL,
+                    "phot_rp_mean_flux_error" REAL,
+                    PRIMARY KEY("RELEASE_", "source_id")
+                );
+                '''
+            TBL_RELEASE.executeIAD(create_table_sql);
+
+            TBL_OBJECTS  = SQLLib.sql(iStro, "TBL_OBJECTS ")
+            #    #ALTER INDEX IDX_TBL_OBJECTS1 to 4 ACTIVE
+            if index_not_exists('IDX_TBL_OBJECTS1', 'TBL_OBJECTS', 'SOURCE_ID'):
+                SQL=f"CREATE INDEX IDX_TBL_OBJECTS1 ON TBL_OBJECTS (SOURCE_ID);"
+                TBL_OBJECTS .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_OBJECTS2', 'TBL_OBJECTS', 'PARALLAX'):
+                SQL=f"CREATE INDEX IDX_TBL_OBJECTS2 ON TBL_OBJECTS (PARALLAX);"
+                TBL_OBJECTS .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_OBJECTS3', 'TBL_OBJECTS', 'RA_'):
+                SQL=f"CREATE INDEX IDX_TBL_OBJECTS3 ON TBL_OBJECTS (RA_);"
+                TBL_OBJECTS .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_OBJECTS4', 'TBL_OBJECTS', 'DEC_'):
+                SQL=f"CREATE INDEX IDX_TBL_OBJECTS4 ON TBL_OBJECTS (DEC_);"
+                TBL_OBJECTS .executeIAD(SQL)
+                
             TBL_RELEASE.executeIAD('CREATE TABLE IF NOT EXISTS "TBL_BINARIES" ( \
                                                 "RELEASE_"	TEXT, \
                                                 "CATALOG"	TEXT, \
@@ -552,6 +583,42 @@ class gaiaStarRetrieval(wx.Panel):
                                                 PRIMARY KEY("RELEASE_","CATALOG","SOURCE_ID_PRIMARY","SOURCE_ID_SECONDARY") \
                                         );'
             )
+            
+            TBL_BINARIES  = SQLLib.sql(iStro, "TBL_BINARIES ")
+            if index_not_exists('IDX_TBL_BINARIES1', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES1 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_PRIMARY);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES2', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_SECONDARY'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES2 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_SECONDARY);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES3', 'TBL_BINARIES', 'RELEASE_, CATALOG, NOT_GROUPED'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES3 ON TBL_BINARIES (RELEASE_, CATALOG, NOT_GROUPED);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES4', 'TBL_BINARIES', 'RELEASE_, CATALOG, HAS_RADIAL_VELOCITY'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES4 ON TBL_BINARIES (RELEASE_, CATALOG, HAS_RADIAL_VELOCITY);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES5', 'TBL_BINARIES', 'NOT_GROUPED'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES5 ON TBL_BINARIES (NOT_GROUPED);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES6', 'TBL_BINARIES', 'HAS_RADIAL_VELOCITY'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES6 ON TBL_BINARIES (HAS_RADIAL_VELOCITY);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES7', 'TBL_BINARIES', 'RELEASE_'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES7 ON TBL_BINARIES (RELEASE_);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES8', 'TBL_BINARIES', 'CATALOG'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES8 ON TBL_BINARIES (CATALOG);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES9', 'TBL_BINARIES', 'HEALPIX'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES9 ON TBL_BINARIES (HEALPIX);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES10', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY, SOURCE_ID_SECONDARY, HAS_RADIAL_VELOCITY, NOT_GROUPED'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES10 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_PRIMARY, SOURCE_ID_SECONDARY, HAS_RADIAL_VELOCITY, NOT_GROUPED);"
+                TBL_BINARIES .executeIAD(SQL)
+            if index_not_exists('IDX_TBL_BINARIES11', 'TBL_BINARIES', 'RELEASE_, CATALOG, SOURCE_ID_PRIMARY, HAS_RADIAL_VELOCITY, NOT_GROUPED'):
+                SQL=f"CREATE INDEX IDX_TBL_BINARIES11 ON TBL_BINARIES (RELEASE_, CATALOG, SOURCE_ID_PRIMARY, HAS_RADIAL_VELOCITY, NOT_GROUPED);"
+                TBL_BINARIES .executeIAD(SQL)
+                
             TBL_RELEASE.executeIAD('CREATE VIEW ALLSTARS2 (SOURCE_ID, CATALOG, RELEASE_, RA_, DEC_, STATUS, NOT_GROUPED, HAS_RADIAL_VELOCITY, PHOT_G_MEAN_MAG, SEPARATION, RUWE) \
                                         AS SELECT SOURCE_ID_SECONDARY, CATALOG, b.RELEASE_, o1.RA_, o1.DEC_, b.STATUS, b.NOT_GROUPED, b.HAS_RADIAL_VELOCITY, o1.PHOT_G_MEAN_MAG, SEPARATION, o1.RUWE \
                                         FROM TBL_BINARIES b \
