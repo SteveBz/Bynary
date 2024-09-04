@@ -381,7 +381,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.spin_G_err.SetToolTip("phot_g_mean_flux_over_error to download - 0 to 100 (expectation is '50')")
         
         # Select phot_rp_mean_flux_over_error
-        static_Rp_err = StaticText(self, id=wx.ID_ANY, label="Rp/err:")
+        static_Rp_err = StaticText(self, id=wx.ID_ANY, label="RP/err:")
         self.sizer_h.Add(static_Rp_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
@@ -390,7 +390,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.spin_Rp_err.SetToolTip("phot_rp_mean_flux_over_error to download - 0 to 100 (expectation is '10')")
         
         # Select phot_bp_mean_flux_over_error
-        static_Bp_err = StaticText(self, id=wx.ID_ANY, label="Bp/err:")
+        static_Bp_err = StaticText(self, id=wx.ID_ANY, label="BP/err:")
         self.sizer_h.Add(static_Bp_err, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
@@ -1104,7 +1104,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.spin_G_err1.SetToolTip("Primary phot_g_mean_flux_over_error to download - 0 to 100 (expectation is '50' - KEB)")
         
         # Select phot_rp_mean_flux_over_error
-        static_Rp_err1 = StaticText(self, id=wx.ID_ANY, label="Rp/err (1):")
+        static_Rp_err1 = StaticText(self, id=wx.ID_ANY, label="RP/err (1):")
         self.sizer_h.Add(static_Rp_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
@@ -1113,7 +1113,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.spin_Rp_err1.SetToolTip("Primary phot_rp_mean_flux_over_error to download - 0 to 100 (expectation is '20' - KEB), but should be '0' to allow for nulls")
         
         # Select phot_bp_mean_flux_over_error
-        static_Bp_err1 = StaticText(self, id=wx.ID_ANY, label="Bp/err (1):")
+        static_Bp_err1 = StaticText(self, id=wx.ID_ANY, label="BP/err (1):")
         self.sizer_h.Add(static_Bp_err1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
@@ -1165,7 +1165,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.spin_G_err2.SetToolTip("Companion phot_g_mean_flux_over_error to download - 0 to 100 (expectation is '50')")
         
         # Select phot_rp_mean_flux_over_error
-        static_Rp_err2 = StaticText(self, id=wx.ID_ANY, label="Rp/err (2):")
+        static_Rp_err2 = StaticText(self, id=wx.ID_ANY, label="RP/err (2):")
         self.sizer_h.Add(static_Rp_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
@@ -1174,7 +1174,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.spin_Rp_err2.SetToolTip("Companion phot_rp_mean_flux_over_error to download - 0 to 100 (expectation is '10')")
         
         # Select phot_bp_mean_flux_over_error
-        static_Bp_err2 = StaticText(self, id=wx.ID_ANY, label="Bp/err (2):")
+        static_Bp_err2 = StaticText(self, id=wx.ID_ANY, label="BP/err (2):")
         self.sizer_h.Add(static_Bp_err2, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Value
@@ -4263,13 +4263,13 @@ class dataFilter(masterProcessingPanel):
         self.static_parallax = StaticText(self, label='Px S/N') 
         fgsizer.Add(self.static_parallax, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         # Signal to noise ratio for Red Magnitude
-        self.static_red_mag = StaticText(self, label='Rp S/N') 
+        self.static_red_mag = StaticText(self, label='RP S/N') 
         fgsizer.Add(self.static_red_mag, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         # Signal to noise ratio for Green Magnitude
         self.static_green_mag = StaticText(self, label='G S/N') 
         fgsizer.Add(self.static_green_mag, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         # Signal to noise ratio for Blue Magnitude
-        self.static_blue_mag = StaticText(self, label='Bp S/N') 
+        self.static_blue_mag = StaticText(self, label='BP S/N') 
         fgsizer.Add(self.static_blue_mag, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5)
         
         # Signal to noise ratio for PMRA and PMDEC
@@ -5076,9 +5076,13 @@ class skyDataPlotting(masterProcessingPanel):
         self.skyGraph.axes.set_xscale('linear')
         
         if self.showGalacticCoordsCheckBox.GetValue():
-            self.skyGraph.set_limits([-180,180],[-90, 90])
+            #self.skyGraph.set_limits([-180,180],[-90, 90])
+            self.skyGraph.axes.set_xlim(-180, 180)
+            self.skyGraph.axes.set_ylim(-90, 90)
         else:
-            self.skyGraph.set_limits([360,0],[-90, 90])            
+            #self.skyGraph.set_limits([360,0],[-90, 90])   
+            self.skyGraph.axes.set_xlim(360, 0)
+            self.skyGraph.axes.set_ylim(-90, 90)         
         
         try:
             self.line.remove()
@@ -6289,7 +6293,7 @@ class kineticDataPlotting(masterProcessingPanel):
         
         if not normalise:
             self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b-', lw=2)#,label='Newtonian')
-        self.lineMond, = self.velocityGraph.axes.plot([.034* corrN, .034* corrN],[.001, 10], 'k:', lw=2)#,label='Mond expectation')
+        self.lineMond, = self.velocityGraph.axes.plot([.034* corrN * math.sqrt(2), .034* corrN * math.sqrt(2)],[.001, 10], 'k:', lw=2)#,label='Mond expectation')
         
         
         if not prntVersion:
