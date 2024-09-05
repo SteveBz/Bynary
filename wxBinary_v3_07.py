@@ -1229,7 +1229,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         
         self.SetSizer(self.sizer_main_divider)
         screen = Display()
-        ctrl_height = int(screen.screen_height * 500/1080)
+        ctrl_height = int(screen.screen_height * 400/1080)
         print(ctrl_height)
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(765,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
