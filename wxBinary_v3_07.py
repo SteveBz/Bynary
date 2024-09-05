@@ -426,7 +426,7 @@ class gaiaStarRetrieval(wx.Panel):
         self.SetSizer(self.sizer_main_divider)
         screen = Display()
         ctrl_height = int(screen.screen_height * 600/1080)
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(565,600), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(565,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"RA from", wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(2, u"RA to", wx.LIST_FORMAT_RIGHT, width=100)
