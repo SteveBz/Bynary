@@ -425,7 +425,8 @@ class gaiaStarRetrieval(wx.Panel):
         
         self.SetSizer(self.sizer_main_divider)
         screen = Display()
-        ctrl_height = int(screen.screen_height * 562/1080)
+        diff = int(1080 - screen.screen_height)
+        ctrl_height = 700-diff
         print(ctrl_height)
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(565,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
@@ -1230,7 +1231,7 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.SetSizer(self.sizer_main_divider)
         screen = Display()
         diff = int(1080 - screen.screen_height)
-        ctrl_height = 500-diff
+        ctrl_height = 550-diff
         print(ctrl_height)
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(765,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
