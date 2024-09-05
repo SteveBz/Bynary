@@ -1228,8 +1228,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.spin_mod_b_gt.SetToolTip("Distance from galactic plane. Mod (b) greater than entered value (expectation is '15')")
         
         self.SetSizer(self.sizer_main_divider)
-                        
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(765,500), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+        screen = Display()
+        ctrl_height = int(screen.screen_height * 500/1080)
+        print(ctrl_height)
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(765,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"Catalogue", wx.LIST_FORMAT_CENTER, width=100)
         self.listctrl.InsertColumn(2, u"separation", wx.LIST_FORMAT_CENTER, width=100)
