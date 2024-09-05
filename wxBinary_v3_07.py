@@ -2726,8 +2726,13 @@ class dataRetrieval(masterProcessingPanel):
         #self.sizer_h.Add(self.deactivateIndicesCheckBox, 0, wx.ALL, 2)
                 
         self.SetSizer(self.sizer_main_divider)
-                        
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1140,600), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+        
+        screen = Display()
+        diff = int(1080 - screen.screen_height)
+        ctrl_height = 800-diff
+        print(ctrl_height)
+        
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1140,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Gaia Star 1 Source ID", wx.LIST_FORMAT_RIGHT, width=200)
         self.listctrl.InsertColumn(1, u"Gaia Star 2 Source ID", wx.LIST_FORMAT_RIGHT, width=200)
         self.listctrl.InsertColumn(2, u"pairing no.", wx.LIST_FORMAT_RIGHT, width=80)
@@ -4432,7 +4437,14 @@ class dataFilter(masterProcessingPanel):
         self.dataInTotal = StaticText(self, id=wx.ID_ANY, label=f'{populateOut:,}')
         fgsizer.Add(self.dataInTotal, 0, wx.ALL, 5)
         
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1920,600), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+                
+        screen = Display()
+        diff = int(1080 - screen.screen_height)
+        ctrl_height = 750-diff
+        print(ctrl_height)
+        
+        
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1920,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Gaia %s Source ID" % RELEASE, width=180)
         self.listctrl.InsertColumn(1, u"pair #", width=60)
         self.listctrl.InsertColumn(2, u"ra", width=70)
