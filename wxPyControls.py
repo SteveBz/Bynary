@@ -209,6 +209,17 @@ class AboutBox(wx.Dialog):
         self.CentreOnParent(wx.BOTH)
         self.SetFocus()
         
+class Display(wx.Display):
+    def __init__(self):
+        # Call the superclass constructor
+        super().__init__()  # Initialize the wx.Display superclass
+        
+        # Get the screen size of the primary display
+        self.screen_size = self.GetGeometry().GetSize()
+        
+        # Extract width and height
+        self.screen_width = self.screen_size.GetWidth()
+        self.screen_height = self.screen_size.GetHeight()
 
 class CalendarCtrl(wx.adv.CalendarCtrl):
     def __init__(self, parent, date, style):
