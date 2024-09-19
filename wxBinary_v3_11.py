@@ -4463,7 +4463,6 @@ class dataFilter(masterProcessingPanel):
         
         self.dataInTotal = StaticText(self, id=wx.ID_ANY, label=f'{populateOut:,}')
         fgsizer.Add(self.dataInTotal, 0, wx.ALL, 5)
-        
                 
         screen = Display()
         diff = int(1080 - screen.screen_height)
@@ -5059,10 +5058,13 @@ class skyDataPlotting(masterProcessingPanel):
         #self.starsOnly_but.Bind(wx.EVT_BUTTON, self.OnStarsOnly)
         #fgsizer.Add(self.starsOnly_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
+        screen = Display()
+        diff = int(1080 - screen.screen_height)
+        ctrl_height = 750-diff
         # Draw velocity map
         #, projection='aitoff'
         try:
-            self.skyGraph = MatplotlibPanel(parent=self, size=(1350, 750))
+            self.skyGraph = MatplotlibPanel(parent=self, size=(1350, ctrl_height))
             self.fg2sizer.Add(self.skyGraph)
         except Exception:
             pass
