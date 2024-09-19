@@ -29,6 +29,7 @@ class binaryStarSystems():
     def addSystem(self, row, ccdm, rfactor=0):
         rowCopy = row.copy()
         R=0             # Separation
+        Rerr=0          # Separation error
         V=[0.0,0.0]     # Radial velocity (RA and DEC float)
         Verr=[0.0,0.0]  # Velocity error bar (RA and DEC float)
         BIN=0           # Bianry or not.
@@ -154,7 +155,7 @@ class binaryStarSystems():
         if str(ccdm) in self.binaryList.keys():
             binary=self.binaryList[str(ccdm)]
             #(R, V, Verr, M) =binary.binaryStarSystem(self.star_rows[idx], str(ccdm))
-            (R, V, Verr, M) =binary.binaryStarSystem(rowCopy, str(ccdm))
+            (R, Rerr, V, Verr, M) =binary.binaryStarSystem(rowCopy, str(ccdm))
             BIN=1
         else:
             BIN=0
@@ -162,7 +163,7 @@ class binaryStarSystems():
             unary = starSystem(rowCopy, self.Mass_Correction, rfactor=0)
             self.binaryList[str(ccdm)]=unary
         
-        return (ccdm, R, V, Verr, M, BIN)
+        return (ccdm, R, Rerr, V, Verr, M, BIN)
         
     def getStar_rows(self):
         
@@ -191,12 +192,12 @@ class starSystem():
             
         (self.primary.gal_l, self.primary.gal_b)=self.calcGal(self.primary.RA_, self.primary.DEC_)
         (self.star2.gal_l, self.star2.gal_b)=self.calcGal(self.star2.RA_, self.star2.DEC_)
-        self.R=float(self.calcR())
+        (self.R, self.Rerr)=self.calcR()
         # V and Verr are 2 D vectors.
         (self.V,self.Verr)=self.calcV()
         (self.M)=self.calcM() # , self.mass_flame_1,self.mass_flame_2,self.mass_calc_1,self.mass_calc_2
         
-        return (self.R, self.V, self.Verr, self.M)
+        return (self.R, self.Rerr, self.V, self.Verr, self.M)
     def calcGal(self, ra, dec):
         
         # Convert to Galactic Coords.
@@ -271,9 +272,26 @@ class starSystem():
         #
         #   R^2 = (d1 + d2) ^2 (1 - cos(theta))/2 
         try:
-            cosTheta=math.sin(self.star2.DEC_*2*math.pi/360)* math.sin(self.primary.DEC_*2*math.pi/360) + math.cos(self.star2.DEC_*2*math.pi/360) *math.cos(self.primary.DEC_*2*math.pi/360) *math.cos(self.star2.RA_*2*math.pi/360 - self.primary.RA_*2*math.pi/360)
+            # Convert RA and DEC from degrees to radians
+            DEC1_rad = self.star2.DEC_ * math.pi / 180
+            DEC2_rad = self.primary.DEC_ * math.pi / 180
+            RA1_rad = self.star2.RA_ * math.pi / 180
+            RA2_rad = self.primary.RA_ * math.pi / 180
+            
+            # Calculate cos(theta) with angle correction
+            delta_RA = RA1_rad - RA2_rad
+            delta_RA = (delta_RA + math.pi) % (2 * math.pi) - math.pi  # Correct for wrap-around
+            
+            cosTheta = (math.sin(DEC1_rad) * math.sin(DEC2_rad) +
+                        math.cos(DEC1_rad) * math.cos(DEC2_rad) * math.cos(delta_RA))
+            
+            # Ensure cosTheta is within valid range for numerical precision issues
+            cosTheta = max(-1, min(1, cosTheta))
+            #cosTheta=math.sin(self.star2.DEC_*2*math.pi/360)* math.sin(self.primary.DEC_*2*math.pi/360) + math.cos(self.star2.DEC_*2*math.pi/360) *math.cos(self.primary.DEC_*2*math.pi/360) *math.cos(self.star2.RA_*2*math.pi/360 - self.primary.RA_*2*math.pi/360)
         except Exception:
             return 0
+        
+        # Calculate R
         try:
             if 1:
                 d1=self.primary.DIST*self.star2.DIST_ERR**2
@@ -281,12 +299,18 @@ class starSystem():
                 e1=self.primary.DIST_ERR**2
                 e2=self.star2.DIST_ERR**2
         
-                R=(d1+d2)*math.sqrt(2.0-2.0*cosTheta)/(e1+e2)
+                R=math.sqrt(2.0-2.0*cosTheta)*(d1+d2)/(e1+e2)
+                
+                # Calculate the error in R using propagation of uncertainties
+                # Partial derivatives method for error propagation
+                dR_dd1 = math.sqrt(2.0 - 2.0 * cosTheta) / 2  # Partial derivative w.r.t. d1
+                dR_dd2 = math.sqrt(2.0 - 2.0 * cosTheta) / 2  # Partial derivative w.r.t. d2
+                Rerr = math.sqrt((dR_dd1 * e1) ** 2 + (dR_dd2 * e2) ** 2)
             else:
                 R=math.sqrt(2)/2*(float(self.primary.DIST)+(self.star2.DIST))*math.sqrt(1.0-cosTheta)
         except Exception:
             return 0
-        return R
+        return (R, Rerr)
     
     def calcV(self):
         const474=4.740470464

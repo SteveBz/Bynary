@@ -35,7 +35,7 @@ import matplotlib.ticker as ticker
 import csv
 import pickle
 from wxPyControls import *
-from PyBins3 import *
+from PyBins4 import *
 from starSystems_v4 import *
 from newtonian_values import xdata2, ydata2, ydata2_1D
 
@@ -427,7 +427,6 @@ class gaiaStarRetrieval(wx.Panel):
         screen = Display()
         diff = int(1080 - screen.screen_height)
         ctrl_height = 700-diff
-        print(ctrl_height)
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(565,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"RA from", wx.LIST_FORMAT_RIGHT, width=100)
@@ -1232,7 +1231,6 @@ class gaiaBinaryRetrieval(wx.Panel):
         screen = Display()
         diff = int(1080 - screen.screen_height)
         ctrl_height = 550-diff
-        print(ctrl_height)
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(765,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(1, u"Catalogue", wx.LIST_FORMAT_CENTER, width=100)
@@ -2543,7 +2541,8 @@ class masterProcessingPanel(wx.Panel):
             exportRecord['vRAerr']=abs(self.parent.binaryDetail.vRAerr[idxBin])
             exportRecord['vDEC']=abs(self.parent.binaryDetail.vDEC[idxBin])
             exportRecord['vDECerr']=abs(self.parent.binaryDetail.vDECerr[idxBin]),                 
-            exportRecord['V2D']=math.sqrt(self.parent.binaryDetail.vRA[idxBin]**2+self.parent.binaryDetail.vDEC[idxBin]**2)
+            exportRecord['v2D']=math.sqrt(self.parent.binaryDetail.vRA[idxBin]**2+self.parent.binaryDetail.vDEC[idxBin]**2)
+            exportRecord['v2D_err']=math.sqrt(self.parent.binaryDetail.vRAerr[idxBin]**2+self.parent.binaryDetail.vDECerr[idxBin]**2)
             exportRecord['Log10vRA']=np.log10(self.parent.binaryDetail.vRA[idxBin])
             exportRecord['Log10vDEC']=np.log10(self.parent.binaryDetail.vDEC[idxBin])
             exportRecord['Log10r']=np.log10(self.parent.binaryDetail.r[idxBin])
@@ -2730,19 +2729,19 @@ class dataRetrieval(masterProcessingPanel):
         screen = Display()
         diff = int(1080 - screen.screen_height)
         ctrl_height = 800-diff
-        print(ctrl_height)
         
-        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1140,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
+        self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1270,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Gaia Star 1 Source ID", wx.LIST_FORMAT_RIGHT, width=200)
         self.listctrl.InsertColumn(1, u"Gaia Star 2 Source ID", wx.LIST_FORMAT_RIGHT, width=200)
         self.listctrl.InsertColumn(2, u"pairing no.", wx.LIST_FORMAT_RIGHT, width=80)
-        self.listctrl.InsertColumn(3, u"separation", width=100)
+        self.listctrl.InsertColumn(3, u"separation  (pc)",  wx.LIST_FORMAT_RIGHT, width=100)
         self.listctrl.InsertColumn(4, u"Not grouped?", wx.LIST_FORMAT_CENTER,  width=80)
         self.listctrl.InsertColumn(5, u"Has RV?", wx.LIST_FORMAT_CENTER,  width=80)
         self.listctrl.InsertColumn(6, u"Status", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(7, u"Release", wx.LIST_FORMAT_CENTER,  width=100)
         self.listctrl.InsertColumn(8, u"Catalogue", wx.LIST_FORMAT_CENTER, width=100)
-        self.listctrl.InsertColumn(9, u"Healpix", wx.LIST_FORMAT_RIGHT, width=100)
+        self.listctrl.InsertColumn(9, u"Healpix", wx.LIST_FORMAT_RIGHT, width=50)
+        self.listctrl.InsertColumn(10, u"Mean Distance (pc)", wx.LIST_FORMAT_RIGHT, width=150)
         #
         self.restoreListCtrl()
         
@@ -2913,8 +2912,7 @@ class dataRetrieval(masterProcessingPanel):
                 healpix = str(int(row.HEALPIX))
             except Exception:
                 healpix = 'Not Avail.'
-            
-            self.listctrl.Append([row.SOURCE_ID_PRIMARY,row.SOURCE_ID_SECONDARY, index,separation, notGrouped, hasRadialVelocity, status, row.RELEASE_, row.CATALOG, healpix])
+            self.listctrl.Append([row.SOURCE_ID_PRIMARY,row.SOURCE_ID_SECONDARY, index,round(float(separation),5), notGrouped, hasRadialVelocity, status, row.RELEASE_, row.CATALOG, healpix, round((self.parent.X.DIST[index]+self.parent.Y.DIST[index])/2, 2)])
 
     def catalogSave(self, event=0):
         global CATALOG, RELEASE
@@ -3089,19 +3087,24 @@ class dataRetrieval(masterProcessingPanel):
         self.parent.plottingPage.text_x_BottomRight.SetValue(gl_cfg.getItem('x_bottomRight','KINETIC'))
         self.parent.plottingPage.text_y_BottomRight.SetValue(gl_cfg.getItem('y_bottomRight','KINETIC'))
         self.parent.plottingPage.text_upperCutoff.SetValue(gl_cfg.getItem('upper_cutoff','KINETIC'))
+        self.parent.plottingPage.text_v_tilde_upperCutoff.SetValue(gl_cfg.getItem('upper_v_tilde_cutoff','KINETIC'))
         self.parent.plottingPage.text_vxerrCutoff.SetValue(gl_cfg.getItem('v_dv_cutoff','KINETIC'))
         self.parent.plottingPage.lowerBinCutoffTextCtrl.SetValue(gl_cfg.getItem('lower_bin_cutoff','KINETIC'))
         self.parent.plottingPage.combo_yLog.SetSelection(gl_cfg.getInt('y_scale','KINETIC'))
         self.parent.plottingPage.combo_binReduction.SetSelection(gl_cfg.getInt('combo-bin-reduction','KINETIC'))
         self.parent.plottingPage.combo_yAvg.SetSelection(gl_cfg.getInt('y_avg','KINETIC'))
         self.parent.plottingPage.combo_xAvg.SetSelection(gl_cfg.getInt('x_avg','KINETIC'))
+        self.parent.plottingPage.combo_xy_option.SetSelection(gl_cfg.getInt('xy_option','KINETIC'))
+        self.parent.plottingPage.newtonian_CheckBox.SetValue(gl_cfg.getBoolean('newtonian','KINETIC')) # save setting in config file
+        self.parent.plottingPage.mond_CheckBox.SetValue(gl_cfg.getBoolean('mond','KINETIC')) # save setting in config file
+        self.parent.plottingPage.largePointsCheckBox.SetValue(gl_cfg.getBoolean('largepoints','KINETIC')) # save setting in config file
         self.parent.plottingPage.prntVersionCheckBox.SetValue(gl_cfg.getBoolean('prntversion','KINETIC')) # save setting in config file
         self.parent.plottingPage.largePointsCheckBox.SetValue(gl_cfg.getBoolean('largepoints','KINETIC')) # save setting in config file
         self.parent.plottingPage.showBinsCheckBox.SetValue(gl_cfg.getBoolean('showbins','KINETIC')) # save setting in config file
         self.parent.plottingPage.rawDataCheckBox.SetValue(gl_cfg.getBoolean('rawdata','KINETIC')) # save setting in config file
         self.parent.plottingPage.outlierLineCheckBox.SetValue(gl_cfg.getBoolean('outlierline','KINETIC')) # save setting in config file
         self.parent.plottingPage.showLabelsCheckBox.SetValue(gl_cfg.getBoolean('showlabels','KINETIC')) # save setting in config file
-        self.parent.plottingPage.aboveBelowRadioBox.SetSelection(gl_cfg.getInt('above-below-line','KINETIC'))
+        self.parent.plottingPage.combo_deselect_aboveBelow.SetSelection(gl_cfg.getInt('above-below-line','KINETIC'))
         
         # Reset defaults for 'Mass vs Flame plot' page.
         
@@ -3551,7 +3554,8 @@ class dataRetrieval(masterProcessingPanel):
                 #print(type(row), row)
                 #print(type(X), X)
                 #print(type(Y), Y)
-                self.listctrl.Append([row.SOURCE_ID_PRIMARY,row.SOURCE_ID_SECONDARY, index, separation, notGrouped, hasRadialVelocity,status, RELEASE, CATALOG, healpix])
+                #print(type(Y.DIST), Y.DIST)
+                self.listctrl.Append([row.SOURCE_ID_PRIMARY,row.SOURCE_ID_SECONDARY, index, round(float(separation),5), notGrouped, hasRadialVelocity,status, RELEASE, CATALOG, healpix, round((X.DIST[i]+Y.DIST[i])/2, 2)])
             
             ##  The 'notgroup' flag indicates that the stars in the system don't occur in other binaries too.
             #notgroup=1
@@ -3602,19 +3606,19 @@ class dataRetrieval(masterProcessingPanel):
                     self.parent.starSystemList.addSystem(X.iloc[index], i)
                     #
                     # Add second star (companion star)
-                    (ccdm, R, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(Y.iloc[index], i)
+                    (ccdm, R, Rerr, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(Y.iloc[index], i)
                 else:
                     # Add first star in reverse order (primary star)
                     self.parent.starSystemList.addSystem(Y.iloc[index], i)
                     #
                     # Add second star in reverse order  (companion star)
-                    (ccdm, R, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(X.iloc[index], i)
+                    (ccdm, R, Rerr, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(X.iloc[index], i)
             except Exception:
                 # Add first star (primary star)
                 self.parent.starSystemList.addSystem(X.iloc[index], i)
                 #
                 # Add second star (companion star)
-                (ccdm, R, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(Y.iloc[index], i)
+                (ccdm, R, Rerr, V, Verr, M, BIN) = self.parent.starSystemList.addSystem(Y.iloc[index], i)
                 self.parent.StatusBarProcessing(f'Except: G_MEAN_MAG error')
                 include=0
             primaryPointer=self.parent.starSystemList.binaryList[str(index+1)].primary
@@ -3915,12 +3919,11 @@ class dataRetrieval(masterProcessingPanel):
                     self.dbload.SetBackgroundColour(Colour(150,20,20))
                     self.dbload.Enable()
                     return
-            self.parent.binaryDetail.append([abs(R), abs(V[0]), abs(Verr[0]), abs(V[1]), abs(Verr[1]), abs(M), int(healpix)])
+            self.parent.binaryDetail.append([abs(R), abs(Rerr), abs(V[0]), abs(Verr[0]), abs(V[1]), abs(Verr[1]), abs(M), int(healpix)])
             
             if include:
        
                 self.createExportRecord(self.parent.X[index], self.parent.Y[index], index)
-
 
         self.parent.export=pd.DataFrame(self.parent.export)
         self.dbload.SetLabel(u"DB Load")
@@ -3938,13 +3941,26 @@ class dataRetrieval(masterProcessingPanel):
         self.parent.status['kineticOut']=self.parent.status['include']
         self.parent.status['massVmassOut']=self.parent.status['include']
         self.parent.status['tfOut']=self.parent.status['include']
-        self.parent.binaryDetail=pd.DataFrame(self.parent.binaryDetail, columns=['r','vRA','vRAerr','vDEC','vDECerr', 'M', 'healpix'])
+        self.parent.binaryDetail=pd.DataFrame(self.parent.binaryDetail, columns=['r','r_err','vRA','vRAerr','vDEC','vDECerr', 'M', 'healpix'])
         self.parent.X=pd.DataFrame.from_dict(self.parent.X, orient='index') #, columns=['ra','dec','BminusR', 'mag']pd.DataFrame.from_dict(data, orient='index')
         self.parent.Y=pd.DataFrame.from_dict(self.parent.Y, orient='index') #, columns=['ra','dec','BminusR', 'mag'])
         self.parent.star_rows=pd.DataFrame.from_dict(self.parent.starSystemList.getStar_rows(), orient='index') #, columns=column_names)
         
         # Calculate 2D velocity using Pythagoras: v2D = sqrt(vRA^2 + vDEC^2)
         self.parent.binaryDetail['v2D'] = np.sqrt(self.parent.binaryDetail['vRA']**2 + self.parent.binaryDetail['vDEC']**2)
+        
+        # Calculate 2D v_Tilde using v2D/np.sqrt(G (M1 + M2)/r_sky)
+        
+        G=float(gl_cfg.getItem('g','RETRIEVAL'))
+        self.parent.binaryDetail['v_tilde'] = self.parent.binaryDetail['v2D'] /np.sqrt(G*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/self.parent.binaryDetail['r'])
+        
+        # Calculate r_mond using np.sqrt(G (M1 + M2)/a_0)
+        #km_pc=float(gl_cfg.getItem('km_pc','RETRIEVAL'))
+        G2=float(gl_cfg.getItem('g2','RETRIEVAL'))
+        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL'))
+        self.parent.binaryDetail['r_mond'] = np.sqrt(G2*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/(a_0))
+        self.parent.binaryDetail['r_over_r_mond'] = self.parent.binaryDetail['r']/self.parent.binaryDetail['r_mond']
+        self.parent.binaryDetail['r_over_r_mond_err'] = self.parent.binaryDetail['r_err']/self.parent.binaryDetail['r_mond']
         
         # Optionally, calculate the error in 2D velocity using error propagation:
         # v2D_error = sqrt((vRA * vRAerr)^2 + (vDEC * vDECerr)^2) / v2D
@@ -3953,6 +3969,7 @@ class dataRetrieval(masterProcessingPanel):
             (self.parent.binaryDetail['vDEC'] * self.parent.binaryDetail['vDECerr'])**2
         ) 
         
+        self.parent.binaryDetail['v_tilde_err'] = self.parent.binaryDetail['v2D_err'] /np.sqrt(G*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/self.parent.binaryDetail['r'])
         #print(self.parent.X)
         
         # Save pandas files as pickle files for next time.
@@ -4451,8 +4468,6 @@ class dataFilter(masterProcessingPanel):
         screen = Display()
         diff = int(1080 - screen.screen_height)
         ctrl_height = 750-diff
-        print(ctrl_height)
-        
         
         self.listctrl = wx.ListCtrl(self, wx.ID_ANY, wx.DefaultPosition, wx.Size(1920,ctrl_height), wx.LC_HRULES | wx.LC_REPORT | wx.SIMPLE_BORDER | wx.VSCROLL | wx.LC_SORT_ASCENDING)
         self.listctrl.InsertColumn(0, u"Gaia %s Source ID" % RELEASE, width=180)
@@ -5045,9 +5060,9 @@ class skyDataPlotting(masterProcessingPanel):
         #fgsizer.Add(self.starsOnly_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Draw velocity map
-        
+        #, projection='aitoff'
         try:
-            self.skyGraph = MatplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
+            self.skyGraph = MatplotlibPanel(parent=self, size=(1350, 750))
             self.fg2sizer.Add(self.skyGraph)
         except Exception:
             pass
@@ -5103,14 +5118,14 @@ class skyDataPlotting(masterProcessingPanel):
         self.skyGraph.axes.set_yscale('linear')
         self.skyGraph.axes.set_xscale('linear')
         
-        if self.showGalacticCoordsCheckBox.GetValue():
-            #self.skyGraph.set_limits([-180,180],[-90, 90])
-            self.skyGraph.axes.set_xlim(-180, 180)
-            self.skyGraph.axes.set_ylim(-90, 90)
-        else:
-            #self.skyGraph.set_limits([360,0],[-90, 90])   
-            self.skyGraph.axes.set_xlim(360, 0)
-            self.skyGraph.axes.set_ylim(-90, 90)         
+        #if self.showGalacticCoordsCheckBox.GetValue():
+        #    #self.skyGraph.set_limits([-180,180],[-90, 90])
+        #    self.skyGraph.axes.set_xlim(-180, 180)
+        #    self.skyGraph.axes.set_ylim(-90, 90)
+        #else:
+        #    #self.skyGraph.set_limits([360,0],[-90, 90])   
+        #    self.skyGraph.axes.set_xlim(360, 0)
+        #    self.skyGraph.axes.set_ylim(-90, 90)         
         
         try:
             self.line.remove()
@@ -5613,7 +5628,7 @@ class kineticDataPlotting(masterProcessingPanel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=18, hgap=0, rows=10, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=19, hgap=0, rows=10, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
         self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
@@ -5633,43 +5648,45 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.static_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Outlier cutoff
-        self.static_above_below = StaticText(self, label='Deselect') 
+        self.static_above_below = StaticText(self, label='Deselect above/\nbelow line') 
         fgsizer.Add(self.static_above_below, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         self.static_x_TopLeft = StaticText(self, label='x (Top Left)') 
         fgsizer.Add(self.static_x_TopLeft, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.static_y_TopLeft = StaticText(self, label='y (Top Left)') 
         fgsizer.Add(self.static_y_TopLeft , 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.static_x_BottomRight = StaticText(self, label='x (Bottom Right)') 
+        self.static_x_BottomRight = StaticText(self, label='x (Bottom\nRight)') 
         fgsizer.Add(self.static_x_BottomRight, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.static_y_BottomRight = StaticText(self, label='y (Bottom Right)') 
+        self.static_y_BottomRight = StaticText(self, label='y (Bottom\nRight)') 
         fgsizer.Add(self.static_y_BottomRight, 0, wx.ALIGN_LEFT|wx.ALL, 5)     
         
         # Upper cutoff
-        self.static_upperCutoff = StaticText(self, label='Upper cutoff') 
+        self.static_upperCutoff = StaticText(self, label='Upper v2D\ncutoff') 
         fgsizer.Add(self.static_upperCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
+        # Upper cutoff
+        self.static_v_tilde_upperCutoff = StaticText(self, label='Upper v-tilde\ncutoff') 
+        fgsizer.Add(self.static_v_tilde_upperCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # v x err reporting threshold.
         self.static_vxerrCutoff = StaticText(self, label="v/dv t'hold") 
         fgsizer.Add(self.static_vxerrCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)        
         
-         # Lower bin cutoff header
+        # Lower bin cutoff header
         lowerBinCutoff_StaticText = StaticText(self, id=wx.ID_ANY, label="Lower Bin cutoff")
         fgsizer.Add(lowerBinCutoff_StaticText, 0, wx.ALL, 2)
-       
-        self.static_yLog1 = StaticText(self, label='y scale') 
-        fgsizer.Add(self.static_yLog1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        #Type of scale
+        #T Reduce occupancy of bin
         self.static_binReduction = StaticText(self, label='Minus Bin %') 
         fgsizer.Add(self.static_binReduction, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.static_yLog = StaticText(self, label='y scale') 
-        fgsizer.Add(self.static_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+       
         self.static_xAverage = StaticText(self, label='x Average') 
         fgsizer.Add(self.static_xAverage, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        
-        # Create Normalise check box
-        normaliseStaticText = StaticText(self, id=wx.ID_ANY, label="Normalise")
-        fgsizer.Add(normaliseStaticText, 0, wx.ALL, 2)
+        self.static_yLog1 = StaticText(self, label='y axis') 
+        fgsizer.Add(self.static_yLog1, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.static_yLog = StaticText(self, label='y avg') 
+        fgsizer.Add(self.static_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.static_xy_option = StaticText(self, label='x-y options') 
+        fgsizer.Add(self.static_xy_option, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Axis limits
         self.spin_bins = SpinCtrl(self, id=wx.ID_ANY, value="", pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.SP_ARROW_KEYS|wx.SP_WRAP|wx.ALIGN_RIGHT, min=1, max=100,initial=int(gl_cfg.getItem('no_bins','KINETIC', 5)))  
@@ -5687,16 +5704,12 @@ class kineticDataPlotting(masterProcessingPanel):
         self.textctrl_yLower.SetToolTip("Lower end of y-scale.")
         self.textctrl_yUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_upper','KINETIC', 5), pos=wx.DefaultPosition,size=(BoxWidth,-1), style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.textctrl_yUpper.SetToolTip("Upper end of y-scale.")
+        self.textctrl_yUpper.SetToolTip("Upper end of y-scale.")       
         
-        # Polarscope orientation radio button
-        aboveBelowChoices = ['None', '&Above', '&Below']
-        self.aboveBelowRadioBox = RadioBox(self, id=wx.ID_ANY,label = 'Above or below line:', pos=wx.DefaultPosition, size=wx.DefaultSize, choices = aboveBelowChoices, majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
-        self.aboveBelowRadioBox.SetBackgroundColour(Colour(50, 50, 60))
-        #self.aboveBelowRadioBox.Bind(wx.EVT_RADIOBOX,self.OnRefreshPAImage)
-        self.aboveBelowRadioBox.SetSelection(int(gl_cfg.getItem('above-below-line','KINETIC', 0)))
-        self.aboveBelowRadioBox.SetToolTip("Choose above or bleow.  Above removes outliers above the line, below removes stars below the line")
-        fgsizer.Add(self.aboveBelowRadioBox, 0, wx.ALL, 2)
+        self.combo_deselect_aboveBelow = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['None', '&Above', '&Below'], value='')
+        self.combo_deselect_aboveBelow.SetSelection(int(gl_cfg.getItem('above-below-line','KINETIC', 0)))
+        self.combo_deselect_aboveBelow.SetToolTip("Choose above or below.  Above removes outliers above the line, below removes stars below the line.")
+        fgsizer.Add(self.combo_deselect_aboveBelow, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Outlier values
         self.text_x_TopLeft = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_topLeft','KINETIC', .004), pos=wx.DefaultPosition,size=(BoxWidth,-1), style=wx.ALIGN_RIGHT) 
@@ -5712,10 +5725,15 @@ class kineticDataPlotting(masterProcessingPanel):
         self.text_y_BottomRight.SetToolTip("Bottom right y of outlier line.") 
         fgsizer.Add(self.text_y_BottomRight, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
-        # Upper cutoff
+        # Upper v2Dcutoff
         self.text_upperCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('upper_cutoff','KINETIC', 4), pos=wx.DefaultPosition,size=(BoxWidth,-1), style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.text_upperCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.text_upperCutoff.SetToolTip("Value of y-scale above which values will be ignored.")
+        self.text_upperCutoff.SetToolTip("Value of 2D velocity in the plane of sky above which values will be ignored.")
+        
+        # Upper v-tilde cutoff
+        self.text_v_tilde_upperCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('upper_v_tilde_cutoff','KINETIC', 2.0), pos=wx.DefaultPosition,size=(BoxWidth,-1), style=wx.ALIGN_RIGHT)  
+        fgsizer.Add(self.text_v_tilde_upperCutoff, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.text_v_tilde_upperCutoff.SetToolTip("Value of v-tilde velocity above which values will be ignored.")
         
         # v x err reporting threshold
         self.text_vxerrCutoff = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('v_dv_cutoff','KINETIC', 0), pos=wx.DefaultPosition,size=(BoxWidth,-1), style=wx.ALIGN_RIGHT)  
@@ -5727,44 +5745,63 @@ class kineticDataPlotting(masterProcessingPanel):
         self.lowerBinCutoffTextCtrl.SetToolTip("Enter number below which occupancy not to display bins.")
         fgsizer.Add(self.lowerBinCutoffTextCtrl, 0, wx.ALL, 2)
         
-        self.combo_yLog = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['log','normal'], value='')
-        self.combo_yLog.SetSelection(int(gl_cfg.getItem('y_scale','KINETIC', 0)))
-        #self.combo_yLog.Hide()
-        fgsizer.Add(self.combo_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        
         self.combo_binReduction = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'], value='')
         self.combo_binReduction.SetSelection(int(gl_cfg.getItem('combo-bin-reduction','KINETIC', 0)))
         self.combo_binReduction.SetToolTip("Percentage of fast stars to remove from each bin to account for CBs and flybys.")
         fgsizer.Add(self.combo_binReduction, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
-        self.combo_yAvg = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['rms','mean'], value='')
-        self.combo_yAvg.SetSelection(int(gl_cfg.getItem('y_avg','KINETIC', 0)))
-        self.combo_binReduction.SetToolTip("use RMS or mean.")
-        #self.combo_yAvg.Hide()
-        fgsizer.Add(self.combo_yAvg, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-                
         self.combo_xAvg = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['centre','mean'], value='')
         self.combo_xAvg.SetSelection(int(gl_cfg.getItem('x_avg','KINETIC', 0)))
         self.combo_xAvg.SetToolTip("Geometric mean of separations.")
         fgsizer.Add(self.combo_xAvg, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
-        # Create Normalise check box
-        self.normaliseCheckBox = CheckBox(self)
-        self.normaliseCheckBox.SetValue(gl_cfg.getBoolean('norm','KINETIC'))
-        self.normaliseCheckBox.SetToolTip("Normalise velocities by subtracting expected newtonian motion from each point.")
-        fgsizer.Add(self.normaliseCheckBox, 0, wx.ALL, 2)
+        self.combo_yLog = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['log','normal'], value='')
+        self.combo_yLog.SetSelection(int(gl_cfg.getItem('y_scale','KINETIC', 0)))
+        #self.combo_yLog.Hide()
+        fgsizer.Add(self.combo_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
+        self.combo_yAvg = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['rms','mean', 'median'], value='')
+        self.combo_yAvg.SetSelection(int(gl_cfg.getItem('y_avg','KINETIC', 0)))
+        self.combo_yAvg.SetToolTip("Use RMS, mean or median.")
+        #self.combo_yAvg.Hide()
+        fgsizer.Add(self.combo_yAvg, 0, wx.ALIGN_LEFT|wx.ALL, 5)
                 
-                
+        self.combo_xy_option = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['(r,v-sky)','(r,v-tilde)','(r/r-mond,v-tilde)','(r/r-mond,v-sky)'], value='')
+        self.combo_xy_option.SetSelection(int(gl_cfg.getItem('xy_option','KINETIC', 0)))
+        self.combo_xy_option.SetToolTip("XY axis options.")
+        #self.combo_yAvg.Hide()
+        fgsizer.Add(self.combo_xy_option, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        
         # Create show bins check box
-        showRABinsStaticText = StaticText(self, id=wx.ID_ANY, label="Show bins (RA|Dec)")
+        showRABinsStaticText = StaticText(self, id=wx.ID_ANY, label="Show bins\n(RA|Dec)")
         fgsizer.Add(showRABinsStaticText, 0, wx.ALL, 2)
         self.showBinsCheckBox = CheckBox(self)
         self.showBinsCheckBox.SetValue(gl_cfg.getBoolean('showbins','KINETIC'))
         self.showBinsCheckBox.SetToolTip("Display 1D RA & Dec data in bins.")
         fgsizer.Add(self.showBinsCheckBox, 0, wx.ALL, 2)
         
+        # Create newtonian_ check box
+        newtonian_StaticText = StaticText(self, id=wx.ID_ANY, label="Newtonian\nline")
+        fgsizer.Add(newtonian_StaticText, 0, wx.ALL, 2)
+        
+        # Create newtonian_ check box
+        self.newtonian_CheckBox = CheckBox(self)
+        self.newtonian_CheckBox.SetValue(gl_cfg.getBoolean('newtonian','KINETIC'))
+        self.newtonian_CheckBox.SetToolTip("Show Newtonian line.")
+        fgsizer.Add(self.newtonian_CheckBox, 0, wx.ALL, 2)
+                
+        # Create Mond check box
+        mond_StaticText = StaticText(self, id=wx.ID_ANY, label="MOND line")
+        fgsizer.Add(mond_StaticText, 0, wx.ALL, 2)
+        
+        # Create Mond check box
+        self.mond_CheckBox = CheckBox(self)
+        self.mond_CheckBox.SetValue(gl_cfg.getBoolean('norm','KINETIC'))
+        self.mond_CheckBox.SetToolTip("Show MOND line.")
+        fgsizer.Add(self.mond_CheckBox, 0, wx.ALL, 2)
+                
         # Create show raw data check box
-        rawDataStaticText = StaticText(self, id=wx.ID_ANY, label="Show raw data")
+        rawDataStaticText = StaticText(self, id=wx.ID_ANY, label="Show raw\ndata")
         fgsizer.Add(rawDataStaticText, 0, wx.ALL, 2)
         self.rawDataCheckBox = CheckBox(self)
         self.rawDataCheckBox.SetValue(gl_cfg.getBoolean('rawdata', 'KINETIC'))
@@ -5772,7 +5809,7 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.rawDataCheckBox, 0, wx.ALL, 2)
 
         # Create show outlier line check box
-        outlierStaticText = StaticText(self, id=wx.ID_ANY, label="Show outlier line")
+        outlierStaticText = StaticText(self, id=wx.ID_ANY, label="Show outlier\nline")
         fgsizer.Add(outlierStaticText, 0, wx.ALL, 2)
         self.outlierLineCheckBox = CheckBox(self)
         self.outlierLineCheckBox.SetValue(gl_cfg.getBoolean('outlierline', 'KINETIC'))
@@ -5780,23 +5817,23 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.outlierLineCheckBox, 0, wx.ALL, 2)
 
         # Create show large data points
-        largeStaticText = StaticText(self, id=wx.ID_ANY, label="Show large data points")
+        largeStaticText = StaticText(self, id=wx.ID_ANY, label="Show large\ndata points")
         fgsizer.Add(largeStaticText, 0, wx.ALL, 2)
         self.largePointsCheckBox = CheckBox(self)
         self.largePointsCheckBox.SetValue(gl_cfg.getBoolean('largepoints', 'KINETIC'))
         self.largePointsCheckBox.SetToolTip("Shows larger dec & ra data points for actual stars on graph.")
         fgsizer.Add(self.largePointsCheckBox, 0, wx.ALL, 2)
 
-        # Create show labels line check box
-        labelsStaticText = StaticText(self, id=wx.ID_ANY, label="Show bin labels")
-        fgsizer.Add(labelsStaticText, 0, wx.ALL, 2)
-        self.showLabelsCheckBox = CheckBox(self)
-        self.showLabelsCheckBox.SetValue(gl_cfg.getBoolean('showlabels','KINETIC'))
-        self.showLabelsCheckBox.SetToolTip("Show labels above bins on graph.")
-        fgsizer.Add(self.showLabelsCheckBox, 0, wx.ALL, 2)
+        ## Create show labels line check box
+        #labelsStaticText = StaticText(self, id=wx.ID_ANY, label="Show bin labels")
+        #fgsizer.Add(labelsStaticText, 0, wx.ALL, 2)
+        #self.showLabelsCheckBox = CheckBox(self)
+        #self.showLabelsCheckBox.SetValue(gl_cfg.getBoolean('showlabels','KINETIC'))
+        #self.showLabelsCheckBox.SetToolTip("Show labels above bins on graph.")
+        #fgsizer.Add(self.showLabelsCheckBox, 0, wx.ALL, 2)
 
         # Create 'print version' check box
-        prntVersion_StaticText = StaticText(self, id=wx.ID_ANY, label="Print Version")
+        prntVersion_StaticText = StaticText(self, id=wx.ID_ANY, label="Print\nVersion")
         fgsizer.Add(prntVersion_StaticText, 0, wx.ALL, 2)
         self.prntVersionCheckBox = CheckBox(self)
         self.prntVersionCheckBox.SetToolTip("Produce print version of graph.")
@@ -5922,6 +5959,10 @@ class kineticDataPlotting(masterProcessingPanel):
         #if hasattr(self.parent, 'hrinclude'):
         self.parent.status['include']=self.parent.status['hrOut']
         self.parent.status['kineticOut']=self.parent.status['include']
+        
+    # Define the s-curve function
+    def s_curve(self, r, N=0.5):
+        return N + 0.2*N / (1 + np.exp(-11*(r-.6)))
 
     def OnPlot(self, event=0):
         
@@ -5951,27 +5992,31 @@ class kineticDataPlotting(masterProcessingPanel):
         gl_cfg.setItem('x_bottomRight',self.text_x_BottomRight.GetValue(),'KINETIC')
         gl_cfg.setItem('y_bottomRight',self.text_y_BottomRight.GetValue(),'KINETIC')
         gl_cfg.setItem('upper_cutoff',self.text_upperCutoff.GetValue(),'KINETIC')
+        gl_cfg.setItem('upper_v_tilde_cutoff',self.text_v_tilde_upperCutoff.GetValue(),'KINETIC')
         gl_cfg.setItem('v_dv_cutoff',self.text_vxerrCutoff.GetValue(),'KINETIC')
         gl_cfg.setItem('lower_bin_cutoff',self.lowerBinCutoffTextCtrl.GetValue(),'KINETIC')
         gl_cfg.setItem('y_scale',self.combo_yLog.GetSelection(),'KINETIC')
         gl_cfg.setItem('combo-bin-reduction',self.combo_binReduction.GetSelection(),'KINETIC')
         gl_cfg.setItem('y_avg',self.combo_yAvg.GetSelection(),'KINETIC')
         gl_cfg.setItem('x_avg',self.combo_xAvg.GetSelection(),'KINETIC')
-        gl_cfg.setItem('norm',self.normaliseCheckBox.GetValue(),'KINETIC')
+        gl_cfg.setItem('xy_option',self.combo_xy_option.GetSelection(),'KINETIC')
+        gl_cfg.setItem('norm',self.newtonian_CheckBox.GetValue(),'KINETIC')
+        gl_cfg.setItem('norm',self.mond_CheckBox.GetValue(),'KINETIC')
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         gl_cfg.setItem('prntversion',self.prntVersionCheckBox.GetValue(), 'KINETIC') # save setting in config file
         gl_cfg.setItem('largepoints',self.largePointsCheckBox.GetValue(), 'KINETIC') # save setting in config file
         gl_cfg.setItem('showbins',self.showBinsCheckBox.GetValue(), 'KINETIC') # save setting in config file
         gl_cfg.setItem('rawdata',self.rawDataCheckBox.GetValue(), 'KINETIC') # save setting in config file
         gl_cfg.setItem('outlierline',self.outlierLineCheckBox.GetValue(), 'KINETIC') # save setting in config file
-        gl_cfg.setItem('showlabels',self.showLabelsCheckBox.GetValue(), 'KINETIC') # save setting in config file
-        gl_cfg.setItem('above-below-line',self.aboveBelowRadioBox.GetSelection(), 'KINETIC')
+        #gl_cfg.setItem('showlabels',self.showLabelsCheckBox.GetValue(), 'KINETIC') # save setting in config file
+        gl_cfg.setItem('above-below-line',self.combo_deselect_aboveBelow.GetSelection(), 'KINETIC')
         self.OnReset()
         # Draw kinematic map
         #self.parent.vdvExclude=0  # Keep track of how many pairs are excluded because 'v x vErr' exceeds a threshold.
         
         XArrayType=self.combo_xAvg.GetValue()
-        normalise=self.normaliseCheckBox.GetValue()
+        newtonian_line=self.newtonian_CheckBox.GetValue()
+        mond_line=self.mond_CheckBox.GetValue()
         # To remove the artist
         for frame in self.velocityGraph.frames:
             try:
@@ -5979,25 +6024,19 @@ class kineticDataPlotting(masterProcessingPanel):
             except Exception:
                 pass
         try:
-            self.linera.remove()
+            self.line_raw.remove()
         except Exception:
             pass
-        try:
-            self.linedec.remove()
-        except Exception:
-            pass
+        
         try:
             self.line2.remove()
         except Exception:
             pass
         try:
-            self.line3ra.remove()
+            self.line3.remove()
         except Exception:
             pass
-        try:
-            self.line3dec.remove()
-        except Exception:
-            pass
+
         try:
             self.lineOL.remove()
         except Exception:
@@ -6005,6 +6044,13 @@ class kineticDataPlotting(masterProcessingPanel):
         
         try:
             self.lineMond.remove()
+        except Exception:
+            pass
+        
+        # Remove the secondary x-axis if it already exists
+        try:
+            if hasattr(self, 'twinx'):
+                self.twinx.remove()
         except Exception:
             pass
         #try:
@@ -6016,29 +6062,33 @@ class kineticDataPlotting(masterProcessingPanel):
         
         legend1=[] 
         legend2=[] 
-        
-        self.velocityGraph.set_limits([float(self.textctrl_xLower.GetValue()),float(self.textctrl_xUpper.GetValue())],[float(self.textctrl_yLower.GetValue()),float(self.textctrl_yUpper.GetValue())])
+        yLower=float(self.textctrl_yLower.GetValue())
+        yUpper=float(self.textctrl_yUpper.GetValue())
+        xLower=float(self.textctrl_xLower.GetValue())
+        xUpper=float(self.textctrl_xUpper.GetValue())
+        self.velocityGraph.set_limits([float(self.textctrl_xLower.GetValue()),float(self.textctrl_xUpper.GetValue())],[yLower,yUpper])
         self.parent.binaryDetail['Msqrt']=self.parent.binaryDetail.M.apply(np.sqrt)
         prntVersion=self.prntVersionCheckBox.GetValue()
         
-        #Set up local valriables to avoid repeated calls to wx functions and for clarity
+        #Set up local variables to avoid repeated calls to wx functions and for clarity
         x_BottomRight=float(self.text_x_BottomRight.GetValue())
         x_TopLeft=float(self.text_x_TopLeft.GetValue())
         y_BottomRight=float(self.text_y_BottomRight.GetValue())
         y_TopLeft=float(self.text_y_TopLeft.GetValue())
-        aboveBelow=self.aboveBelowRadioBox.GetSelection()
+        aboveBelow=self.combo_deselect_aboveBelow.GetSelection()
         # Calculate parameters for outlier line.
         self.m=float(math.log10(y_BottomRight)-math.log10(y_TopLeft))/(math.log10(x_BottomRight)-math.log10(x_TopLeft)) # m = dy/dx
         self.c=float(math.log10(y_TopLeft) - math.log10(x_TopLeft)*self.m)
     
         lenArray=len(self.parent.binaryDetail)
         upperCutoff=float(self.text_upperCutoff.GetValue())
+        upper_v_tilde_Cutoff=float(self.text_v_tilde_upperCutoff.GetValue())
         vxerrCutoff=float(self.text_vxerrCutoff.GetValue())
             
         if self.showBinsCheckBox.GetValue():   
             
             #
-            # Convert RA data into bins
+            # Convert data into bins
             #
 #######################################################################
 
@@ -6046,30 +6096,18 @@ class kineticDataPlotting(masterProcessingPanel):
             bottom=float(self.textctrl_xLower.GetValue())   #  Get bottom of range
             diff = math.log10(top)-math.log10(bottom)   #  Work out difference in log terms.
 ######################################################################
-            numRABins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
-            dataRABins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
-            dataTotalBins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            numBins=int(self.spin_bins.GetValue())      #  Get number of bins.
+            dataBins=binOrganiser(numBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            dataTotalBins=binOrganiser(numBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             upper=top
-            factor=10**(diff/numRABins)
+            factor=10**(diff/numBins)
             lower=upper/factor
-            for i in range(numRABins):
-                dataRABins.newBin(lower, upper)
+            for i in range(numBins):
+                dataBins.newBin(lower, upper)
                 dataTotalBins.newBin(lower, upper)
                 upper=lower
                 lower=upper/factor
-                
-            numDECBins=int(self.spin_bins.GetValue()-1)      #  Get number of DEC bins (It's 1 fewer than the number of RA bins).
-            dataDECBins=binOrganiser(numDECBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
-            
-            # Need to offset upper bound of top bin by sqrt of a factor. TOTAL interval is the same with 1/2 a DEC bin at the top and half a DEC bin at the bottom.
-            # Ignore these and reduce number of bins by 1.
-            upper=top/math.sqrt(factor)
-            lower=upper/factor
-            for i in range(numDECBins):
-                dataDECBins.newBin(lower, upper)
-                upper=lower
-                lower=upper/factor
-
+            #    
             #Filter out currently inluded rows only
             indexStatus = self.parent.status.index
             condition = self.parent.status.include == True
@@ -6086,15 +6124,19 @@ class kineticDataPlotting(masterProcessingPanel):
                 #else:
                 #    include=int(self.parent.status.include[i])
                 #Set up local valriables to avoid repeated PD access and for clarity
-                vRA=0
-                vDEC=0
-                excludeRA=0
-                excludeDec=0
+                v2D=0
+                v_tilde=0
+                excludev2D=0
+                excludeTot=0
+                v_tilde=float(self.parent.binaryDetail.v_tilde[i]) #/self.parent.binaryDetail.Msqrt[i]
+                r_over_r_mond=float(self.parent.binaryDetail.r_over_r_mond[i]) #/self.parent.binaryDetail.Msqrt[i]
+                v2D=float(self.parent.binaryDetail.v2D[i]) #/self.parent.binaryDetail.Msqrt[i]
                 vRA=float(self.parent.binaryDetail.vRA[i]) #/self.parent.binaryDetail.Msqrt[i]
                 vDEC=float(self.parent.binaryDetail.vDEC[i]) #/self.parent.binaryDetail.Msqrt[i]
                 r=float(self.parent.binaryDetail.r[i])
                 vRAerr=float(self.parent.binaryDetail.vRAerr[i])
                 vDECerr=float(self.parent.binaryDetail.vDECerr[i])
+                v2D_err=float(self.parent.binaryDetail.v2D_err[i])
                 # Go through and bin
                 label=float(50 * i /lenArray)
                 self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -6112,23 +6154,33 @@ class kineticDataPlotting(masterProcessingPanel):
                 if aboveBelow: 
                     Y=self.XreturnY(r)
                     #Outliers above line
-                    if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==1 and (v2D > Y) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                     #Outliers below line
-                    if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==2 and (v2D < Y ) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                         
                 # Check for cutoff.  If we loose one, we should loose both.
-                if (vRA>upperCutoff or vDEC>upperCutoff):
+                if (v2D>upperCutoff ):
                     self.parent.status.loc[i, 'include'] = 0
-                    self.parent.StatusBarProcessing(f'Potential Flyby at vRA = {vRA}, vDEC = {vDEC}')
-                
+                    self.parent.StatusBarProcessing(f'Potential Flyby at v2D = {v2D}')
+                    
+                # Check for v-tilde cutoff.  If we loose one, we should loose both.
+                if (v_tilde>upper_v_tilde_Cutoff ):
+                    self.parent.status.loc[i, 'include'] = 0
+                    self.parent.StatusBarProcessing(f'Potential Flyby at v2D = {v2D}')
+
                 # Check RA limits
                 if self.parent.status.include[i]:
                     #Exclude point if v/dv > vxerrCutoff
-                    #Add vDEC datapoint and vRA to calculate Pythagorian value.
-                    y=math.sqrt(vRA**2+vDEC**2)
-                    excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, threshold_value=vxerrCutoff, idx=i)
+                    if self.combo_xy_option.GetSelection() == 0:
+                        excludeTot = dataTotalBins.binAddDataPoint(x=r, y=v2D, dy=vDECerr, threshold_value=vxerrCutoff, idx=i)
+                    elif self.combo_xy_option.GetSelection() == 1:
+                        excludeTot = dataTotalBins.binAddDataPoint(x=r, y=v_tilde, dy=vDECerr, threshold_value=vxerrCutoff, idx=i)
+                    elif self.combo_xy_option.GetSelection() == 2:
+                        excludeTot = dataTotalBins.binAddDataPoint(x=r_over_r_mond, y=v_tilde, dy=vDECerr, threshold_value=vxerrCutoff, idx=i)
+                    else:
+                        excludeTot = dataTotalBins.binAddDataPoint(x=r_over_r_mond, y=v2D, dy=vDECerr, threshold_value=vxerrCutoff, idx=i)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeTot:
                         self.parent.status.loc[i, 'include'] = 0
@@ -6136,12 +6188,16 @@ class kineticDataPlotting(masterProcessingPanel):
                 
             #Remove top 'n' percent of each bin
             if int(self.combo_binReduction.GetValue()):   
-                for binNum in range(numRABins):
+                for binNum in range(numBins):
                     indices=dataTotalBins.binCalculateDataPoints(binNum, int(self.combo_binReduction.GetValue()))
                     if len(indices):
                         for index in indices:
-            
-                            self.parent.status.loc[dataTotalBins.indices[binNum][index], 'include'] = 0
+
+                            try:
+                                #Remove WB
+                                self.parent.status.loc[dataTotalBins.indices[binNum][index], 'include'] = 0
+                            except Exception as error_message:
+                                print(f'Failed to remove index {index} from bin {binNum} - error {error_message}')
                 
             # Process individual pairs by RA & DEC
             for i in statusIndicesList:
@@ -6151,18 +6207,14 @@ class kineticDataPlotting(masterProcessingPanel):
                 #else:
                 #    include=int(self.parent.status.include[i])
                 #Set up local valriables to avoid repeated PD access and for clarity
-                vRA=0
-                vDEC=0
-                excludeRA=0
-                excludeDec=0
-                vRA=float(self.parent.binaryDetail.vRA[i])
-                vDEC=float(self.parent.binaryDetail.vDEC[i])
-                if normalise:
-                    vRA=vRA-self.log_log_interpolate((1e-3,1.0079), (.5,.042), r)
-                    vDEC=vDEC-self.log_log_interpolate((1e-3,1.0079), (.5,.042), r)
+                v_tilde=0
+                excludev2D=0
+                v2D=float(self.parent.binaryDetail.v2D[i])
+                v_tilde=float(self.parent.binaryDetail.v_tilde[i]) #/self.parent.binaryDetail.Msqrt[i]
+                r_over_r_mond=float(self.parent.binaryDetail.r_over_r_mond[i]) #/self.parent.binaryDetail.Msqrt[i]
                 r=float(self.parent.binaryDetail.r[i])
-                vRAerr=float(self.parent.binaryDetail.vRAerr[i])
-                vDECerr=float(self.parent.binaryDetail.vDECerr[i])
+                v2D_err=float(self.parent.binaryDetail.v2D_err[i])
+                v_tilde_err=float(self.parent.binaryDetail.v_tilde_err[i])
                 # Go through and bin
                 label=float(50.0 * i /lenArray) + 50.0
                 self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -6180,47 +6232,52 @@ class kineticDataPlotting(masterProcessingPanel):
                 if aboveBelow: 
                     Y=self.XreturnY(r)
                     #Outliers above line
-                    if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==1 and (v2D > Y  ) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                     #Outliers below line
-                    if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==2 and (v2D < Y) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                         
                 # Check for cutoff.  If we loose one, we should loose both.
-                if (vRA>upperCutoff or vDEC>upperCutoff):
+                if (v2D>upperCutoff ):
                     self.parent.status.loc[i, 'include'] = 0
-                    self.parent.StatusBarProcessing(f'Potential Flyby at vRA = {vRA}, vDEC = {vDEC}')
+                    self.parent.StatusBarProcessing(f'Potential Flyby at v2D = {v2D}')
                 # Check RA limits
-                if self.parent.status.include[i]:
+                if self.parent.status.include[i]:                    
                     #Exclude point if v/dv > vxerrCutoff
-                    excludeRA = dataRABins.binAddDataPoint(x=r, y=vRA, dy=vRAerr, threshold_value=vxerrCutoff)
-                    #Add vDEC datapoint and add vRA to calculate Pythagorian value.
-                    excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threshold_value=vxerrCutoff)
+                    if self.combo_xy_option.GetSelection() == 0:
+                        excludev2D = dataBins.binAddDataPoint(x=r, y=v2D, dy=v2D_err, threshold_value=vxerrCutoff, idx=i)
+                    elif self.combo_xy_option.GetSelection() == 1:
+                        excludev2D = dataBins.binAddDataPoint(x=r, y=v_tilde, dy=v2D_err, threshold_value=vxerrCutoff, idx=i)
+                    elif self.combo_xy_option.GetSelection() == 2:
+                        excludev2D = dataBins.binAddDataPoint(x=r_over_r_mond, y=v_tilde, dy=v_tilde_err, threshold_value=vxerrCutoff, idx=i)
+                    else:
+                        excludev2D = dataBins.binAddDataPoint(x=r_over_r_mond, y=v2D, dy=v_tilde_err, threshold_value=vxerrCutoff, idx=i)
                     # Exclude binary if both RA & Dec excluded.
-                    if not excludeRA or not excludeDec:
+                    if not excludev2D:
                         self.parent.status.loc[i, 'include'] = 0
-                        self.parent.StatusBarProcessing(f'excludeRA = {excludeRA}, excludeDec = {excludeDec}')
+                        self.parent.StatusBarProcessing(f'V/dv cuttoff excludev2D = {excludev2D}')
                     else:
                         primaryPointer=self.parent.X.iloc[i]
                         star2Pointer=self.parent.Y.iloc[i]
                         self.createExportRecord(primaryPointer, star2Pointer, i)
-            xdata3ra=dataRABins.getBinXArray(XArrayType)
-            ydata3ra=dataRABins.getBinYArray(self.combo_yAvg.GetValue())
-            rerrbin3ra=dataRABins.getBinXVarArray(XArrayType)
-            verrbin3ra=dataRABins.getBinYVarArray(type='var_qrms')
+            xdata3=dataBins.getBinXArray(XArrayType)
+            ydata3=dataBins.getBinYArray(mean_type=self.combo_yAvg.GetValue())
+            rerrbin3=dataBins.getBinXVarArray(XArrayType)
+            verrbin3=dataBins.getBinYVarArray(type='var_qrms', mean_type=self.combo_yAvg.GetValue(), )
                         
-            self.line3ra = self.velocityGraph.axes.errorbar(xdata3ra, ydata3ra, xerr=rerrbin3ra, yerr=verrbin3ra, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
-            self.line3ra[-1][0].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
-            self.line3ra[-1][1].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
+            self.line3 = self.velocityGraph.axes.errorbar(xdata3, ydata3, xerr=rerrbin3, yerr=verrbin3, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
+            self.line3[-1][0].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
+            self.line3[-1][1].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
             
             if not prntVersion:
-                legend1.append(self.line3ra)
-                legend2.append('Gaia RA binned data')
+                legend1.append(self.line3)
+                legend2.append('Gaia binned data')
             
             xScaleBy=1.15
             yScaleBy=1.05
 
-            if self.showLabelsCheckBox.GetValue():
+            if self.showBinsCheckBox.GetValue():
                 #    """
                 #Attach a text label above each bar displaying its height
                 #"""
@@ -6229,63 +6286,104 @@ class kineticDataPlotting(masterProcessingPanel):
                     c='black'
                 else:
                     c='white'
-                for x,y,label in zip(xdata3ra, ydata3ra, dataRABins.getBinYLabelArray()):
+                for x,y,label in zip(xdata3, ydata3, dataBins.getBinYLabelArray()):
                    self.velocityGraph.frames.append(self.velocityGraph.axes.text(float(x)*xScaleBy, float(y)*yScaleBy, f'{label}', ha='center', va='bottom', c=c, fontsize=FONTSIZE))
             
-            #self.velocityGraph.twiny            
-            self.velocityGraph.draw(self.line3ra, xdata3ra, ydata3ra, False, [] )
             
-            ####################################################################################################dec
+                #self.velocityGraph.twiny            
+                self.velocityGraph.draw(self.line3, xdata3, ydata3, False, [] )
             
-            xdata3dec=dataDECBins.getBinXArray(XArrayType)
-            ydata3dec=dataDECBins.getBinYArray(self.combo_yAvg.GetValue())
-            rerrbin3dec=dataDECBins.getBinXVarArray(XArrayType)
-            verrbin3dec=dataDECBins.getBinYVarArray(type='var_qrms')
-                        
-            if self.showLabelsCheckBox.GetValue():
-                if prntVersion:
-                    c='black'
-                else:
-                    c='white'
-                for x,y,label in zip(xdata3dec, ydata3dec, dataDECBins.getBinYLabelArray()):
-                   self.velocityGraph.frames.append(self.velocityGraph.axes.text(float(x)*xScaleBy, float(y)*yScaleBy, f'{label}', ha='center', va='bottom', c=c, fontsize=FONTSIZE))
-               
-            self.line3dec = self.velocityGraph.axes.errorbar(xdata3dec, ydata3dec, xerr=rerrbin3dec, yerr=verrbin3dec, fmt='o', ecolor='g', elinewidth=2, capsize=0, mfc='g', mec='g', ms=3) #,label='Gaia binned'
-            self.line3dec[-1][0].set_linestyle('--')
-            self.line3dec[-1][1].set_linestyle('--')
-            if not prntVersion:
-                legend1.append(self.line3dec)
-                legend2.append('Gaia DEC binned data')
-            
-            self.velocityGraph.draw(self.line3dec, xdata3dec, ydata3dec, False, [] )
-        
-        xdata1 = self.parent.binaryDetail.r * self.parent.status['include']
-        ydata1ra = self.parent.binaryDetail.vRA * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
-        ydata1dec = self.parent.binaryDetail.vDEC * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
-        if normalise:
-            ydata1ra = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042),xdata1 , ydata1ra)
-            ydata1dec = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042), xdata1, ydata1dec)
-        a=np.array(ydata1ra)
+        self.velocityGraph.axes.set_ylabel(r'$\tilde{v}$ in sky plane', fontsize=FONTSIZE)
+        self.velocityGraph.axes.set_xlabel(r'$r_{sky}$ / $r_{MOND}$', fontsize=FONTSIZE)
 
-               
-        ROWCOUNTMATRIX['BIN']=len(xdata1)
+        ROWCOUNTMATRIX['BIN']=sum(self.parent.status['include'])
+        if self.combo_xy_option.GetSelection() == 0:
+            xdata1 = self.parent.binaryDetail.r * self.parent.status['include']
+            xdata1err = self.parent.binaryDetail.r_err * self.parent.status['include']
+            ydata1v = self.parent.binaryDetail.v2D * self.parent.status['include'] 
+            ydata1err = self.parent.binaryDetail.v2D_err * self.parent.status['include'] 
+            #Axes and title
+            self.velocityGraph.axes.set_ylabel(r'2D relative velocity in sky plane [$km s^{-1}$]', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_xlabel(r'2D separation, $r_{sky}$ [$pc$]', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,}  WBs with actual 2D velocity vs separation", fontsize=FONTSIZE)
+        elif self.combo_xy_option.GetSelection() == 1:
+            xdata1 = self.parent.binaryDetail.r * self.parent.status['include']
+            xdata1err = self.parent.binaryDetail.r_err * self.parent.status['include']
+            ydata1v = self.parent.binaryDetail.v_tilde * self.parent.status['include'] 
+            ydata1err = self.parent.binaryDetail.v_tilde_err * self.parent.status['include'] 
+            #Axes and title
+            self.velocityGraph.axes.set_ylabel(r'$\tilde{v}$ in sky plane', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_xlabel(r'2D separation, $r_{sky}$ [$pc$]', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,}  WBs with $\\tilde{{v}}$ vs separation", fontsize=FONTSIZE)
+        elif self.combo_xy_option.GetSelection() == 2:
+            xdata1 = self.parent.binaryDetail.r_over_r_mond * self.parent.status['include']
+            xdata1err = self.parent.binaryDetail.r_over_r_mond_err * self.parent.status['include']
+            ydata1v = self.parent.binaryDetail.v_tilde * self.parent.status['include'] 
+            ydata1err = self.parent.binaryDetail.v_tilde_err * self.parent.status['include'] 
+            #Axes and title
+            self.velocityGraph.axes.set_ylabel(r'$\tilde{v}$ in sky plane', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_xlabel(r'$r_{sky}$ / $r_{MOND}$', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,}  WBs with $\\tilde{{v}}$ against separation over MOND radius", fontsize=FONTSIZE)
+            # Remove the secondary x-axis if it already exists
+            try:
+                if hasattr(self, 'twinx'):
+                    self.twinx.remove()
+            except Exception:
+                pass
+        else:
+            xdata1 = self.parent.binaryDetail.r_over_r_mond * self.parent.status['include']
+            xdata1err = self.parent.binaryDetail.r_over_r_mond_err * self.parent.status['include']
+            ydata1v = self.parent.binaryDetail.v2D * self.parent.status['include'] 
+            ydata1err = self.parent.binaryDetail.v2D_err * self.parent.status['include'] 
+            #Axes and title
+            self.velocityGraph.axes.set_ylabel(r'2D relative velocity in sky plane [$km s^{-1}$]', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_xlabel(r'$r_{sky}$ / $r_{MOND}$', fontsize=FONTSIZE)
+            self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,}  WBs showing actual 2D velocity against separation by MOND radius", fontsize=FONTSIZE)
+            # Remove the secondary x-axis if it already exists
+            try:
+                if hasattr(self, 'twinx'):
+                    self.twinx.remove()
+            except Exception:
+                pass
+        
+            
+        #ydata1dec = self.parent.binaryDetail.vDEC * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
+        #if normalise:
+        #    ydata1v = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042),xdata1 , ydata1v)
+        #    ydata1dec = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042), xdata1, ydata1dec)
+        a=np.array(ydata1v)
+
         if self.rawDataCheckBox.GetValue():
             c='white'
             if prntVersion:
                 c='black'
             marker = ','
+            alpha=.5
             markersize=1
             if self.largePointsCheckBox.GetValue():
                 marker = 'o'
                 markersize=3
-                alpha=.5
-            self.linera, = self.velocityGraph.axes.plot(xdata1.to_numpy(), ydata1ra.to_numpy(), color=c, marker=marker, alpha=alpha, markeredgecolor='none', linestyle='none', linewidth=0, markersize=markersize)
-            self.velocityGraph.draw(self.linera, xdata1.to_numpy(), ydata1ra.to_numpy(), True, [] )
-            self.linedec, = self.velocityGraph.axes.plot(xdata1.to_numpy(), ydata1dec.to_numpy(), color=c, marker=marker, alpha=alpha, markeredgecolor='none', linestyle='none', linewidth=0, markersize=markersize)
-            self.velocityGraph.draw(self.linedec, xdata1.to_numpy(), ydata1dec.to_numpy(), True, [] )
-                    
+            #self.line_raw, = self.velocityGraph.axes.plot(xdata1.to_numpy(), ydata1v.to_numpy(), color=c, marker=marker, alpha=alpha, markeredgecolor='none', linestyle='none', linewidth=0, markersize=markersize)
+            #self.velocityGraph.draw(self.line_raw, xdata1.to_numpy(), ydata1v.to_numpy(), True, [] )
+            # Plotting with y-axis error bars
+            self.line_raw = self.velocityGraph.axes.errorbar(
+                xdata1.to_numpy(),          # x data
+                ydata1v.to_numpy(),         # y data
+                xerr=xdata1err.to_numpy(),  # x-axis error bars 
+                yerr=ydata1err.to_numpy(),  # y-axis error bars 
+                fmt='o',                    # format for points ('o' means circular markers)
+                color=c,                    # color of the points and error bars
+                alpha=alpha,                # transparency
+                markersize=markersize,      # size of the marker
+                markeredgecolor='none',     # no marker edge color
+                linestyle='none',           # no connecting line between markers
+            )
+          
+            # Draw the plot
+            self.velocityGraph.draw(self.line_raw, xdata1.to_numpy(), ydata1v.to_numpy(), True, [])
+
             if not prntVersion:
-                legend1.append(self.linedec)
+                legend1.append(self.line_raw)
                 legend2.append('Gaia raw data')
         if self.outlierLineCheckBox.GetValue():
             xdataOL=[x_TopLeft,x_BottomRight]
@@ -6296,7 +6394,7 @@ class kineticDataPlotting(masterProcessingPanel):
             
             if not prntVersion:
                 legend1.append(self.lineOL)
-                legend2.append('Outlier cutoff')
+                legend2.append('Flyby cutoff')
         
         ROWCOUNTMATRIX['ADQL']=len(self.parent.status['include'])
         ROWCOUNTMATRIX['GRP']=len(self.parent.status['include'])-self.parent.status['notgroup'].sum()
@@ -6309,41 +6407,90 @@ class kineticDataPlotting(masterProcessingPanel):
             self.velocityGraph.axes.set_title("")
             self.velocityGraph.axes.patch.set_facecolor('1')  # White shade
         else:
-            self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,} binary stars, Gaia {RELEASE}, velocity vs separation with Newtonian expectation", fontsize=FONTSIZE)
+            #self.velocityGraph.axes.set_title(f"{ROWCOUNTMATRIX['BIN']:,} binary stars, Gaia {RELEASE}, velocity vs separation with Newtonian expectation", fontsize=FONTSIZE)
             self.velocityGraph.axes.patch.set_facecolor('0.25')  # Grey shade
         
         # Multiply each element in the lists by corrN
         
         avgMass=self.CalcMeanXYoverDxy('mass_calc',False)
         corrN=math.sqrt(avgMass)
-        xdata2N = [x * corrN for x in xdata2]
-        ydata2N = [y * corrN for y in ydata2]
-        ydata2N_1D = [y * corrN for y in ydata2_1D]
-        
-        if not normalise:
-            self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b-', lw=2)#,label='Newtonian')
-        self.lineMond, = self.velocityGraph.axes.plot([.034* corrN * math.sqrt(2), .034* corrN * math.sqrt(2)],[.001, 10], 'k:', lw=2)#,label='Mond expectation')
-        
-        
-        if not prntVersion:
-            legend1.append(self.line2)
-            legend2.append('Newtonian rms value')
+        #
+        print(corrN)
+        G2=float(gl_cfg.getItem('g2','RETRIEVAL'))
+        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL'))
+        r_mond=np.sqrt(G2*avgMass*2/(a_0))
             
-        self.velocityGraph.axes.legend(legend1, legend2)
         if prntVersion:
-            self.velocityGraph.axes.get_legend().remove()
+            try:
+                self.velocityGraph.axes.get_legend().remove()
+            except:
+                pass
+        if self.combo_xy_option.GetSelection() <= 1:
+            # Recreate the secondary x-axis
+            self.twinx = self.velocityGraph.axes.twiny()
+            self.twinx.set_xlabel('2D projected separation [au]', fontsize=FONTSIZE)
             
-        
-        twiny=self.velocityGraph.axes.twiny()
-        twiny.axes.set_xlabel('2D projected separation [au]', fontsize=FONTSIZE)
-        twiny.set_xlim(float(self.textctrl_xLower.GetValue())*206265,float(self.textctrl_xUpper.GetValue())*206265)
-        twiny.set_xscale('log', nonpositive='clip')
-        twiny.tick_params(labelsize=20)
-        
-        
-        if not normalise:
+            # Set the new limits after rescaling
+            self.twinx.set_xlim(float(self.textctrl_xLower.GetValue()) * 206265, float(self.textctrl_xUpper.GetValue()) * 206265)
+    
+            # Apply log scale and other formatting options
+            self.twinx.set_xscale('log', nonpositive='clip')
+            self.twinx.tick_params(labelsize=20)
+      
+        if newtonian_line:
+            if self.combo_xy_option.GetSelection() == 0:
+                xdata2N = [x  for x in xdata2]
+                ydata2N_1D = [y * corrN for y in ydata2]
+                self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b:', lw=2)#,label='Newtonian')
+            elif self.combo_xy_option.GetSelection() == 1:
+                xdata2N = [x  for x in xdata2]
+                ydata2N_1D = [.5 for y in ydata2]
+                self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b:', lw=2)#,label='Newtonian')
+            elif self.combo_xy_option.GetSelection() == 2:
+                xdata2N = [x for x in xdata2]
+                ydata2N_1D = [.5 for y in ydata2]
+                self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b:', lw=2)#,label='New 
+            else:
+                xdata2N = [x / r_mond for x in xdata2]
+                ydata2N_1D = [y * corrN for y in ydata2]
+                self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b:', lw=2)#,label='Newtonian')
+                
+            if not prntVersion:
+                legend1.append(self.line2)
+                legend2.append('Newtonian value')
+                
             self.velocityGraph.draw(self.line2, xdata2, ydata2_1D, False, [] )
         
+        if mond_line:
+            
+            if self.combo_xy_option.GetSelection() == 0:
+                xdata_mond = [.034* corrN * math.sqrt(2), .034* corrN * math.sqrt(2)]
+                ydata_mond = [yLower, yUpper]
+                
+                ## Define r/rM values
+                #xdata_mond = np.linspace(xLower,xUpper, 1000)
+                #ydata_mond = self.s_curve(xdata_mond)
+            elif self.combo_xy_option.GetSelection() == 1:
+                xdata_mond = [.034* corrN * math.sqrt(2), .034* corrN * math.sqrt(2)]
+                ydata_mond = [yLower, yUpper]
+            elif self.combo_xy_option.GetSelection() == 2:
+                # Define r/rM values
+                xdata_mond = np.linspace(xLower,xUpper, 1000)
+                ydata_mond = self.s_curve(xdata_mond)
+            else:
+                xdata_mond = [1, 1]
+                ydata_mond = [yLower, yUpper]
+                
+            self.lineMond, = self.velocityGraph.axes.plot(xdata_mond,ydata_mond, 'g--', lw=2)#,label='Mond expectation')
+            
+            if not prntVersion:
+                legend1.append(self.lineMond)
+                legend2.append('Mond expectation')
+            
+            self.velocityGraph.axes.legend(legend1, legend2)
+            self.velocityGraph.draw(self.lineMond, xdata_mond, ydata_mond, False, [] )
+            
+            
         self.summaryList.DeleteAllItems()
         self.summaryList.InsertItem(0, 'Gaia DB')
         self.summaryList.SetItem(0, 1, f"{ROWCOUNTMATRIX['ADQL']:,}")
@@ -6408,11 +6555,6 @@ class kineticDataPlotting(masterProcessingPanel):
         self.summaryList.InsertItem(rowCnt, 'Mean S/N for v/dv (DEC)')
         self.summaryList.SetItem(rowCnt, 1, f"{snVoverDv[1]:,}")
         
-        #rowCnt += 1 #Next row
-        #self.summaryList.InsertItem(rowCnt, 'Mean v(RA & DEC)')
-        #meanV=self.CalcMeanV()
-        #self.summaryList.SetItem(rowCnt, 1, f"{meanV:,}")
-        
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean S/N PMRA')
         snPMRAoverDPMRAx=self.CalcMeanXYoverDxy('PMRA','PMRA_ERROR')
@@ -6427,9 +6569,11 @@ class kineticDataPlotting(masterProcessingPanel):
         snPxoverDpx=self.CalcMeanXYoverDxy('PARALLAX','parallax_error')
         self.summaryList.SetItem(rowCnt, 1, f"{snPxoverDpx:,}")
         rowCnt += 1 #Next row
-        self.summaryList.InsertItem(rowCnt, 'Median S/N Px')
+        self.summaryList.InsertItem(rowCnt, 'Median Err/Px')
         snPxoverDpx=self.CalcMedianXYoverDxy('PARALLAX','parallax_error')
-        self.summaryList.SetItem(rowCnt, 1, f"{snPxoverDpx:,}")
+        #self.summaryList.SetItem(rowCnt, 1, f"{snPxoverDpx:,4}")
+        self.summaryList.SetItem(rowCnt, 1, f"{snPxoverDpx:,.4f}")
+
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean RUWE')
         avgRuwe=self.CalcMeanXYoverDxy('RUWE',False)
@@ -6465,62 +6609,27 @@ class kineticDataPlotting(masterProcessingPanel):
         if self.showBinsCheckBox.GetValue():  
             #Mean binned binary RMS 1D relative velocity in RA
             rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, 'Mean binned RMS 1D velocity in RA')        
-            ydata3rapd=pd.DataFrame(ydata3ra, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3rapd.V.mean():,.4f}")
+            self.summaryList.InsertItem(rowCnt, 'Mean binned velocity value')        
+            ydata3pd=pd.DataFrame(ydata3, columns=['V'])
+            self.summaryList.SetItem(rowCnt, 1, f"{ydata3pd.V.mean():,.4f}")
         
             #STDEV binned binary RMS 1D relative velocity in RA (
             rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, '1D velocity std dev in RA')        
-            ydata3rapd=pd.DataFrame(ydata3ra, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3rapd.V.std():,.4f}")
+            self.summaryList.InsertItem(rowCnt, 'Velocity std dev from mean.')        
+            ydata3pd=pd.DataFrame(ydata3, columns=['V'])
+            self.summaryList.SetItem(rowCnt, 1, f"{ydata3pd.V.std():,.4f}")
         
-            #Mean binned binary RMS 1D relative velocity in DEC
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, 'Mean binned RMS 1D velocity in DEC')        
-            ydata3decpd=pd.DataFrame(ydata3dec, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3decpd.V.mean():,.4f}")
-            
-            #Mean binned binary RMS 1D relative velocity in DEC
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, '1D velocity std dev in DEC')        
-            ydata3decpd=pd.DataFrame(ydata3dec, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3decpd.V.std():,.4f}")
-            
-            #Mean binned binary 1D separation in RA
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, 'Mean binned 1D separation in RA')        
-            xdata3rapd=pd.DataFrame(xdata3ra, columns=['r'])
-            newlist = [x for x in xdata3rapd.r if math.isnan(x) == False and float(x) > 0]
-            product = 0
-            for j in range(0, len(newlist)):
-                product = product + math.log10(float(newlist[j]))
-            geoMean = product / float(len(newlist))
-            self.summaryList.SetItem(rowCnt, 1, f"{10**geoMean:,.4f}")
-        
-            #Mean binned binary  1D separation in DEC
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, 'Mean binned 1D separation in DEC')        
-            xdata3decpd=pd.DataFrame(xdata3dec, columns=['r'])
-            newlist = [x for x in xdata3decpd.r if math.isnan(x) == False and float(x) > 0]
-            product = 0
-            for j in range(0, len(newlist)):
-                product = product + math.log10(float(newlist[j]))
-            geoMean = product / float(len(newlist))
-            self.summaryList.SetItem(rowCnt, 1, f"{10**geoMean:,.4f}")
-            
-            ##Mean binary 1D separation
+            ##Mean binned binary 1D separation in RA
             #rowCnt += 1 #Next row
-            #self.summaryList.InsertItem(rowCnt, 'Mean 1D separation')        
-            #xdata1pd=pd.DataFrame(xdata1, columns=['r'])
-            #self.summaryList.SetItem(rowCnt, 1, f"{xdata1pd.r.mean():,.5f}")
+            #self.summaryList.InsertItem(rowCnt, 'Mean binned 2D separation in RA')        
+            #xdata3pd=pd.DataFrame(xdata3, columns=['r'])
+            #newlist = [x for x in xdata3pd.r if math.isnan(x) == False and float(x) > 0]
+            #product = 0
+            #for j in range(0, len(newlist)):
+            #    product = product + math.log10(float(newlist[j]))
+            #geoMean = product / float(len(newlist))
+            #self.summaryList.SetItem(rowCnt, 1, f"{10**geoMean:,.4f}")
         
-            ##Mean binned binary RMS 1D relative velocity  in DEC
-            #rowCnt += 1 #Next row
-            #self.summaryList.InsertItem(rowCnt, 'Mean binned 1D separation in DEC')        
-            #xdata1decpd=pd.DataFrame(xdata1dec, columns=['r'])
-            #self.summaryList.SetItem(rowCnt, 1, f"{xdata3decpd.r.mean():,.4f}")
-                
         self.parent.status['massVmassOut']=self.parent.status['include']
         self.parent.status['tfOut']=self.parent.status['include']
         self.parent.status['numberOut']=self.parent.status['include']
@@ -6926,7 +7035,7 @@ class TFDataPlotting(masterProcessingPanel):
         
         self.TulleyFPlot.axes.set_xlabel('total binary mass ($M_{\odot}$)', fontsize=FONTSIZE)
                 
-        self.TulleyFPlot.axes.set_ylabel(f'{ND}D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
+        self.TulleyFPlot.axes.set_ylabel(f'{ND}D relative velocity in sky plane [$km s^{-1}$]', fontsize=FONTSIZE)
         ####################################################################################################
         self.parent.binaryDetail['include']=self.parent.status['include']
         M=self.parent.binaryDetail.loc[(self.parent.binaryDetail['include'] > 0)]
@@ -8568,24 +8677,31 @@ class AladinView(wx.Panel):
 #FONTSIZE = 10  # Define the font size as a global variable
 
 class MatplotlibPanel(wx.Panel):
-    def __init__(self, parent, size, projection=''):
+    def __init__(self, parent, size, projection='rectilinear'):
         wx.Panel.__init__(self, parent, size=size)
         self.parent = parent
-
+        
+        self.projection=projection 
         self.figure = Figure(figsize=(8, 5))
         
         # Axes & labels
-        self.axes = self.figure.add_subplot(111)
+        self.axes = self.figure.add_subplot(111, projection=projection)
         self.frames = []
-        self.axes.set_ylabel('1D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
-        self.axes.set_xlabel('2D projected separation [pc]', fontsize=FONTSIZE)
-        self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
+        
+        if projection == 'aitoff':
+            self.axes.set_xlabel('Longitude [radians]', fontsize=FONTSIZE)
+            self.axes.set_ylabel('Latitude [radians]', fontsize=FONTSIZE)
+            self.axes.set_title("Aitoff Projection", fontsize=FONTSIZE)
+            self.axes.grid(visible=True, which='major', axis='both')
+        else:
+            self.axes.set_ylabel(r'$\tilde{v}$ in sky plane', fontsize=FONTSIZE)
+            self.axes.set_xlabel(r'$r_{sky}$ / $r_{MOND}$', fontsize=FONTSIZE)
+            self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
+            self.axes.set_yscale('log', nonpositive='clip')
+            self.axes.set_xscale('log', nonpositive='clip')
         self.axes.patch.set_facecolor('0.25')  # Grey shade
         self.axes.grid(visible=True, which='major', axis='both')
         self.axes.set_autoscale_on(True)
-        #self.axes.margins(1)
-        self.axes.set_yscale('log', nonpositive='clip')
-        self.axes.set_xscale('log', nonpositive='clip')
         #
         self.figure.tight_layout(h_pad=1, w_pad=1)
         self.canvas = FigureCanvas(self, -1, self.figure)
@@ -8597,21 +8713,23 @@ class MatplotlibPanel(wx.Panel):
         # Hidden toolbar
         self.toolbar = NavigationToolbar2Wx(self.canvas)
         self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
-        # self.toolbar.Hide()
 
     def set_limits(self, x_limits, y_limits):
-        x_limits = (max(1e-10, x_limits[0]), x_limits[1])  # Avoid setting zero or negative values
-        y_limits = (max(1e-10, y_limits[0]), y_limits[1])
-        self.axes.set_xlim(x_limits)
-        self.axes.set_ylim(y_limits)    
+        if self.projection == 'rectilinear':  # New condition
+            x_limits = (max(1e-10, x_limits[0]), x_limits[1])  # Avoid setting zero or negative values
+            y_limits = (max(1e-10, y_limits[0]), y_limits[1])
+            self.axes.set_xlim(x_limits)
+            self.axes.set_ylim(y_limits)    
 
     def draw(self, line, xdata, ydata, error, error_data):
-        if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue() == 'log':
-            self.axes.set_yscale('log', nonpositive='clip')
-        else:
-            self.axes.set_yscale('linear')
-        self.axes.relim()
-        self.axes.autoscale_view(True, True, True)
+        
+        if self.projection == 'rectilinear':
+            if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue() == 'log':
+                self.axes.set_yscale('log', nonpositive='clip')
+            else:
+                self.axes.set_yscale('linear')
+            self.axes.relim()
+            self.axes.autoscale_view(True, True, True)
         
         self._set_tick_params()
         self.figure.canvas.draw()
@@ -8630,20 +8748,6 @@ class MatplotlibPanel(wx.Panel):
     def format_print(self):
         self.axes.patch.set_facecolor('1')  # White
 
-    #def _set_tick_params(self):
-    #    angle = 0
-    #    for tick in self.axes.xaxis.get_major_ticks():
-    #        tick.label.set_fontsize(FONTSIZE)
-    #        tick.label.set_rotation(angle)
-    #    for tick in self.axes.yaxis.get_major_ticks():
-    #        tick.label.set_fontsize(FONTSIZE)
-    #        tick.label.set_rotation(angle)
-    #    for tick in self.axes.xaxis.get_minor_ticks():
-    #        tick.label.set_fontsize(FONTSIZE)
-    #        tick.label.set_rotation(angle)
-    #    for tick in self.axes.yaxis.get_minor_ticks():
-    #        tick.label.set_fontsize(FONTSIZE)
-    #        tick.label.set_rotation(angle)
 
     def _set_tick_params(self):
         angle = 0
@@ -8653,217 +8757,15 @@ class MatplotlibPanel(wx.Panel):
         for tick in self.axes.yaxis.get_major_ticks():
             tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
-        for tick in self.axes.xaxis.get_minor_ticks():
-            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
-            tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
-        for tick in self.axes.yaxis.get_minor_ticks():
-            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
-            tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
+            
+        if self.projection == 'rectilinear':
+            for tick in self.axes.xaxis.get_minor_ticks():
+                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+                tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
+            for tick in self.axes.yaxis.get_minor_ticks():
+                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+                tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
 
-
-class MatplotlibPanel3(wx.Panel):
-    def __init__(self, parent, size, projection=''):
-        wx.Panel.__init__(self, parent, size=size)
-        self.parent=parent
-
-        self.figure = Figure(figsize=(8,5)) # Inches!?Figure(figsize=(5,2.5))
-        
-        # Axes & labels
-        #if projection:
-        #    self.axes = self.figure.add_subplot(111, projection=projection)
-        #else:
-        self.axes = self.figure.add_subplot(111)
-        self.frames=[] 
-        self.axes.set_ylabel('1D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
-        self.axes.set_xlabel('2D projected separation [pc]', fontsize=FONTSIZE)
-        self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
-        self.axes.patch.set_facecolor('0.25')  # Grey shade
-        self.axes.grid(visible=1, which='major', axis='both')
-        self.axes.set_autoscale_on(True)
-        self.axes.margins(1)
-        self.axes.set_yscale('log', nonpositive='clip')
-        self.axes.set_xscale('log', nonpositive='clip')
-        
-        self.figure.tight_layout(h_pad=1, w_pad=1)
-        self.canvas = FigureCanvas(self, -1, self.figure)
-
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
-        self.SetSizer(self.sizer)
-
-        #### Hidden toolbar
-        self.toolbar = NavigationToolbar2Wx(self.canvas)
-        self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
-        #self.toolbar.Hide()
-    
-    def set_limits(self, xLimits,yLimits):
-    
-        self.axes.set_xlim(xLimits)
-        self.axes.set_ylim(yLimits)    
-    
-    def draw(self, line, xdata, ydata, error, errorData):
-
-        if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue()=='log':
-            self.axes.set_yscale('log', nonpositive='clip')
-        else:
-            self.axes.set_yscale('linear')
-        self.axes.relim()
-        self.axes.autoscale_view(True,True,True)
-        #
-        
-        ANGLE=0
-        for tick in self.axes.xaxis.get_major_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)
-        for tick in self.axes.yaxis.get_major_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-        for tick in self.axes.xaxis.get_minor_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)
-        for tick in self.axes.yaxis.get_minor_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
-        
-    def drawLinear(self):
-
-        #if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue()=='log':
-        #    self.axes.set_yscale('log', nonpositive='clip')
-        #else:
-        self.axes.set_xscale('linear')
-        self.axes.set_yscale('linear')
-        self.axes.relim()
-        self.axes.autoscale_view(True,True,True)
-        #
-        
-        ANGLE=0
-        for tick in self.axes.xaxis.get_major_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)
-        for tick in self.axes.yaxis.get_major_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-        for tick in self.axes.xaxis.get_minor_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)
-        for tick in self.axes.yaxis.get_minor_ticks():
-            tick.label.set_fontsize(FONTSIZE) 
-            tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-        self.figure.canvas.draw()
-        self.figure.canvas.flush_events()
-        
-    def formatPrint(self):
-        self.axes.patch.set_facecolor('1')  # White
-        
-import matplotlib.pyplot as plt
-class MatplotlibPanel2(wx.Panel):
-    
-    def __init__(self, parent, size, projection='', data=[]):
-        
-        wx.Panel.__init__(self, parent, size=size)
-        self.parent=parent
-
-
-        self.figure = plt.figure(figsize=(8,5))
-        self.axes = self.figure.add_subplot(111, projection="aitoff")
-        if len(data):
-            self.axes.scatter(data[0]['x'], data[0]['y'],marker=data[0]['marker'], s=1.5, color=data[0]['color'], linewidths=0, edgecolors='face')
-            self.axes.scatter(data[1]['x'], data[1]['y'],marker=data[0]['marker'], s=1.5, color=data[0]['color'], linewidths=0, edgecolors='face')
-        # Axes & labels
-        #if projection:
-        #    self.axes = self.figure.add_subplot(111, projection=projection)
-        #else:
-        #self.axes = self.figure.add_subplot(111)
-        #self.axes = plt.subplot(projection="aitoff") #  # or mollweide, hammer, aitoff, or lambert.
-        self.frames=[]
-        
-
-        #self.axes.set_ylabel('1D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
-        #self.axes.set_xlabel('2D projected separation [pc]', fontsize=FONTSIZE)
-        #self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
-        self.axes.patch.set_facecolor('0.25')  # Grey shade
-        self.axes.grid(visible=1, which='major', axis='both')
-        self.axes.set_autoscale_on(True)
-        self.axes.margins(1)
-        #self.axes.set_yscale('log', nonpositive='clip')
-        #self.axes.set_xscale('log', nonpositive='clip')
-        
-        self.figure.tight_layout(h_pad=1, w_pad=1)
-        self.canvas = FigureCanvas(self, -1, self.figure)
-
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
-        self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.GROW)
-        self.SetSizer(self.sizer)
-
-        #### Hidden toolbar
-        self.toolbar = NavigationToolbar2Wx(self.canvas)
-        self.sizer.Add(self.toolbar, 0, wx.LEFT | wx.EXPAND)
-        #self.toolbar.Hide()
-    
-    #def set_limits(self, xLimits,yLimits):
-    #
-    #    return
-    #    self.axes.set_xlim(xLimits)
-    #    self.axes.set_ylim(yLimits)    
-    #
-    #def draw(self, line, xdata, ydata, error, errorData):
-    #    self.axes.scatter(xdata,ydata, marker='o', color='y')
-    #    #if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue()=='log':
-    #    #    self.axes.set_yscale('log', nonpositive='clip')
-    #    #else:
-    #    #    self.axes.set_yscale('linear')
-    #    #self.axes.relim()
-    #    ##self.axes.autoscale_view(True,True,True)
-    #    ##
-    #    #
-    #    #ANGLE=0
-    #    #for tick in self.axes.xaxis.get_major_ticks():
-    #    #    tick.label.set_fontsize(FONTSIZE) 
-    #    #    tick.label.set_rotation(ANGLE)
-    #    #for tick in self.axes.yaxis.get_major_ticks():
-    #    #    tick.label.set_fontsize(FONTSIZE) 
-    #    #    tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-    #    #for tick in self.axes.xaxis.get_minor_ticks():
-    #    #    tick.label.set_fontsize(FONTSIZE) 
-    #    #    tick.label.set_rotation(ANGLE)
-    #    #for tick in self.axes.yaxis.get_minor_ticks():
-    #    #    tick.label.set_fontsize(FONTSIZE) 
-    #    #    tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-    #    #self.figure.canvas.draw()
-    #    #self.figure.canvas.flush_events()
-    #    
-    #def drawLinear(self):
-    #
-    #    #if hasattr(self.parent, 'combo_yLog') and self.parent.combo_yLog.GetValue()=='log':
-    #    #    self.axes.set_yscale('log', nonpositive='clip')
-    #    #else:
-    #    self.axes.set_xscale('linear')
-    #    self.axes.set_yscale('linear')
-    #    self.axes.relim()
-    #    self.axes.autoscale_view(True,True,True)
-    #    #
-    #    
-    #    ANGLE=0
-    #    for tick in self.axes.xaxis.get_major_ticks():
-    #        tick.label.set_fontsize(FONTSIZE) 
-    #        tick.label.set_rotation(ANGLE)
-    #    for tick in self.axes.yaxis.get_major_ticks():
-    #        tick.label.set_fontsize(FONTSIZE) 
-    #        tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-    #    for tick in self.axes.xaxis.get_minor_ticks():
-    #        tick.label.set_fontsize(FONTSIZE) 
-    #        tick.label.set_rotation(ANGLE)
-    #    for tick in self.axes.yaxis.get_minor_ticks():
-    #        tick.label.set_fontsize(FONTSIZE) 
-    #        tick.label.set_rotation(ANGLE)  # vertical, 'horizontal'
-    #    self.figure.canvas.draw()
-    #    self.figure.canvas.flush_events()
-    #    
-    #def formatPrint(self):
-    #    self.axes.patch.set_facecolor('1')  # White
-        
 
 if __name__ == '__main__':
     app = wx.App(0)

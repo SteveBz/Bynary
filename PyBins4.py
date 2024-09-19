@@ -168,10 +168,10 @@ class binOrganiser():
         #print(f'type ({type}) =', data)
         return data
         
-    def getBinYArray(self, type='rms'):
+    def getBinYArray(self, mean_type='rms'):
  
         data=[] 
-        if type=='mean':
+        if mean_type=='mean':
             for i in range(self.binCount):
                 # Mean of the data
                 if len(self.yBins[i])>=self.lowerBinContentCount:
@@ -183,7 +183,7 @@ class binOrganiser():
                     data.append(mean) 
                 else:
                     data.append(math.nan)
-        elif type=='median':
+        elif mean_type=='median':
             for i in range(self.binCount):
                 # Median of the data
                 if len(self.yBins[i])>=self.lowerBinContentCount:
@@ -193,12 +193,12 @@ class binOrganiser():
                         median = statistics.median(newlist)
                         #print(median)
                     except Exception as e:
-                        print (f"type='{type}', error='{e}'")
+                        print (f"mean_type='{mean_type}', error='{e}'")
                         median = math.nan
                     data.append(median) 
                 else:
                     data.append(math.nan)
-        elif type=='rms':
+        elif mean_type=='rms':
             for i in range(self.binCount):
                 # rms of the data
                 if len(self.yBins[i])>=self.lowerBinContentCount:
@@ -219,19 +219,56 @@ class binOrganiser():
         errbinM=[] 
         errbinP=[] 
         array=self.getBinXArray(type)
-        for i in range(self.binCount):
-            if len(self.yBins[i])>=self.lowerBinContentCount:
-                errorBarM = abs(array[i]-self.binLowerBounds[i])
-                errorBarP = abs(array[i]-self.binUpperBounds[i])
-                errbinM.append(errorBarM)
-                errbinP.append(errorBarP)
-            else:
-                errbinP.append(math.nan)
-                errbinM.append(math.nan)
-        #print(f'Error bars =', [errbinM,errbinP])
+        #data=[]
+        #gsd_data=[]
+        if type=='centre':
+            for i in range(self.binCount):
+                if len(self.yBins[i])>=self.lowerBinContentCount:
+                    errorBarM = abs(array[i]-self.binLowerBounds[i])
+                    errorBarP = abs(array[i]-self.binUpperBounds[i])
+                    errbinM.append(errorBarM)
+                    errbinP.append(errorBarP)
+                else:
+                    errbinP.append(math.nan)
+                    errbinM.append(math.nan)
+            #print(f'Error bars =', [errbinM,errbinP])
+        elif type=='mean':
+            for i in range(self.binCount):
+                if len(self.yBins[i]) >= self.lowerBinContentCount:
+                    # Filter out invalid or zero values from the list
+                    newlist = [x for x in self.xBins[i] if not math.isnan(x) and x > 0]
+    
+                    if len(newlist) > 0:
+                        # Compute the geometric mean
+                        log_sum = sum(math.log10(x) for x in newlist)
+                        geoMean = 10 ** (log_sum / len(newlist))
+                        #data.append(geoMean)
+    
+                        # Calculate the GSD (Geometric Standard Deviation)
+                        variance = sum((math.log10(x) - math.log10(geoMean)) ** 2 for x in newlist) / len(newlist)
+                        gsd = 10 ** math.sqrt(variance / len(newlist))
+                        #gsd_data.append(gsd)
+    
+                        # Calculate error bars based on GSD
+                        errorBarM = geoMean / gsd  # Lower error bar
+                        errorBarP = geoMean * gsd  # Upper error bar
+                        errbinM.append(geoMean - errorBarM)
+                        errbinP.append(errorBarP - geoMean)
+                    else:
+                        #data.append(math.nan)
+                        #gsd_data.append(math.nan)
+                        errbinM.append(math.nan)
+                        errbinP.append(math.nan)
+                else:
+                    #data.append(math.nan)
+                    #gsd_data.append(math.nan)
+                    errbinM.append(math.nan)
+                    errbinP.append(math.nan)
+                #print(f'Error bars =', [errbinM,errbinP])
+            
         return [errbinM,errbinP]
         
-    def getBinYVarArray(self, type='qrms'):
+    def getBinYVarArray(self, type='qrms', mean_type='rms'):
         errbin=[]
         if type=='meanerror':
             for i in range(self.binCount):
@@ -273,7 +310,6 @@ class binOrganiser():
                     errbin.append(variance) 
                 else:
                     errbin.append(math.nan)
-
         if type=='var_qrms':
             for i in range(self.binCount):
                 if len(self.yBins[i])>=self.lowerBinContentCount:
@@ -283,21 +319,33 @@ class binOrganiser():
                     errv2List = [errv2 for errv2 in self.errvSquares[i] if math.isnan(errv2) == False]
                     try:
                         qrms = sum(errv2List)/ len(errv2List)
-                        #qrms = sum(vxerrvList)/ ((len(Ylist)-1)*sum(Ylist))
                     except Exception:
                         errbin.append(math.nan)
                         continue
                     # 2) List all square deviations from the mean
-                    y_mean = np.mean(self.yBins[i])
+                    #if mean_type=='rms':
+                    #    y_mean = np.sqrt(np.mean(self.yBins[i]**2))  # RMS
+                        
+                    if mean_type == 'rms':          # RMS
+                        y_mean = np.sqrt(np.mean(np.array(self.yBins[i])**2))  # Convert to numpy array first
+    
+    
+                    elif mean_type=='mean':
+                        y_mean = np.mean(self.yBins[i])
+                    if mean_type=='median':
+                        # Calculate the median
+                        y_mean = np.median(self.yBins[i])
+                        ## Calculate the variance using the median
+                        #y_mean = np.mean((self.yBins[i] - median)**2)
                     deviation_sq = [(y - y_mean) ** 2 for y in self.yBins[i] if math.isnan(y) == False]
-                    # Variance
+                    # Variance of a Gaussian distribution, hence the extra "2"
                     variance = sum(deviation_sq) / (2 * len(self.yBins[i]))
-                    #errbin.append(variance) 
                 else:
                     errbin.append(math.nan)
                     continue
                 #qrms = 0
-                error = math.sqrt(qrms + variance / len(self.yBins[i]))
+                #/ len(self.yBins[i])
+                error = math.sqrt(qrms + variance/ len(self.yBins[i]) ) 
                 errbin.append(error)
         return errbin
 

@@ -3946,6 +3946,12 @@ class dataRetrieval(masterProcessingPanel):
         # Calculate 2D velocity using Pythagoras: v2D = sqrt(vRA^2 + vDEC^2)
         self.parent.binaryDetail['v2D'] = np.sqrt(self.parent.binaryDetail['vRA']**2 + self.parent.binaryDetail['vDEC']**2)
         
+        # Calculate 2D v_Tilde using v2D/np.sqrt(G (M1 + M2)/r_sky)
+        
+        G=float(gl_cfg.getItem('g','RETRIEVAL'))
+        
+        self.parent.binaryDetail['v_tilde'] = self.parent.binaryDetail['v2D'] /np.sqrt(G*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/self.parent.binaryDetail['r'])
+        
         # Optionally, calculate the error in 2D velocity using error propagation:
         # v2D_error = sqrt((vRA * vRAerr)^2 + (vDEC * vDECerr)^2) / v2D
         self.parent.binaryDetail['v2D_err'] = np.sqrt(
@@ -5991,13 +5997,10 @@ class kineticDataPlotting(masterProcessingPanel):
         except Exception:
             pass
         try:
-            self.line3ra.remove()
+            self.line3.remove()
         except Exception:
             pass
-        try:
-            self.line3dec.remove()
-        except Exception:
-            pass
+
         try:
             self.lineOL.remove()
         except Exception:
@@ -6016,12 +6019,13 @@ class kineticDataPlotting(masterProcessingPanel):
         
         legend1=[] 
         legend2=[] 
-        
-        self.velocityGraph.set_limits([float(self.textctrl_xLower.GetValue()),float(self.textctrl_xUpper.GetValue())],[float(self.textctrl_yLower.GetValue()),float(self.textctrl_yUpper.GetValue())])
+        yLower=float(self.textctrl_yLower.GetValue())
+        yUpper=float(self.textctrl_yUpper.GetValue())
+        self.velocityGraph.set_limits([float(self.textctrl_xLower.GetValue()),float(self.textctrl_xUpper.GetValue())],[yLower,yUpper])
         self.parent.binaryDetail['Msqrt']=self.parent.binaryDetail.M.apply(np.sqrt)
         prntVersion=self.prntVersionCheckBox.GetValue()
         
-        #Set up local valriables to avoid repeated calls to wx functions and for clarity
+        #Set up local variables to avoid repeated calls to wx functions and for clarity
         x_BottomRight=float(self.text_x_BottomRight.GetValue())
         x_TopLeft=float(self.text_x_TopLeft.GetValue())
         y_BottomRight=float(self.text_y_BottomRight.GetValue())
@@ -6038,7 +6042,7 @@ class kineticDataPlotting(masterProcessingPanel):
         if self.showBinsCheckBox.GetValue():   
             
             #
-            # Convert RA data into bins
+            # Convert data into bins
             #
 #######################################################################
 
@@ -6046,30 +6050,18 @@ class kineticDataPlotting(masterProcessingPanel):
             bottom=float(self.textctrl_xLower.GetValue())   #  Get bottom of range
             diff = math.log10(top)-math.log10(bottom)   #  Work out difference in log terms.
 ######################################################################
-            numRABins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
-            dataRABins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
-            dataTotalBins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            numBins=int(self.spin_bins.GetValue())      #  Get number of bins.
+            dataBins=binOrganiser(numBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
+            dataTotalBins=binOrganiser(numBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             upper=top
-            factor=10**(diff/numRABins)
+            factor=10**(diff/numBins)
             lower=upper/factor
-            for i in range(numRABins):
-                dataRABins.newBin(lower, upper)
+            for i in range(numBins):
+                dataBins.newBin(lower, upper)
                 dataTotalBins.newBin(lower, upper)
                 upper=lower
                 lower=upper/factor
-                
-            numDECBins=int(self.spin_bins.GetValue()-1)      #  Get number of DEC bins (It's 1 fewer than the number of RA bins).
-            dataDECBins=binOrganiser(numDECBins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
-            
-            # Need to offset upper bound of top bin by sqrt of a factor. TOTAL interval is the same with 1/2 a DEC bin at the top and half a DEC bin at the bottom.
-            # Ignore these and reduce number of bins by 1.
-            upper=top/math.sqrt(factor)
-            lower=upper/factor
-            for i in range(numDECBins):
-                dataDECBins.newBin(lower, upper)
-                upper=lower
-                lower=upper/factor
-
+            #    
             #Filter out currently inluded rows only
             indexStatus = self.parent.status.index
             condition = self.parent.status.include == True
@@ -6086,15 +6078,18 @@ class kineticDataPlotting(masterProcessingPanel):
                 #else:
                 #    include=int(self.parent.status.include[i])
                 #Set up local valriables to avoid repeated PD access and for clarity
-                vRA=0
-                vDEC=0
-                excludeRA=0
-                excludeDec=0
+                v2D=0
+                v_tilde=0
+                excludev2D=0
+                excludeTot=0
+                v_tilde=float(self.parent.binaryDetail.v_tilde[i]) #/self.parent.binaryDetail.Msqrt[i]
+                v2D=float(self.parent.binaryDetail.v2D[i]) #/self.parent.binaryDetail.Msqrt[i]
                 vRA=float(self.parent.binaryDetail.vRA[i]) #/self.parent.binaryDetail.Msqrt[i]
                 vDEC=float(self.parent.binaryDetail.vDEC[i]) #/self.parent.binaryDetail.Msqrt[i]
                 r=float(self.parent.binaryDetail.r[i])
                 vRAerr=float(self.parent.binaryDetail.vRAerr[i])
                 vDECerr=float(self.parent.binaryDetail.vDECerr[i])
+                v2D_err=float(self.parent.binaryDetail.v2D_err[i])
                 # Go through and bin
                 label=float(50 * i /lenArray)
                 self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -6112,23 +6107,21 @@ class kineticDataPlotting(masterProcessingPanel):
                 if aboveBelow: 
                     Y=self.XreturnY(r)
                     #Outliers above line
-                    if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==1 and (v2D > Y) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                     #Outliers below line
-                    if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==2 and (v2D < Y ) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                         
                 # Check for cutoff.  If we loose one, we should loose both.
-                if (vRA>upperCutoff or vDEC>upperCutoff):
+                if (v2D>upperCutoff ):
                     self.parent.status.loc[i, 'include'] = 0
-                    self.parent.StatusBarProcessing(f'Potential Flyby at vRA = {vRA}, vDEC = {vDEC}')
-                
+                    self.parent.StatusBarProcessing(f'Potential Flyby at v2D = {v2D}')
+                 
                 # Check RA limits
                 if self.parent.status.include[i]:
                     #Exclude point if v/dv > vxerrCutoff
-                    #Add vDEC datapoint and vRA to calculate Pythagorian value.
-                    y=math.sqrt(vRA**2+vDEC**2)
-                    excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, threshold_value=vxerrCutoff, idx=i)
+                    excludeTot = dataTotalBins.binAddDataPoint(x=r, y=v2D, dy=vDECerr, threshold_value=vxerrCutoff, idx=i)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeTot:
                         self.parent.status.loc[i, 'include'] = 0
@@ -6136,12 +6129,19 @@ class kineticDataPlotting(masterProcessingPanel):
                 
             #Remove top 'n' percent of each bin
             if int(self.combo_binReduction.GetValue()):   
-                for binNum in range(numRABins):
+                for binNum in range(numBins):
                     indices=dataTotalBins.binCalculateDataPoints(binNum, int(self.combo_binReduction.GetValue()))
+                    print (indices)
                     if len(indices):
                         for index in indices:
-            
-                            self.parent.status.loc[dataTotalBins.indices[binNum][index], 'include'] = 0
+                            print(index)
+                            print(binNum)
+                            try:
+                                #Remove WB
+                                self.parent.status.loc[dataTotalBins.indices[binNum][index], 'include'] = 0
+                            except Exception as error_message:
+                                print(f'Failed to remove index {index} from bin {binNum} - error {error_message}')
+                                #print(error_message)
                 
             # Process individual pairs by RA & DEC
             for i in statusIndicesList:
@@ -6151,18 +6151,18 @@ class kineticDataPlotting(masterProcessingPanel):
                 #else:
                 #    include=int(self.parent.status.include[i])
                 #Set up local valriables to avoid repeated PD access and for clarity
-                vRA=0
-                vDEC=0
-                excludeRA=0
-                excludeDec=0
-                vRA=float(self.parent.binaryDetail.vRA[i])
-                vDEC=float(self.parent.binaryDetail.vDEC[i])
+                v_tilde=0
+                #vDEC=0
+                excludev2D=0
+                #excludeDec=0
+                v_tilde=float(self.parent.binaryDetail.v_tilde[i])
+                #vDEC=float(self.parent.binaryDetail.vDEC[i])
                 if normalise:
-                    vRA=vRA-self.log_log_interpolate((1e-3,1.0079), (.5,.042), r)
-                    vDEC=vDEC-self.log_log_interpolate((1e-3,1.0079), (.5,.042), r)
+                    v2D=v2D-self.log_log_interpolate((1e-3,1.0079), (.5,.042), r)
+                    #vDEC=vDEC-self.log_log_interpolate((1e-3,1.0079), (.5,.042), r)
                 r=float(self.parent.binaryDetail.r[i])
-                vRAerr=float(self.parent.binaryDetail.vRAerr[i])
-                vDECerr=float(self.parent.binaryDetail.vDECerr[i])
+                v2D_err=float(self.parent.binaryDetail.v2D_err[i])
+                #vDECerr=float(self.parent.binaryDetail.vDECerr[i])
                 # Go through and bin
                 label=float(50.0 * i /lenArray) + 50.0
                 self.plot_but.SetLabel(f'{label:,.1f}%')
@@ -6180,42 +6180,42 @@ class kineticDataPlotting(masterProcessingPanel):
                 if aboveBelow: 
                     Y=self.XreturnY(r)
                     #Outliers above line
-                    if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==1 and (v2D > Y  ) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                     #Outliers below line
-                    if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
+                    if aboveBelow ==2 and (v2D < Y) and r > x_TopLeft and r < x_BottomRight:
                         self.parent.status.loc[i, 'include'] = 0
                         
                 # Check for cutoff.  If we loose one, we should loose both.
-                if (vRA>upperCutoff or vDEC>upperCutoff):
+                if (v2D>upperCutoff ):
                     self.parent.status.loc[i, 'include'] = 0
-                    self.parent.StatusBarProcessing(f'Potential Flyby at vRA = {vRA}, vDEC = {vDEC}')
+                    self.parent.StatusBarProcessing(f'Potential Flyby at v2D = {v2D}')
                 # Check RA limits
                 if self.parent.status.include[i]:
                     #Exclude point if v/dv > vxerrCutoff
-                    excludeRA = dataRABins.binAddDataPoint(x=r, y=vRA, dy=vRAerr, threshold_value=vxerrCutoff)
-                    #Add vDEC datapoint and add vRA to calculate Pythagorian value.
-                    excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threshold_value=vxerrCutoff)
+                    excludev2D = dataBins.binAddDataPoint(x=r, y=v_tilde, dy=v2D_err, threshold_value=vxerrCutoff)
+                    #Add vDEC datapoint and add v2D to calculate Pythagorian value.
+                    #excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threshold_value=vxerrCutoff)
                     # Exclude binary if both RA & Dec excluded.
-                    if not excludeRA or not excludeDec:
+                    if not excludev2D:
                         self.parent.status.loc[i, 'include'] = 0
                         self.parent.StatusBarProcessing(f'excludeRA = {excludeRA}, excludeDec = {excludeDec}')
                     else:
                         primaryPointer=self.parent.X.iloc[i]
                         star2Pointer=self.parent.Y.iloc[i]
                         self.createExportRecord(primaryPointer, star2Pointer, i)
-            xdata3ra=dataRABins.getBinXArray(XArrayType)
-            ydata3ra=dataRABins.getBinYArray(self.combo_yAvg.GetValue())
-            rerrbin3ra=dataRABins.getBinXVarArray(XArrayType)
-            verrbin3ra=dataRABins.getBinYVarArray(type='var_qrms')
+            xdata3=dataBins.getBinXArray(XArrayType)
+            ydata3=dataBins.getBinYArray(self.combo_yAvg.GetValue())
+            rerrbin3=dataBins.getBinXVarArray(XArrayType)
+            verrbin3=dataBins.getBinYVarArray(type='var_qrms')
                         
-            self.line3ra = self.velocityGraph.axes.errorbar(xdata3ra, ydata3ra, xerr=rerrbin3ra, yerr=verrbin3ra, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
-            self.line3ra[-1][0].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
-            self.line3ra[-1][1].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
+            self.line3 = self.velocityGraph.axes.errorbar(xdata3, ydata3, xerr=rerrbin3, yerr=verrbin3, fmt='o', ecolor='r', elinewidth=2, capsize=0, mfc='r', mec='r', ms=3) #,label='Gaia binned'
+            self.line3[-1][0].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
+            self.line3[-1][1].set_linestyle('-.') #eb1[-1][0] is the LineCollection objects of the errorbar lines
             
             if not prntVersion:
-                legend1.append(self.line3ra)
-                legend2.append('Gaia RA binned data')
+                legend1.append(self.line3)
+                legend2.append('Gaia binned data')
             
             xScaleBy=1.15
             yScaleBy=1.05
@@ -6229,43 +6229,20 @@ class kineticDataPlotting(masterProcessingPanel):
                     c='black'
                 else:
                     c='white'
-                for x,y,label in zip(xdata3ra, ydata3ra, dataRABins.getBinYLabelArray()):
+                for x,y,label in zip(xdata3, ydata3, dataBins.getBinYLabelArray()):
                    self.velocityGraph.frames.append(self.velocityGraph.axes.text(float(x)*xScaleBy, float(y)*yScaleBy, f'{label}', ha='center', va='bottom', c=c, fontsize=FONTSIZE))
             
             #self.velocityGraph.twiny            
-            self.velocityGraph.draw(self.line3ra, xdata3ra, ydata3ra, False, [] )
+            self.velocityGraph.draw(self.line3, xdata3, ydata3, False, [] )
             
-            ####################################################################################################dec
-            
-            xdata3dec=dataDECBins.getBinXArray(XArrayType)
-            ydata3dec=dataDECBins.getBinYArray(self.combo_yAvg.GetValue())
-            rerrbin3dec=dataDECBins.getBinXVarArray(XArrayType)
-            verrbin3dec=dataDECBins.getBinYVarArray(type='var_qrms')
-                        
-            if self.showLabelsCheckBox.GetValue():
-                if prntVersion:
-                    c='black'
-                else:
-                    c='white'
-                for x,y,label in zip(xdata3dec, ydata3dec, dataDECBins.getBinYLabelArray()):
-                   self.velocityGraph.frames.append(self.velocityGraph.axes.text(float(x)*xScaleBy, float(y)*yScaleBy, f'{label}', ha='center', va='bottom', c=c, fontsize=FONTSIZE))
-               
-            self.line3dec = self.velocityGraph.axes.errorbar(xdata3dec, ydata3dec, xerr=rerrbin3dec, yerr=verrbin3dec, fmt='o', ecolor='g', elinewidth=2, capsize=0, mfc='g', mec='g', ms=3) #,label='Gaia binned'
-            self.line3dec[-1][0].set_linestyle('--')
-            self.line3dec[-1][1].set_linestyle('--')
-            if not prntVersion:
-                legend1.append(self.line3dec)
-                legend2.append('Gaia DEC binned data')
-            
-            self.velocityGraph.draw(self.line3dec, xdata3dec, ydata3dec, False, [] )
         
         xdata1 = self.parent.binaryDetail.r * self.parent.status['include']
-        ydata1ra = self.parent.binaryDetail.vRA * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
-        ydata1dec = self.parent.binaryDetail.vDEC * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
+        ydata1v = self.parent.binaryDetail.v_tilde * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
+        #ydata1dec = self.parent.binaryDetail.vDEC * self.parent.status['include'] #/self.parent.binaryDetail.Msqrt
         if normalise:
-            ydata1ra = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042),xdata1 , ydata1ra)
+            ydata1v = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042),xdata1 , ydata1v)
             ydata1dec = self.log_log_interpolate_diff((1e-3,1.0079), (.5,.042), xdata1, ydata1dec)
-        a=np.array(ydata1ra)
+        a=np.array(ydata1v)
 
                
         ROWCOUNTMATRIX['BIN']=len(xdata1)
@@ -6279,14 +6256,12 @@ class kineticDataPlotting(masterProcessingPanel):
                 marker = 'o'
                 markersize=3
                 alpha=.5
-            self.linera, = self.velocityGraph.axes.plot(xdata1.to_numpy(), ydata1ra.to_numpy(), color=c, marker=marker, alpha=alpha, markeredgecolor='none', linestyle='none', linewidth=0, markersize=markersize)
-            self.velocityGraph.draw(self.linera, xdata1.to_numpy(), ydata1ra.to_numpy(), True, [] )
-            self.linedec, = self.velocityGraph.axes.plot(xdata1.to_numpy(), ydata1dec.to_numpy(), color=c, marker=marker, alpha=alpha, markeredgecolor='none', linestyle='none', linewidth=0, markersize=markersize)
-            self.velocityGraph.draw(self.linedec, xdata1.to_numpy(), ydata1dec.to_numpy(), True, [] )
-                    
-            if not prntVersion:
-                legend1.append(self.linedec)
-                legend2.append('Gaia raw data')
+            self.linera, = self.velocityGraph.axes.plot(xdata1.to_numpy(), ydata1v.to_numpy(), color=c, marker=marker, alpha=alpha, markeredgecolor='none', linestyle='none', linewidth=0, markersize=markersize)
+            self.velocityGraph.draw(self.linera, xdata1.to_numpy(), ydata1v.to_numpy(), True, [] )
+  
+            #if not prntVersion:
+            #    legend1.append(self.linedec)
+            #    legend2.append('Gaia raw data')
         if self.outlierLineCheckBox.GetValue():
             xdataOL=[x_TopLeft,x_BottomRight]
             ydataOL=[y_TopLeft,y_BottomRight]
@@ -6296,7 +6271,7 @@ class kineticDataPlotting(masterProcessingPanel):
             
             if not prntVersion:
                 legend1.append(self.lineOL)
-                legend2.append('Outlier cutoff')
+                legend2.append('Flyby cutoff')
         
         ROWCOUNTMATRIX['ADQL']=len(self.parent.status['include'])
         ROWCOUNTMATRIX['GRP']=len(self.parent.status['include'])-self.parent.status['notgroup'].sum()
@@ -6318,16 +6293,19 @@ class kineticDataPlotting(masterProcessingPanel):
         corrN=math.sqrt(avgMass)
         xdata2N = [x * corrN for x in xdata2]
         ydata2N = [y * corrN for y in ydata2]
-        ydata2N_1D = [y * corrN for y in ydata2_1D]
+        ydata2N_1D = [y * corrN for y in ydata2]
         
-        if not normalise:
-            self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b-', lw=2)#,label='Newtonian')
-        self.lineMond, = self.velocityGraph.axes.plot([.034* corrN * math.sqrt(2), .034* corrN * math.sqrt(2)],[.001, 10], 'k:', lw=2)#,label='Mond expectation')
-        
-        
+        #if not normalise:
+        #    self.line2, = self.velocityGraph.axes.plot(xdata2N, ydata2N_1D, 'b-', lw=2)#,label='Newtonian')
+        self.lineMond, = self.velocityGraph.axes.plot([.034* corrN * math.sqrt(2), .034* corrN * math.sqrt(2)],[yLower, yUpper], 'k:', lw=2)#,label='Mond expectation')
+
         if not prntVersion:
-            legend1.append(self.line2)
-            legend2.append('Newtonian rms value')
+            legend1.append(self.lineMond)
+            legend2.append('Mond expectation')
+            
+        #if not prntVersion:
+        #    legend1.append(self.line2)
+        #    legend2.append('Newtonian rms value')
             
         self.velocityGraph.axes.legend(legend1, legend2)
         if prntVersion:
@@ -6341,8 +6319,8 @@ class kineticDataPlotting(masterProcessingPanel):
         twiny.tick_params(labelsize=20)
         
         
-        if not normalise:
-            self.velocityGraph.draw(self.line2, xdata2, ydata2_1D, False, [] )
+        #if not normalise:
+        #    self.velocityGraph.draw(self.line2, xdata2, ydata2_1D, False, [] )
         
         self.summaryList.DeleteAllItems()
         self.summaryList.InsertItem(0, 'Gaia DB')
@@ -6408,11 +6386,6 @@ class kineticDataPlotting(masterProcessingPanel):
         self.summaryList.InsertItem(rowCnt, 'Mean S/N for v/dv (DEC)')
         self.summaryList.SetItem(rowCnt, 1, f"{snVoverDv[1]:,}")
         
-        #rowCnt += 1 #Next row
-        #self.summaryList.InsertItem(rowCnt, 'Mean v(RA & DEC)')
-        #meanV=self.CalcMeanV()
-        #self.summaryList.SetItem(rowCnt, 1, f"{meanV:,}")
-        
         rowCnt += 1 #Next row
         self.summaryList.InsertItem(rowCnt, 'Mean S/N PMRA')
         snPMRAoverDPMRAx=self.CalcMeanXYoverDxy('PMRA','PMRA_ERROR')
@@ -6466,61 +6439,26 @@ class kineticDataPlotting(masterProcessingPanel):
             #Mean binned binary RMS 1D relative velocity in RA
             rowCnt += 1 #Next row
             self.summaryList.InsertItem(rowCnt, 'Mean binned RMS 1D velocity in RA')        
-            ydata3rapd=pd.DataFrame(ydata3ra, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3rapd.V.mean():,.4f}")
+            ydata3pd=pd.DataFrame(ydata3, columns=['V'])
+            self.summaryList.SetItem(rowCnt, 1, f"{ydata3pd.V.mean():,.4f}")
         
             #STDEV binned binary RMS 1D relative velocity in RA (
             rowCnt += 1 #Next row
             self.summaryList.InsertItem(rowCnt, '1D velocity std dev in RA')        
-            ydata3rapd=pd.DataFrame(ydata3ra, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3rapd.V.std():,.4f}")
+            ydata3pd=pd.DataFrame(ydata3, columns=['V'])
+            self.summaryList.SetItem(rowCnt, 1, f"{ydata3pd.V.std():,.4f}")
         
-            #Mean binned binary RMS 1D relative velocity in DEC
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, 'Mean binned RMS 1D velocity in DEC')        
-            ydata3decpd=pd.DataFrame(ydata3dec, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3decpd.V.mean():,.4f}")
-            
-            #Mean binned binary RMS 1D relative velocity in DEC
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, '1D velocity std dev in DEC')        
-            ydata3decpd=pd.DataFrame(ydata3dec, columns=['V'])
-            self.summaryList.SetItem(rowCnt, 1, f"{ydata3decpd.V.std():,.4f}")
-            
             #Mean binned binary 1D separation in RA
             rowCnt += 1 #Next row
             self.summaryList.InsertItem(rowCnt, 'Mean binned 1D separation in RA')        
-            xdata3rapd=pd.DataFrame(xdata3ra, columns=['r'])
-            newlist = [x for x in xdata3rapd.r if math.isnan(x) == False and float(x) > 0]
+            xdata3pd=pd.DataFrame(xdata3, columns=['r'])
+            newlist = [x for x in xdata3pd.r if math.isnan(x) == False and float(x) > 0]
             product = 0
             for j in range(0, len(newlist)):
                 product = product + math.log10(float(newlist[j]))
             geoMean = product / float(len(newlist))
             self.summaryList.SetItem(rowCnt, 1, f"{10**geoMean:,.4f}")
         
-            #Mean binned binary  1D separation in DEC
-            rowCnt += 1 #Next row
-            self.summaryList.InsertItem(rowCnt, 'Mean binned 1D separation in DEC')        
-            xdata3decpd=pd.DataFrame(xdata3dec, columns=['r'])
-            newlist = [x for x in xdata3decpd.r if math.isnan(x) == False and float(x) > 0]
-            product = 0
-            for j in range(0, len(newlist)):
-                product = product + math.log10(float(newlist[j]))
-            geoMean = product / float(len(newlist))
-            self.summaryList.SetItem(rowCnt, 1, f"{10**geoMean:,.4f}")
-            
-            ##Mean binary 1D separation
-            #rowCnt += 1 #Next row
-            #self.summaryList.InsertItem(rowCnt, 'Mean 1D separation')        
-            #xdata1pd=pd.DataFrame(xdata1, columns=['r'])
-            #self.summaryList.SetItem(rowCnt, 1, f"{xdata1pd.r.mean():,.5f}")
-        
-            ##Mean binned binary RMS 1D relative velocity  in DEC
-            #rowCnt += 1 #Next row
-            #self.summaryList.InsertItem(rowCnt, 'Mean binned 1D separation in DEC')        
-            #xdata1decpd=pd.DataFrame(xdata1dec, columns=['r'])
-            #self.summaryList.SetItem(rowCnt, 1, f"{xdata3decpd.r.mean():,.4f}")
-                
         self.parent.status['massVmassOut']=self.parent.status['include']
         self.parent.status['tfOut']=self.parent.status['include']
         self.parent.status['numberOut']=self.parent.status['include']
@@ -6926,7 +6864,7 @@ class TFDataPlotting(masterProcessingPanel):
         
         self.TulleyFPlot.axes.set_xlabel('total binary mass ($M_{\odot}$)', fontsize=FONTSIZE)
                 
-        self.TulleyFPlot.axes.set_ylabel(f'{ND}D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
+        self.TulleyFPlot.axes.set_ylabel(f'{ND}D relative velocity in sky plane [$km s^{-1}$]', fontsize=FONTSIZE)
         ####################################################################################################
         self.parent.binaryDetail['include']=self.parent.status['include']
         M=self.parent.binaryDetail.loc[(self.parent.binaryDetail['include'] > 0)]
@@ -8577,7 +8515,7 @@ class MatplotlibPanel(wx.Panel):
         # Axes & labels
         self.axes = self.figure.add_subplot(111)
         self.frames = []
-        self.axes.set_ylabel('1D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
+        self.axes.set_ylabel(r'$\tilde{v}$ in sky plane', fontsize=FONTSIZE)
         self.axes.set_xlabel('2D projected separation [pc]', fontsize=FONTSIZE)
         self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
         self.axes.patch.set_facecolor('0.25')  # Grey shade
@@ -8674,7 +8612,7 @@ class MatplotlibPanel3(wx.Panel):
         #else:
         self.axes = self.figure.add_subplot(111)
         self.frames=[] 
-        self.axes.set_ylabel('1D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
+        self.axes.set_ylabel(r'\tilde{v} in sky plane', fontsize=FONTSIZE)
         self.axes.set_xlabel('2D projected separation [pc]', fontsize=FONTSIZE)
         self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
         self.axes.patch.set_facecolor('0.25')  # Grey shade
@@ -8780,7 +8718,7 @@ class MatplotlibPanel2(wx.Panel):
         self.frames=[]
         
 
-        #self.axes.set_ylabel('1D relative velocity in plane of sky [$km s^{-1}$]', fontsize=FONTSIZE)
+        #self.axes.set_ylabel('1D relative velocity in sky plane [$km s^{-1}$]', fontsize=FONTSIZE)
         #self.axes.set_xlabel('2D projected separation [pc]', fontsize=FONTSIZE)
         #self.axes.set_title("<n> binary pairs showing actual velocity and Newtonian expectation", fontsize=FONTSIZE)
         self.axes.patch.set_facecolor('0.25')  # Grey shade
