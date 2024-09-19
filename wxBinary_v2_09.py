@@ -24,7 +24,7 @@ import matplotlib.ticker as ticker
 import csv
 import pickle
 from wxPyControls import *
-from PyBins3 import *
+from PyBins2 import *
 from starSystems import *
 from newtonian_values import xdata2, ydata2, ydata2_1D
 
@@ -42,7 +42,6 @@ from astroquery.gaia import Gaia
 from shutil import copyfile as cp
 
 
-import argparse
 #Gaia.remove_jobs(["job_id_1","job_id_2",...])
 #Gaia.login()
 #jobs = [job for job in Gaia.list_async_jobs()]
@@ -88,20 +87,6 @@ sqlite_connection = engine.connect()
 #	"CATALOG"	TEXT,
 #	PRIMARY KEY("RELEASE_","CATALOG")
 #);
-
-
-## Reads user parameters
-#def parser():
-parser = argparse.ArgumentParser(
-    prog = 'wxBinary',
-    description = 'Application to download Binaries from Gaia and process.'
-)
-
-# Parsing options (observer)
-parser.add_argument('-i', help = 'Ignore saved data', action = 'store_true', dest = 'ignore_saved')
-
-args = parser.parse_args()
-
 class MainPanel(wx.Panel):
     def __init__(self, mainFrame):
         self.mainFrame=mainFrame
@@ -445,10 +430,10 @@ class gaiaStarRetrieval(wx.Panel):
         self.button1.Bind(wx.EVT_LEFT_DOWN, self.read_GaiaStars)
         self.sizer_v2.Add(self.button1, 0,wx.ALIGN_LEFT|wx.ALL , 5)
         
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel import or status update.")
-        self.sizer_v2.Add(self.cancel, 0, wx.LEFT | wx.RIGHT , 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel import or status update.")
+        self.sizer_v2.Add(self.button2, 0, wx.LEFT | wx.RIGHT , 5)
         
         self.deleteSelection = Button(self, id=wx.ID_ANY, label="Delete", pos=wx.DefaultPosition,size=wx.DefaultSize)
         #self.deleteSelection.Bind(wx.EVT_BUTTON, self.OnDeleteSelection)
@@ -1170,10 +1155,10 @@ class gaiaBinaryRetrieval(wx.Panel):
         self.button1.Bind(wx.EVT_LEFT_DOWN, self.read_GaiaBinaries)
         self.sizer_v2.Add(self.button1, 0,wx.ALIGN_LEFT|wx.ALL , 5)
                 
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel import or status update.")
-        self.sizer_v2.Add(self.cancel, 0, wx.LEFT | wx.RIGHT , 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel import or status update.")
+        self.sizer_v2.Add(self.button2, 0, wx.LEFT | wx.RIGHT , 5)
         
         self.button3 = Button(self, wx.ID_ANY, u"Clear jobs")
         self.button3.Bind(wx.EVT_LEFT_DOWN, self.OnClear)
@@ -1603,12 +1588,10 @@ class gaiaBinaryRetrieval(wx.Panel):
                     -- Where star 2 is within a defined radius of star 1 (see note)
                     1 = contains(POINT('ICRS', g2.ra, g2.dec), CIRCLE('ICRS', t1.ra, t1.dec,{pc}*t1.parallax))
                 AND
-                    -- This is Eqation (2) in El Badry
                     -- And radial separation minus ...
                     abs(1/t1.parallax - 1/g2.parallax) -
                     -- 2 * pi()/180 * 'in the plane separation'/parallax
                     2*0.01745*distance(POINT('ICRS', t1.ra, t1.dec), POINT('ICRS', g2.ra, g2.dec))/t1.parallax
-                    -- 3 * 'error along the line of sight'/parallax
                     < 3*sqrt(power(t1.parallax_error,2)/power(t1.parallax, 4) + power(g2.parallax_error, 2)/power(g2.parallax, 4))
             --    AND
             --        -- Relative velocity in the plane of the sky - Pythagoras. No spherical correction (pp 15-16 WM Smart).
@@ -2115,28 +2098,21 @@ class dataRetrieval(masterProcessingPanel):
         
         global RELEASE
         global CATALOG
-        global args
-        if not args.ignore_saved:
-            for file in files:
-                try:
-                    setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
-                    print(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix} loaded')
-                except Exception:
-                    setattr(self.parent,file, pd.DataFrame())
-    
+        for file in files:
             try:
-                file_to_read = open(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle', 'rb') #File containing example object
-                self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
-                file_to_read.close()
-                print(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle loaded')
+                setattr(self.parent,file, pd.read_pickle(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix}'))
+                print(f'bindata/{RELEASE}/{CATALOG}/{file}.{fileSuffix} loaded')
             except Exception:
-                print(f'Error in reading bindata/{RELEASE}/{CATALOG}/starSystemList.pickle')
-                self.parent.starSystemList=binaryStarSystems(0, gl_cfg.getItem('mass-adjust','RETRIEVAL', '0.05'))
-        else:
-            for file in files:
                 setattr(self.parent,file, pd.DataFrame())
+
+        try:
+            file_to_read = open(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle', 'rb') #File containing example object
+            self.parent.starSystemList = pickle.load(file_to_read) # Load saved object
+            file_to_read.close()
+            print(f'bindata/{RELEASE}/{CATALOG}/starSystemList.pickle loaded')
+        except Exception:
+            print(f'Error in reading bindata/{RELEASE}/{CATALOG}/starSystemList.pickle')
             self.parent.starSystemList=binaryStarSystems(len(self.parent.status), gl_cfg.getItem('mass-adjust','RETRIEVAL', '0.05'))
-            
         #print(self.parent.star_rows)
         self.sizer_main_divider=wx.BoxSizer(wx.HORIZONTAL)
         self.sizer_main=wx.BoxSizer(wx.VERTICAL)
@@ -2283,25 +2259,25 @@ class dataRetrieval(masterProcessingPanel):
         self.button2.SetToolTip("Export selected data from active TF tab to csv file")
         self.button2.Bind(wx.EVT_LEFT_DOWN, self.write_csv)
         
-        ##Save catalogue in a directory
-        #
-        #self.save = Button(self, id=wx.ID_ANY, label="&Save", pos=wx.DefaultPosition,size=wx.DefaultSize)
-        #self.save.Bind(wx.EVT_BUTTON, self.catalogSave)
-        #self.save.SetToolTip("Save catalogue in a directory")
-        #self.sizer_v2.Add(self.save, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        #Save catalogue in a directory
+        
+        self.save = Button(self, id=wx.ID_ANY, label="&Save", pos=wx.DefaultPosition,size=wx.DefaultSize)
+        self.save.Bind(wx.EVT_BUTTON, self.catalogSave)
+        self.save.SetToolTip("Save catalogue in a directory")
+        self.sizer_v2.Add(self.save, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Restore catalogue from a diretory
         
         self.restore = Button(self, id=wx.ID_ANY, label="&Restore", pos=wx.DefaultPosition,size=wx.DefaultSize)
         self.restore.Bind(wx.EVT_BUTTON, self.catalogRestore)
-        self.restore.SetToolTip("Restore catalogue from diretory")
+        self.restore.SetToolTip("Restore catalogue from a diretory")
         self.sizer_v2.Add(self.restore, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel import or status update.")
-        self.sizer_v2.Add(self.cancel, 0, wx.LEFT | wx.RIGHT , 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel import or status update.")
+        self.sizer_v2.Add(self.button2, 0, wx.LEFT | wx.RIGHT , 5)
         
         # Status processing prompt
         
@@ -2489,8 +2465,7 @@ class dataRetrieval(masterProcessingPanel):
     def OnCancel(self, event=0):
 
         global CANCEL
-        #
-        self.rvnull.Enable()
+        self.ungroup.Enable()
         self.dbload.Enable()
         CANCEL= True
         self.parent.StatusBarNormal('Completed OK')
@@ -3090,11 +3065,11 @@ class dataRetrieval(masterProcessingPanel):
 
 
         self.parent.export=pd.DataFrame(self.parent.export)
-        self.dbload.SetLabel(u"DB Load")
+        self.dbload.SetLabel('Import')
         
         ROWCOUNTMATRIX['ADQL']=len(self.parent.selectedStarBinaryMappings)
         self.static_Total.SetLabel(f'{int(len(self.parent.star_rows)/2):,}')
-        self.parent.StatusBarProcessing('End DB Load')
+        self.parent.StatusBarProcessing('End')
         
         #self.parent.selectedStarIDs=pd.DataFrame(self.parent.selectedStarIDs, columns=['source_id'])
         self.parent.selectedStarBinaryMappings=pd.DataFrame.from_dict(self.parent.selectedStarBinaryMappings, orient='index')#, columns=['i', 'SOURCE_ID_PRIMARY', 'SOURCE_ID_SECONDARY'
@@ -3149,7 +3124,7 @@ class dataRetrieval(masterProcessingPanel):
         self.parent.printArrays()
         self.dbload.Enable()
         
-        self.parent.StatusBarNormal('DB Load completed OK')
+        self.parent.StatusBarNormal('Completed OK')
         
     def resetStatus(self, event):
         
@@ -3431,8 +3406,8 @@ class dataFilter(masterProcessingPanel):
         fgsizer = wx.FlexGridSizer(cols=13, hgap=0, rows=3, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Headings (ie row 1)
                 
@@ -3566,10 +3541,10 @@ class dataFilter(masterProcessingPanel):
         fgsizer.Add(self.loadData, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel filter.")
-        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel filter.")
+        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         # Filter Reset button
         
@@ -4085,8 +4060,8 @@ class skyDataPlotting(masterProcessingPanel):
         fgsizer = wx.FlexGridSizer(cols=14, hgap=0, rows=2, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Create unselected data check box
         unselectedStaticText = StaticText(self, id=wx.ID_ANY, label="Show unselected")
@@ -4158,11 +4133,11 @@ class skyDataPlotting(masterProcessingPanel):
         
         # Draw velocity map
         
-        try:
-            self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
-            self.fg2sizer.Add(self.skyGraph)
-        except Exception:
-            pass
+        #try:
+        self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750), projection='aitoff')
+        fg2sizer.Add(self.skyGraph)
+        #except Exception:
+        #    pass
         
         self.Layout()
         
@@ -4187,8 +4162,8 @@ class skyDataPlotting(masterProcessingPanel):
         #self.skyGraph.sizer.destroy()
         #
         #self.skyGraph.toolbar.destroy()
-        
-        #self.skyGraph.Destroy()
+        #
+        #self.skyGraph.destroy()
         
         prntVersion=self.prntVersionCheckBox.GetValue()
         gl_cfg.setItem('prntversion',prntVersion, 'SKYPLOT') # save setting in config file
@@ -4198,7 +4173,6 @@ class skyDataPlotting(masterProcessingPanel):
         gl_cfg.setItem('suppressgroups',self.suppressGroupsCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
         gl_cfg.setItem('suppressrvzero',self.suppressRVZeroCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
         gl_cfg.setItem('galacticCoords',self.showGalacticCoordsCheckBox.GetValue(), 'SKYPLOT') # save setting in config file
-        gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         #
         #print(self.parent.X.ra)
         
@@ -4264,13 +4238,6 @@ class skyDataPlotting(masterProcessingPanel):
                 marker = 'o'
                 markersize=1.5
             try:
-                data0={'x':xdata2.ra.to_list(),
-                       'y':ydata2.dec.to_list(),
-                       'color':c,
-                       'marker':marker,
-                       'linestyle':'none',
-                       'linewidth':0,
-                       'markersize':markersize}
                 self.line2, = self.skyGraph.axes.plot(xdata2.ra.to_list(), ydata2.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
             except Exception as e:
                 self.parent.StatusBarProcessing (f'self.skyGraph.axes.plot Crash 1) "{e}"')
@@ -4330,13 +4297,6 @@ class skyDataPlotting(masterProcessingPanel):
             xdata1.ra = self.parent.X.gal_l  * self.parent.status['include']
             ydata1.dec = self.parent.X.gal_b  * self.parent.status['include']
         try:
-            #data1={'x':xdata1.ra.to_list(),
-            #       'y':ydata1.dec.to_list(),
-            #       'color':c,
-            #       'marker':marker,
-            #       'linestyle':'none',
-            #       'linewidth':0,
-            #       'markersize':markersize}
             self.line, = self.skyGraph.axes.plot(xdata1.ra.to_list(), ydata1.dec.to_list(), color=c, marker=marker, linestyle='none', linewidth=0, markersize=markersize)
         except Exception as e:
             self.parent.StatusBarProcessing (f'self.skyGraph.axes.plot Crash 2) "{e}"')
@@ -4345,19 +4305,9 @@ class skyDataPlotting(masterProcessingPanel):
             self.plot_but.SetBackgroundColour(Colour(150,20,20))
             self.plot_but.Enable()
             return
-        #self.skyGraph = matplotlibPanel(parent=self, size=(1350, 750)) #, projection='aitoff', data=[data0, data1]
-        #self.fg2sizer.Add(self.skyGraph)
         
-        
-        legend1.append(self.line)
-        legend2.append('selected')
-        self.skyGraph.axes.legend(legend1, legend2)
-        if prntVersion:
-            self.skyGraph.axes.get_legend().remove()
-            
         self.skyGraph.draw(self.line, xdata1, ydata1, True,[] )
-        #
-        
+        #        
         try:   
             self.skyGraph.Layout()
         except Exception:
@@ -4382,8 +4332,8 @@ class HRDataPlotting(masterProcessingPanel):
         fgsizer = wx.FlexGridSizer(cols=13, hgap=0, rows=4, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Headings
         
@@ -4467,10 +4417,10 @@ class HRDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.Filter_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel H-R filter.")
-        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel H-R filter.")
+        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         
         # H-R Filter Reset button
         
@@ -4481,7 +4431,7 @@ class HRDataPlotting(masterProcessingPanel):
         # Draw velocity map
         try:
             self.hrGraph = matplotlibPanel(parent=self, size=(950, 750))
-            self.fg2sizer.Add(self.hrGraph)
+            fg2sizer.Add(self.hrGraph)
         except Exception:
             pass
         
@@ -4721,11 +4671,11 @@ class kineticDataPlotting(masterProcessingPanel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=15, hgap=0, rows=10, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=14, hgap=0, rows=10, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Headings
         
@@ -4741,9 +4691,6 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.static_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Outlier cutoff
-        self.static_above_below = StaticText(self, label='Deselect') 
-        fgsizer.Add(self.static_above_below, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        
         self.static_x_TopLeft = StaticText(self, label='x (Top Left)') 
         fgsizer.Add(self.static_x_TopLeft, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.static_y_TopLeft = StaticText(self, label='y (Top Left)') 
@@ -4766,10 +4713,8 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(lowerBinCutoff_StaticText, 0, wx.ALL, 2)
        
         #Type of scale
-        #self.static_yLog = StaticText(self, label='y scale') 
-        #fgsizer.Add(self.static_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.static_binReduction = StaticText(self, label='Minus Bin %') 
-        fgsizer.Add(self.static_binReduction, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        self.static_yLog = StaticText(self, label='y scale') 
+        fgsizer.Add(self.static_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.static_yAverage = StaticText(self, label='y Average') 
         fgsizer.Add(self.static_yAverage, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
@@ -4790,15 +4735,6 @@ class kineticDataPlotting(masterProcessingPanel):
         self.textctrl_yUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_upper','KINETIC', 5), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_yUpper.SetToolTip("Upper end of y-scale.")
-        
-        # Polarscope orientation radio button
-        aboveBelowChoices = ['None', '&Above', '&Below']
-        self.aboveBelowRadioBox = RadioBox(self, id=wx.ID_ANY,label = 'Above or below line:', pos=wx.DefaultPosition, size=wx.DefaultSize, choices = aboveBelowChoices, majorDimension = 1, style = wx.RA_SPECIFY_ROWS)
-        self.aboveBelowRadioBox.SetBackgroundColour(Colour(50, 50, 60))
-        #self.aboveBelowRadioBox.Bind(wx.EVT_RADIOBOX,self.OnRefreshPAImage)
-        self.aboveBelowRadioBox.SetSelection(int(gl_cfg.getItem('above-below-line','KINETIC', 0)))
-        self.aboveBelowRadioBox.SetToolTip("Choose above or bleow.  Above removes outliers above the line, below removes stars below the line")
-        fgsizer.Add(self.aboveBelowRadioBox, 0, wx.ALL, 2)
         
         # Outlier values
         self.text_x_TopLeft = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_topLeft','KINETIC', .004), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT) 
@@ -4831,11 +4767,7 @@ class kineticDataPlotting(masterProcessingPanel):
         
         self.combo_yLog = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['log','normal'], value='')
         self.combo_yLog.SetSelection(int(gl_cfg.getItem('y_scale','KINETIC', 0)))
-        self.combo_yLog.Hide()
-        #fgsizer.Add(self.combo_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.combo_binReduction = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'], value='')
-        self.combo_binReduction.SetSelection(int(gl_cfg.getItem('combo-bin-reduction','KINETIC', 0)))
-        fgsizer.Add(self.combo_binReduction, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+        fgsizer.Add(self.combo_yLog, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.combo_yAvg = Choice(self, id=wx.ID_ANY, pos=wx.DefaultPosition, size=wx.DefaultSize, choices=['rms','mean'], value='')
         self.combo_yAvg.SetSelection(int(gl_cfg.getItem('y_avg','KINETIC', 0)))
         fgsizer.Add(self.combo_yAvg, 0, wx.ALIGN_LEFT|wx.ALL, 5)
@@ -4896,21 +4828,21 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         try:
             self.velocityGraph = matplotlibPanel(parent=self, size=(1350, 750))
-            self.fg2sizer.Add(self.velocityGraph)
+            fg2sizer.Add(self.velocityGraph)
         except Exception:
             pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
-        self.fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
+        fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
         self.summaryList.InsertColumn(0, "Metric", wx.LIST_FORMAT_RIGHT, width=280 )
         self.summaryList.SetColumnWidth(0, 280)
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
@@ -4925,8 +4857,7 @@ class kineticDataPlotting(masterProcessingPanel):
     def XreturnY(self, X):
         # Return lower outlier range.
         #Y=float(self.m*float(X) + float(self.c))
-        print(f'm = {self.m}, c = {self.c}')
-        Y=self.m*float(math.log10(X)) + float(self.c)
+        Y=self.m*float(math.log10(X)) + self.c
         return 10**Y
     
     def OnReset(self, event=0):
@@ -4965,7 +4896,6 @@ class kineticDataPlotting(masterProcessingPanel):
         gl_cfg.setItem('v_dv_cutoff',self.text_vxerrCutoff.GetValue(),'KINETIC')
         gl_cfg.setItem('lower_bin_cutoff',self.lowerBinCutoffTextCtrl.GetValue(),'KINETIC')
         gl_cfg.setItem('y_scale',self.combo_yLog.GetSelection(),'KINETIC')
-        gl_cfg.setItem('combo-bin-reduction',self.combo_binReduction.GetSelection(),'KINETIC')
         gl_cfg.setItem('y_avg',self.combo_yAvg.GetSelection(),'KINETIC')
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         gl_cfg.setItem('prntversion',self.prntVersionCheckBox.GetValue(), 'KINETIC') # save setting in config file
@@ -4974,7 +4904,7 @@ class kineticDataPlotting(masterProcessingPanel):
         gl_cfg.setItem('rawdata',self.rawDataCheckBox.GetValue(), 'KINETIC') # save setting in config file
         gl_cfg.setItem('outlierline',self.outlierLineCheckBox.GetValue(), 'KINETIC') # save setting in config file
         gl_cfg.setItem('showlabels',self.showLabelsCheckBox.GetValue(), 'KINETIC') # save setting in config file
-        gl_cfg.setItem('above-below-line',self.aboveBelowRadioBox.GetSelection(), 'KINETIC')
+        
         self.OnReset()
         # Draw kinematic map
         #self.parent.vdvExclude=0  # Keep track of how many pairs are excluded because 'v x vErr' exceeds a threshold.
@@ -5022,9 +4952,8 @@ class kineticDataPlotting(masterProcessingPanel):
         x_TopLeft=float(self.text_x_TopLeft.GetValue())
         y_BottomRight=float(self.text_y_BottomRight.GetValue())
         y_TopLeft=float(self.text_y_TopLeft.GetValue())
-        aboveBelow=self.aboveBelowRadioBox.GetSelection()
         # Calculate parameters for outlier line.
-        self.m=float(math.log10(y_BottomRight)-math.log10(y_TopLeft))/(math.log10(x_BottomRight)-math.log10(x_TopLeft)) # m = dy/dx
+        self.m=float(math.log10(y_BottomRight)-math.log10(y_TopLeft)/(math.log10(x_BottomRight)-math.log10(x_TopLeft))) # m = dy/dx
         self.c=float(math.log10(y_TopLeft) - math.log10(x_TopLeft)*self.m)
     
         lenArray=len(self.parent.binaryDetail)
@@ -5044,13 +4973,11 @@ class kineticDataPlotting(masterProcessingPanel):
 ######################################################################
             numRABins=int(self.spin_bins.GetValue())      #  Get number of RA bins.
             dataRABins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
-            dataTotalBins=binOrganiser(numRABins, int(float(self.lowerBinCutoffTextCtrl.GetValue())))
             upper=top
             factor=10**(diff/numRABins)
             lower=upper/factor
             for i in range(numRABins):
                 dataRABins.newBin(lower, upper)
-                dataTotalBins.newBin(lower, upper)
                 upper=lower
                 lower=upper/factor
                 
@@ -5071,10 +4998,7 @@ class kineticDataPlotting(masterProcessingPanel):
             condition = self.parent.status.include == True
             statusIndices = indexStatus[condition]
             statusIndicesList = statusIndices.tolist()
-            listOfPairs=[]
-            listOfPairSquares=[]
             
-            # Pre-process individual pairs by total RA& DEC (ie pythagoras)
             for i in statusIndicesList:
                 
                 if math.isnan(self.parent.status.include[i]) or not int(self.parent.status.include[i]):
@@ -5092,7 +5016,7 @@ class kineticDataPlotting(masterProcessingPanel):
                 vRAerr=float(self.parent.binaryDetail.vRAerr[i])
                 vDECerr=float(self.parent.binaryDetail.vDECerr[i])
                 # Go through and bin
-                label=float(50 * i /lenArray)
+                label=float(100.0 * i /lenArray)
                 self.plot_but.SetLabel(f'{label:,.1f}%')
                 if CANCEL:
                     CANCEL = False
@@ -5105,89 +5029,21 @@ class kineticDataPlotting(masterProcessingPanel):
                 # is more than the calculated velocity allowed at that radius
                 #
                 # Check for outliers
-                if aboveBelow: 
-                    Y=self.XreturnY(r)
-                    #Outliers above line
-                    if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.include[i]=0
-                    #Outliers below line
-                    if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.include[i]=0
-                        
-                # Check for cutoff.  If we loose one, we should loose both.
-                if (vRA>upperCutoff or vDEC>upperCutoff):
+                Y=self.XreturnY(r)
+                if (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
                     self.parent.status.include[i]=0
-                        
-                # Check RA limits
-                if self.parent.status.include[i]:
-                    #Exclude point if v/dv > vxerrCutoff6
-                    #Add vDEC datapoint and vRA to calculate Pythagorian value.
-                    y=math.sqrt(vRA**2+vDEC**2)
-                    excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, threashold_value=vxerrCutoff, idx=i)
-                    # Exclude binary if both RA & Dec excluded.
-                    if not excludeTot:
-                        self.parent.status.include[i]=0
-                     
-            #Remove top 'n' percent of each bin
-            if int(self.combo_binReduction.GetValue()):   
-                for binNum in range(numRABins):
-                    indices=dataTotalBins.binCalculateDataPoints(binNum, int(self.combo_binReduction.GetValue()))
-                    if len(indices):
-                        for index in indices:
-                            self.parent.status.include[dataTotalBins.indices[binNum][index]]=0
-                
-            # Process individual pairs by RA & DEC
-            for i in statusIndicesList:
-                
-                if math.isnan(self.parent.status.include[i]) or not int(self.parent.status.include[i]):
-                    continue
-                #else:
-                #    include=int(self.parent.status.include[i])
-                #Set up local valriables to avoid repeated PD access and for clarity
-                vRA=0
-                vDEC=0
-                excludeRA=0
-                excludeDec=0
-                vRA=float(self.parent.binaryDetail.vRA[i])
-                vDEC=float(self.parent.binaryDetail.vDEC[i])
-                r=float(self.parent.binaryDetail.r[i])
-                vRAerr=float(self.parent.binaryDetail.vRAerr[i])
-                vDECerr=float(self.parent.binaryDetail.vDECerr[i])
-                # Go through and bin
-                label=float(50.0 * i /lenArray) + 50.0
-                self.plot_but.SetLabel(f'{label:,.1f}%')
-                if CANCEL:
-                    CANCEL = False
-                    self.plot_but.Enable()
-                    return
-                wx.Yield()
-                
-                # Check for outliers.  If we loose one, we should loose both.
-                # If r is within band that we're checking for ouliers AND the velocity
-                # is more than the calculated velocity allowed at that radius
-                #
-                # Check for outliers
-                if aboveBelow: 
-                    Y=self.XreturnY(r)
-                    #Outliers above line
-                    if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.include[i]=0
-                    #Outliers below line
-                    if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.include[i]=0
-                        
+                    
                 # Check for cutoff.  If we loose one, we should loose both.
-                if (vRA>upperCutoff or vDEC>upperCutoff):
+                if vRA>upperCutoff or vDEC>upperCutoff:
                     self.parent.status.include[i]=0
-                        
+                    
                 # Check RA limits
                 if self.parent.status.include[i]:
                     #Exclude point if v/dv > vxerrCutoff
-                    excludeRA = dataRABins.binAddDataPoint(x=r, y=vRA, dy=vRAerr, threashold_value=vxerrCutoff)
-                    #Add vDEC datapoint and add vRA to calculate Pythagorian value.
-                    excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threashold_value=vxerrCutoff)
+                    excludeRA = dataRABins.binAddDataPoint(x=r, y=vRA, dy=vRAerr, value=vxerrCutoff)
+                    excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, value=vxerrCutoff)
                     # Exclude binary if both RA & Dec excluded.
-                    if not excludeRA or not excludeDec:
+                    if excludeRA and excludeDec:
                         self.parent.status.include[i]=0
                     else:
                         primaryPointer=self.parent.X.iloc[i]
@@ -5450,8 +5306,8 @@ class TFDataPlotting(masterProcessingPanel):
         fgsizer = wx.FlexGridSizer(cols=13, hgap=0, rows=10, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Headings
         
@@ -5607,21 +5463,21 @@ class TFDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         try:
             self.TulleyFPlot = matplotlibPanel(parent=self, size=(1350, 750))
-            self.fg2sizer.Add(self.TulleyFPlot)
+            fg2sizer.Add(self.TulleyFPlot)
         except Exception:
             pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
-        self.fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
+        fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
         self.summaryList.InsertColumn(0, "Metric", wx.LIST_FORMAT_RIGHT, width=280 )
         self.summaryList.SetColumnWidth(0, 280)
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
@@ -5769,13 +5625,13 @@ class TFDataPlotting(masterProcessingPanel):
                 if r>float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
                     self.createExportRecord(primaryPointer, star2Pointer, i)
                     if self.V1D_CheckBox.GetValue()==True:
-                        if not dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, threashold_value=0) :
+                        if dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, value=0) :
                             self.parent.StatusBarProcessing(f'Exclude "vRAerr (a)" x={M}, y={vRA}')
-                        if not dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, threashold_value=0) :
+                        if dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, value=0) :
                             self.parent.StatusBarProcessing(f'Exclude "vDECerr (a)" x={M}, y={vDEC}')
                         
                     else:
-                        if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threashold_value=0) :
+                        if dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, value=0) :
                             self.parent.status.include[i]=0
                             self.parent.StatusBarProcessing(f'Exclude "Verr" x={M}, y={V2D}')
                 else:
@@ -5785,12 +5641,12 @@ class TFDataPlotting(masterProcessingPanel):
                 if r<float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
                     self.createExportRecord(primaryPointer, star2Pointer, i)
                     if self.V1D_CheckBox.GetValue()==True:
-                        if not dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, threashold_value=0):
+                        if dataTFBins.binAddDataPoint(x=M, y=vRA, dy=vRAerr, value=0):
                             self.parent.StatusBarProcessing(f'Exclude "vRAerr (b)" x={M}, y={vRA}')
-                        if not dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, threashold_value=0) :
+                        if dataTFBins.binAddDataPoint(x=M, y=vDEC, dy=vDECerr, value=0) :
                             self.parent.StatusBarProcessing(f'Exclude "vDECerr (b)" x={M}, y={vDEC}')
                     else:
-                        if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threashold_value=0) :
+                        if dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, value=0) :
                             self.parent.status.include[i]=0
                             self.parent.StatusBarProcessing(f'Exclude "verr" x={M}, y={V2D}')
                 else:
@@ -6110,8 +5966,8 @@ class MassPlotting(masterProcessingPanel):
         fgsizer = wx.FlexGridSizer(cols=4, hgap=0, rows=10, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Headings
         
@@ -6186,32 +6042,32 @@ class MassPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
-        try:
-            self.MassPlot = matplotlibPanel(parent=self, size=(900, 650))
-            self.MassPlot.axes.set_yscale('linear')
-            self.MassPlot.axes.set_xscale('linear')
-            self.fg2sizer.Add(self.MassPlot)
-        except Exception:
-            pass
+        #try:
+        self.MassPlot = matplotlibPanel(parent=self, size=(750, 750))
+        self.MassPlot.axes.set_yscale('linear')
+        self.MassPlot.axes.set_xscale('linear')
+        fg2sizer.Add(self.MassPlot)
+        #except Exception:
+        #    pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
-        self.fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
+        fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
         self.summaryList.InsertColumn(0, "Metric", wx.LIST_FORMAT_RIGHT, width=280 )
         self.summaryList.SetColumnWidth(0, 280)
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
         self.summaryList.SetColumnWidth(1, 120)
         self.SetSizer(self.sizer_v)
-        try:
-            self.MassPlot.Layout()
-        except Exception:
-            pass
+        #try:
+        self.MassPlot.Layout()
+        #except Exception:
+        #    pass
         self.Layout()
 
     def OnReset(self, event=0):
@@ -6333,12 +6189,12 @@ class MassPlotting(masterProcessingPanel):
             # Ie 'Outer' shell
             if float(primaryPointer.mass_flame):
                 self.createExportRecord(primaryPointer, star2Pointer, i)
-                if not dataBins.binAddDataPoint(x=primaryPointer.mass_calc, y=primaryPointer.mass_flame, dy=(primaryPointer.age_flame_upper-primaryPointer.age_flame_lower)/2.0, threashold_value=0) :
+                if dataBins.binAddDataPoint(x=primaryPointer.mass_calc, y=primaryPointer.mass_flame, dy=(primaryPointer.age_flame_upper-primaryPointer.age_flame_lower)/2.0, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (a)" x={primaryPointer.mass_calc}, y={primaryPointer.mass_flame}')
 
             if float(star2Pointer.mass_flame):
                 self.createExportRecord(primaryPointer, star2Pointer, i)
-                if not dataBins.binAddDataPoint(x=star2Pointer.mass_calc, y=star2Pointer.mass_flame, dy=(star2Pointer.age_flame_upper-star2Pointer.age_flame_lower)/2.0, threashold_value=0) :
+                if dataBins.binAddDataPoint(x=star2Pointer.mass_calc, y=star2Pointer.mass_flame, dy=(star2Pointer.age_flame_upper-star2Pointer.age_flame_lower)/2.0, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "Calculated mass (b)" x={star2Pointer.mass_calc}, y={star2Pointer.mass_flame}')
 
         
@@ -6573,8 +6429,8 @@ class NumberDensityPlotting(masterProcessingPanel):
         fgsizer = wx.FlexGridSizer(cols=4, hgap=0, rows=6, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Headings
         
@@ -6663,21 +6519,21 @@ class NumberDensityPlotting(masterProcessingPanel):
         fgsizer.Add(self.plot_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         #Cancel Button
-        self.cancel = Button(self, wx.ID_ANY, u"Cancel")
-        self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
-        self.cancel.SetToolTip("Cancel binning.")
-        fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        self.button2 = Button(self, wx.ID_ANY, u"Cancel")
+        self.button2.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
+        self.button2.SetToolTip("Cancel binning.")
+        fgsizer.Add(self.button2, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
         try:
             self.NumberDensityPlot = matplotlibPanel(parent=self, size=(1350, 750))
-            self.fg2sizer.Add(self.NumberDensityPlot)
+            fg2sizer.Add(self.NumberDensityPlot)
         except Exception:
             pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
-        self.fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
+        fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
         self.summaryList.InsertColumn(0, "Metric", wx.LIST_FORMAT_RIGHT, width=280 )
         self.summaryList.SetColumnWidth(0, 280)
         self.summaryList.InsertColumn(1, "Value", wx.LIST_FORMAT_RIGHT, width=120 )
@@ -6836,7 +6692,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins1.binAddDataPoint(x=DIST, y=1, dy=.00011, threashold_value=0) :
+                if dataNDBins1.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "vRAerr (c)" x={DIST}, y=1')
     
             xdata1ND=dataNDBins1.getBinXArray(type='centre')
@@ -6876,7 +6732,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins2.binAddDataPoint(x=DIST, y=1, dy=.00011, threashold_value=0) :
+                if dataNDBins2.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "vRAerr (d)" x={DIST}, y=1')
     
             xdata2ND=dataNDBins2.getBinXArray(type='centre')
@@ -6914,7 +6770,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins3.binAddDataPoint(x=DIST, y=1, dy=.00011, threashold_value=0) :
+                if dataNDBins3.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude "vRAerr (e)" x={DIST}, y=1')
     
             xdata3ND=dataNDBins3.getBinXArray(type='centre')
@@ -6954,7 +6810,7 @@ class NumberDensityPlotting(masterProcessingPanel):
                     self.plot_but.Enable()
                     return
                 wx.Yield()
-                if not dataNDBins4.binAddDataPoint(x=DIST, y=1, dy=.00011, threashold_value=0) :
+                if dataNDBins4.binAddDataPoint(x=DIST, y=1, dy=.00011, value=0) :
                     self.parent.StatusBarProcessing(f'Exclude 1 pair "vRAerr (f)" Distance={DIST}')
     
             xdata4ND=dataNDBins4.getBinXArray(type='centre')
@@ -7169,8 +7025,8 @@ class AladinView(wx.Panel):
         fgsizer = wx.FlexGridSizer(cols=12, hgap=0, rows=10, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
-        self.fg2sizer = wx.FlexGridSizer(cols=3, hgap=0, rows=1, vgap=0)           # On left hand side
-        self.sizer_v.Add(self.fg2sizer)
+        fg2sizer = wx.FlexGridSizer(cols=3, hgap=0, rows=1, vgap=0)           # On left hand side
+        self.sizer_v.Add(fg2sizer)
         
         # Draw button
         
@@ -7237,7 +7093,7 @@ class AladinView(wx.Panel):
         
         # Create summary results list box.
         self.binaryList=ListCtrl(self, size=(560, 750)) 
-        self.fg2sizer.Add(self.binaryList, 0, wx.ALL, 2)
+        fg2sizer.Add(self.binaryList, 0, wx.ALL, 2)
         self.binaryList.InsertColumn(0, "Primary", wx.LIST_FORMAT_RIGHT, width=170 )
         self.binaryList.SetColumnWidth(0, 170)
         self.binaryList.InsertColumn(1, "Companion", wx.LIST_FORMAT_RIGHT, width=170 )
@@ -7251,10 +7107,10 @@ class AladinView(wx.Panel):
         
 ##########   Aladin.u-strasbg.fr #########################
         self.cosmicBrowser = wx.html2.WebView.New(self, id=wx.ID_ANY, url="", pos=wx.DefaultPosition, size=(750, 750))
-        self.fg2sizer.Add(self.cosmicBrowser)
+        fg2sizer.Add(self.cosmicBrowser)
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(500, 750)) 
-        self.fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
+        fg2sizer.Add(self.summaryList, 0, wx.ALL, 2)
         self.summaryList.InsertColumn(0, "Property", wx.LIST_FORMAT_RIGHT, width=80 )
         self.summaryList.SetColumnWidth(0, 130)
         self.summaryList.InsertColumn(1, "Primary", wx.LIST_FORMAT_RIGHT, width=170 )
@@ -7541,11 +7397,11 @@ class matplotlibPanel2(wx.Panel):
         self.parent=parent
 
 
-        self.figure = plt.figure(figsize=(8,5))
-        self.axes = self.figure.add_subplot(111, projection="aitoff")
+        fig = plt.figure(figsize=(8,5))
+        ax = fig.add_subplot(111, projection="aitoff")
         if len(data):
-            self.axes.scatter(data[0]['x'], data[0]['y'],marker=data[0]['marker'], s=1.5, color=data[0]['color'], linewidths=0, edgecolors='face')
-            self.axes.scatter(data[1]['x'], data[1]['y'],marker=data[0]['marker'], s=1.5, color=data[0]['color'], linewidths=0, edgecolors='face')
+            ax.scatter(data[0][0], data[0][1],marker='o', color='s')
+            ax.scatter(data[1][0], data[1][1],marker='o', color='k')
         # Axes & labels
         #if projection:
         #    self.axes = self.figure.add_subplot(111, projection=projection)

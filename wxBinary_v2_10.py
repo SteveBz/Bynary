@@ -42,6 +42,7 @@ from astroquery.gaia import Gaia
 from shutil import copyfile as cp
 
 
+import argparse
 #Gaia.remove_jobs(["job_id_1","job_id_2",...])
 #Gaia.login()
 #jobs = [job for job in Gaia.list_async_jobs()]
