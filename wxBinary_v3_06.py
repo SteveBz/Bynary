@@ -27,7 +27,7 @@ import csv
 import pickle
 from wxPyControls import *
 from PyBins3 import *
-from starSystems_v4 import *
+from starSystems_v3 import *
 from newtonian_values import xdata2, ydata2, ydata2_1D
 
 from astropy_healpix import HEALPix # pip3 install astropy_healpix
@@ -4688,7 +4688,7 @@ class dataFilter(masterProcessingPanel):
                     #    print(f'Probability {round(float(binProb_row),2)} !> limit = {round(float(binProbability_limit),2)}')
 
             if not include:
-                self.parent.status.loc[idxBin, 'include'] = 0
+                self.parent.status.include[idxBin]=0
             odd=(idxStar-2*idxBin)
             if odd and self.parent.status.include[idxBin]:
                 primaryPointer=self.parent.X.iloc[idxBin]
@@ -5288,12 +5288,12 @@ class HRDataPlotting(masterProcessingPanel):
                 wx.Yield()
             (Yup, Ydown)=self.XreturnY(X1.BminusR)
             if float(X1.mag) < Yup or float(X1.mag) > Ydown or float(X1.BminusR) < colourLower or float(X1.BminusR) > colourUpper :
-                self.parent.status.loc[index, 'include'] = 0
+                self.parent.status.include[index]=0
                 continue
             
             (Yup, Ydown)=self.XreturnY(X2.BminusR)
             if float(X2.mag) < Yup or float(X2.mag) > Ydown or float(X2.BminusR) < colourLower or float(X2.BminusR) > colourUpper :
-                self.parent.status.loc[index, 'include'] = 0
+                self.parent.status.include[index]=0
                 continue
 
             self.createExportRecord(X1, X2, index)
@@ -5850,14 +5850,14 @@ class kineticDataPlotting(masterProcessingPanel):
                     Y=self.XreturnY(r)
                     #Outliers above line
                     if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.loc[i, 'include'] = 0
+                        self.parent.status.include[i]=0
                     #Outliers below line
                     if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.loc[i, 'include'] = 0
+                        self.parent.status.include[i]=0
                         
                 # Check for cutoff.  If we loose one, we should loose both.
                 if (vRA>upperCutoff or vDEC>upperCutoff):
-                    self.parent.status.loc[i, 'include'] = 0
+                    self.parent.status.include[i]=0
                     self.parent.StatusBarProcessing(f'Potential Flyby at vRA = {vRA}, vDEC = {vDEC}')
                         
                 # Check RA limits
@@ -5868,7 +5868,7 @@ class kineticDataPlotting(masterProcessingPanel):
                     excludeTot = dataTotalBins.binAddDataPoint(x=r, y=y, dy=vDEC*vRAerr+vRA*vDECerr, threshold_value=vxerrCutoff, idx=i)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeTot:
-                        self.parent.status.loc[i, 'include'] = 0
+                        self.parent.status.include[i]=0
                         self.parent.StatusBarProcessing(f'V/dv cuttoff excludeTot = {excludeTot}')
                      
             #Remove top 'n' percent of each bin
@@ -5877,7 +5877,7 @@ class kineticDataPlotting(masterProcessingPanel):
                     indices=dataTotalBins.binCalculateDataPoints(binNum, int(self.combo_binReduction.GetValue()))
                     if len(indices):
                         for index in indices:
-                            self.parent.status.loc[dataTotalBins.indices[binNum][index], 'include'] = 0
+                            self.parent.status.include[dataTotalBins.indices[binNum][index]]=0
                 
             # Process individual pairs by RA & DEC
             for i in statusIndicesList:
@@ -5914,14 +5914,14 @@ class kineticDataPlotting(masterProcessingPanel):
                     Y=self.XreturnY(r)
                     #Outliers above line
                     if aboveBelow ==1 and (vRA > Y or vDEC > Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.loc[i, 'include'] = 0
+                        self.parent.status.include[i]=0
                     #Outliers below line
                     if aboveBelow ==2 and (vRA < Y or vDEC < Y ) and r > x_TopLeft and r < x_BottomRight:
-                        self.parent.status.loc[i, 'include'] = 0
+                        self.parent.status.include[i]=0
                         
                 # Check for cutoff.  If we loose one, we should loose both.
                 if (vRA>upperCutoff or vDEC>upperCutoff):
-                    self.parent.status.loc[i, 'include'] = 0
+                    self.parent.status.include[i]=0
                     self.parent.StatusBarProcessing(f'Potential Flyby at vRA = {vRA}, vDEC = {vDEC}')
                         
                 # Check RA limits
@@ -5932,7 +5932,7 @@ class kineticDataPlotting(masterProcessingPanel):
                     excludeDec = dataDECBins.binAddDataPoint(x=r, y=vDEC, dy=vDECerr, threshold_value=vxerrCutoff)
                     # Exclude binary if both RA & Dec excluded.
                     if not excludeRA or not excludeDec:
-                        self.parent.status.loc[i, 'include'] = 0
+                        self.parent.status.include[i]=0
                         self.parent.StatusBarProcessing(f'excludeRA = {excludeRA}, excludeDec = {excludeDec}')
                     else:
                         primaryPointer=self.parent.X.iloc[i]
@@ -6584,10 +6584,10 @@ class TFDataPlotting(masterProcessingPanel):
                         
                     else:
                         if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threshold_value=0) :
-                            self.parent.status.loc[i, 'include'] = 0
+                            self.parent.status.include[i]=0
                             self.parent.StatusBarProcessing(f'Exclude "Verr" x={M}, y={V2D}')
                 else:
-                    self.parent.status.loc[i, 'include'] = 0
+                    self.parent.status.include[i]=0
             else:
                 # Ie 'Inner' shell
                 if r<float(self.TextCtrl_sepnCutoff.GetValue()) and upperYCutoff>V2D and upperRCutoff>r:
@@ -6599,10 +6599,10 @@ class TFDataPlotting(masterProcessingPanel):
                             self.parent.StatusBarProcessing(f'Exclude "vDECerr (b)" x={M}, y={vDEC}')
                     else:
                         if not dataTFBins.binAddDataPoint(x=M, y=V2D, dy=Verr, threshold_value=0) :
-                            self.parent.status.loc[i, 'include'] = 0
+                            self.parent.status.include[i]=0
                             self.parent.StatusBarProcessing(f'Exclude "verr" x={M}, y={V2D}')
                 else:
-                    self.parent.status.loc[i, 'include'] = 0
+                    self.parent.status.include[i]=0
 
         xdata3TF=dataTFBins.getBinXArray(type='centre')
         ydata3TF=dataTFBins.getBinYArray(self.combo_yAvg.GetValue())
