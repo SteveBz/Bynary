@@ -5059,12 +5059,14 @@ class skyDataPlotting(masterProcessingPanel):
         #fgsizer.Add(self.starsOnly_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         screen = Display()
-        diff = int(1080 - screen.screen_height)
-        ctrl_height = 750-diff
+        diff_h = int(1080 - screen.screen_height)
+        diff_w = int(1080 - screen.screen_width)
+        ctrl_height = 750-diff_h
+        ctrl_width = 750-diff_w
         # Draw velocity map
         #, projection='aitoff'
         try:
-            self.skyGraph = MatplotlibPanel(parent=self, size=(1350, ctrl_height))
+            self.skyGraph = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
             self.fg2sizer.Add(self.skyGraph)
         except Exception:
             pass
