@@ -5060,9 +5060,9 @@ class skyDataPlotting(masterProcessingPanel):
         
         screen = Display()
         diff_h = int(1080 - screen.screen_height)
-        diff_w = int(1080 - screen.screen_width)
+        diff_w = int(1920 - screen.screen_width)
         ctrl_height = 750-diff_h
-        ctrl_width = 750-diff_w
+        ctrl_width = 1350-diff_w
         # Draw velocity map
         #, projection='aitoff'
         try:
