@@ -7037,7 +7037,7 @@ class TFDataPlotting(masterProcessingPanel):
         
         self.TulleyFPlot.draw(self.line3TF, xdata3TF, ydata3TF, False, [] )
         
-        self.TulleyFPlot.axes.set_xlabel('total binary mass ($M_{\odot}$)', fontsize=FONTSIZE)
+        self.TulleyFPlot.axes.set_xlabel(r'total binary mass ($M_{\odot}$)', fontsize=FONTSIZE)
                 
         self.TulleyFPlot.axes.set_ylabel(f'{ND}D relative velocity in sky plane [$km s^{-1}$]', fontsize=FONTSIZE)
         ####################################################################################################
@@ -7580,8 +7580,8 @@ class MassPlotting(masterProcessingPanel):
                self.MassPlot.frames.append(self.MassPlot.axes.text(float(x)*xScaleBy, float(y)*yScaleBy, f'{label}', ha='center', va='bottom', c=c, fontsize=FONTSIZE))
         
             self.MassPlot.draw(self.line3, xdata3, ydata3, False, [] )
-        self.MassPlot.axes.set_xlabel('Calculated stellar mass ($M_{\odot}$)', fontsize=FONTSIZE)
-        self.MassPlot.axes.set_ylabel('FLAME mass from Gaia ($M_{\odot}$)', fontsize=FONTSIZE)
+        self.MassPlot.axes.set_xlabel(r'Calculated stellar mass ($M_{\odot}$)', fontsize=FONTSIZE)
+        self.MassPlot.axes.set_ylabel(r'FLAME mass from Gaia ($M_{\odot}$)', fontsize=FONTSIZE)
         ####################################################################################################
         self.parent.binaryDetail['include']=self.parent.status['include']
         M=self.parent.binaryDetail.loc[(self.parent.binaryDetail['include'] > 0)]
