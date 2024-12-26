@@ -50,7 +50,7 @@ python3 -m venv venv
 ```
 cd <dir name>
 . venv/bin/activate
-python3 wxBinary_v2_11.py
+python3 wxBinary_v3_12.py
 ```
 ### (NB to deactivate the virtual environment, if necessary):
 ```
