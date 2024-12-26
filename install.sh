@@ -19,6 +19,7 @@ mkdir bindata
 pip3 install attrdict3
 pip3 install --no-cache-dir -U -f https://extras.wxpython.org/wxPython4/extras/linux/gtk3/ubuntu-23.04 wxPython  # Linux (K)ubuntu-23.04
 #pip install -U wxPython # Windows and macOS
+pip install wxPython # Windows and macOS
 
 #pip3 install numpy
 pip3 install wheel
