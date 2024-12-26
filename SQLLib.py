@@ -268,12 +268,12 @@ class sql:
         
     def executeIAD(self, SQL):    
         dbCursor=self.connect.cursor()
-        #print(SQL)
+        print(SQL)
         # Loop round in case of deadlocks
         for i in range(4):
             try:
                 dbCursor.execute(SQL)
-            except (fdb.Error) as e:
+            except Exception as e:
                 if i < 3:
                     time.sleep(1)
                 else:
@@ -346,7 +346,7 @@ class sqlSelect(sql):
         try:
             dbCursor.execute(SQL)
             #self.connect.commit()
-        except (fdb.Error) as e:
+        except Exception as e:
             
             frame = inspect.currentframe()
             # __FILE__
