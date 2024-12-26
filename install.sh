@@ -23,6 +23,7 @@ pip install wxPython # Windows and macOS
 
 #pip3 install numpy
 pip3 install wheel
+#pip3 install matplotlib
 pip3 install matplotlib==3.4.3
 pip3 install pandas
 #Next line needs rust
