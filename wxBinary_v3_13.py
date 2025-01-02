@@ -5523,11 +5523,19 @@ class HRDataPlotting(masterProcessingPanel):
 
         self.parent.StatusBarNormal('Completed OK')
         
+    #def XreturnY(self, X):
+    #    # Return range of acceptable magnitudes.
+    #    Y=float(self.m*float(X) + float(self.c))
+    #
+    #    return [Y-self.Yerr,Y+self.Yerr]
+
     def XreturnY(self, X):
-        # Return range of acceptable magnitudes.
-        Y=float(self.m*float(X) + float(self.c))
-        
-        return [Y-self.Yerr,Y+self.Yerr]
+        try:
+            X = float(X)  # Ensure X is a float
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Invalid value for X: {X}") from e
+        Y = float(self.m * X + self.c)
+        return [Y - self.Yerr, Y + self.Yerr]
         
     # Define the function to map ruwe values to colors, considering selected/unselected status
     def map_colors(self, value, is_selected):
@@ -5565,25 +5573,25 @@ class HRDataPlotting(masterProcessingPanel):
         for frame in self.hrGraph.frames:
             try:
                 Artist.remove(frame)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Error occurred: {e}")
         try:
-            self.line.remove()
-        except Exception:
-            pass
+            self.line1.remove()
+        except Exception as e:
+            print(f"Error removing line1: {e}")
         try:
             self.line2.remove()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error occurred: {e}")
         try:
             self.line3.remove()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error occurred: {e}")
         try:
             self.cbar.remove()
             self.hrGraph.figure.tight_layout()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error removing colorbar: {e}")
     
         
         legend1=[] 
@@ -5675,8 +5683,8 @@ class HRDataPlotting(masterProcessingPanel):
         self.hrGraph.frames=[] 
         try:
             self.hrGraph.Layout()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"Error occurred: {e}")
         self.Layout()
 
         self.parent.status['massVmassOut']=self.parent.status['include'].copy()
