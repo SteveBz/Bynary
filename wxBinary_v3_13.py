@@ -159,10 +159,13 @@ class MainPanel(wx.Panel):
         self.nb.TulleyFisherPage = TFDataPlotting(self.nb, self)
         self.nb.NumberDensityPage = NumberDensityPlotting(self.nb, self)
         #NumberDensityPlotting
-        self.nb.AladinPage = AladinView(self.nb, self)
-        
-#        #
-#        ## add the pages to the notebook with the label to show on the tab
+        try:
+            self.nb.AladinPage = AladinView(self.nb, self)
+        except Exception as e:
+            print("Error. %s" % e)
+
+#
+#       add the pages to the notebook with the label to show on the tab
         self.nb.AddPage(self.nb.releasePage, "Download stars and attributes")
         self.nb.AddPage(self.nb.catalogPage, "Download binary catalogue")
         self.nb.AddPage(self.nb.retrievalPage, "Load Binary catalogue")
@@ -173,7 +176,12 @@ class MainPanel(wx.Panel):
         self.nb.AddPage(self.nb.GaiaMassPage, "Est Mass vs FLAME Mass plot")
         self.nb.AddPage(self.nb.TulleyFisherPage, "Velocity vs Mass plot")
         self.nb.AddPage(self.nb.NumberDensityPage, "Star Density vs Distance plot")
-        self.nb.AddPage(self.nb.AladinPage, "View Binaries in Aladin Lite")
+
+        try:
+            self.nb.AddPage(self.nb.AladinPage, "View Binaries in Aladin Lite")
+        except Exception as e:
+            print("Error. %s" % e)
+
         self.nb.SetSelection(int(gl_cfg.getItem('tab','SETTINGS', 0))) # get setting from config file)
         
     def StatusBarNormal(self, text=""):
@@ -5579,24 +5587,19 @@ class HRDataPlotting(masterProcessingPanel):
             self.line1.remove()
         except Exception as e:
             print(f"Error removing line1: {e}")
+
         try:
             self.line2.remove()
         except Exception as e:
             print(f"Error occurred: {e}")
-        try:
-            self.line3.remove()
-        except Exception as e:
-            print(f"Error occurred: {e}")
-        try:
-            self.cbar.remove()
-            self.hrGraph.figure.tight_layout()
-        except Exception as e:
+
+#        try:
+#            if hasattr(self, 'cbar') and self.cbar:
+#                self.cbar.remove()
+#                self.cbar = None
+#        except Exception as e:
             print(f"Error removing colorbar: {e}")
     
-        
-        legend1=[] 
-        legend2=[] 
-        
         unselectedBins=0
         prntVersion=self.prntVersionCheckBox.GetValue()
         if self.unselectedCheckBox.GetValue():
@@ -5622,11 +5625,8 @@ class HRDataPlotting(masterProcessingPanel):
                 print(xdata2)
                 print(ydata2)
             
-            legend1.append(self.line2)
-            legend2.append('unselected')
             self.hrGraph.draw(self.line2, xdata2, ydata2, False, [] )
-            
-        
+
             unselectedBins=len(self.parent.status['include'])-self.parent.status['include'].sum()
             
         if prntVersion:
@@ -5663,20 +5663,21 @@ class HRDataPlotting(masterProcessingPanel):
         bounds = [0, 1.25, 1.4, 2]  # RUWE values that correspond to the color changes
         norm = BoundaryNorm(bounds, cmap.N)
 
-
         self.line1 = self.hrGraph.axes.scatter(xdata1, ydata1, c=cdata1, cmap=cmap, norm=norm, marker=marker, s=markersize**2, zorder=2)
         #self.line1 = self.hrGraph.axes.scatter(xdata1, ydata1, c=cdata1, cmap='jet', vmin=1, vmax=1.5, marker=marker, s=markersize**2, zorder=2)
-    
         # visualizing the mapping from values to colors
-        # Add a colorbar
-        self.cbar = self.hrGraph.figure.colorbar(self.line1, ax=self.hrGraph.axes,  ticks=[0, 1.25, 1.4, 2])  # You can adjust ticks based on your data range
-        self.cbar.set_label('RUWE')  # Add a label to the colorbar
-        # Adjust layout after adding the colorbar
-        self.hrGraph.figure.tight_layout()
-        legend1.append(self.line1)
-        legend2.append('Selected binaries')
+        if not hasattr(self, 'cbar'):
+            # Add a colorbar
+            self.cbar = self.hrGraph.figure.colorbar(self.line1, ax=self.hrGraph.axes,  ticks=[0, 1.25, 1.4, 2])  # You can adjust ticks based on your data range
+            self.cbar.set_label('RUWE')  # Add a label to the colorbar
+        #legend1.append(self.line1)
+        #legend2.append('Selected binaries')
         self.hrGraph.draw(self.line1, xdata1, ydata1, True,[] )
                 
+
+        # Adjust layout after adding the colorbar
+        #self.hrGraph.figure.tight_layout()
+        self.hrGraph.figure.subplots_adjust()
         #    """
         #Attach a text label above each bar displaying its height
         #"""
@@ -5692,6 +5693,7 @@ class HRDataPlotting(masterProcessingPanel):
         self.parent.status['numberOut']=self.parent.status['include'].copy()
         self.saveConfFiles('hrOut')
         
+        gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         self.plot_but.Enable()
 
         self.parent.StatusBarNormal(f'Completed OK')
