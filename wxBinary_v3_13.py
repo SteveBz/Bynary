@@ -3974,14 +3974,14 @@ class dataRetrieval(masterProcessingPanel):
         
         # Calculate 2D v_Tilde using v2D/np.sqrt(G (M1 + M2)/r_sky)
         
-        G=float(gl_cfg.getItem('g','RETRIEVAL'))
+        G=float(gl_cfg.getItem('g','RETRIEVAL'), 4.30E-03)
         print(self.parent.X)
         self.parent.binaryDetail['v_tilde'] = self.parent.binaryDetail['v2D'] /np.sqrt(G*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/self.parent.binaryDetail['r'])
         
         # Calculate r_mond using np.sqrt(G (M1 + M2)/a_0)
         #km_pc=float(gl_cfg.getItem('km_pc','RETRIEVAL'))
-        G2=float(gl_cfg.getItem('g2','RETRIEVAL'))
-        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL'))
+        G2=float(gl_cfg.getItem('g2','RETRIEVAL'), 1.393e-13)
+        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL'), 1.2E-10)
         self.parent.binaryDetail['r_mond'] = np.sqrt(G2*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/(a_0))
         self.parent.binaryDetail['r_over_r_mond'] = self.parent.binaryDetail['r']/self.parent.binaryDetail['r_mond']
         self.parent.binaryDetail['r_over_r_mond_err'] = self.parent.binaryDetail['r_err']/self.parent.binaryDetail['r_mond']
