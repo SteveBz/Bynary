@@ -8348,8 +8348,8 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.NumberDensityPlot.axes.xaxis.set_major_locator(ticker.AutoLocator())
         self.NumberDensityPlot.axes.xaxis.set_major_formatter(ticker.ScalarFormatter(useMathText=True))
         
-        #self.NumberDensityPlot.drawLinear()
-        self.drawLinear()
+        self.NumberDensityPlot.draw_linear()
+        #self.drawLinear()
         try:
             self.NumberDensityPlot.Layout()
         except Exception:
