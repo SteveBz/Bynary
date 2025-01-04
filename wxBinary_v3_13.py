@@ -78,10 +78,6 @@ HPS_SCALE=192
 HPS_SCALE = int(gl_cfg.getItem('hps_scale','SETTINGS', 192))
 
 FONTSIZE=20
-
-FONTSIZE = gl_cfg.getItem('fontsize','SETTINGS', 20)
-FONTSIZE2 = int(FONTSIZE)-4
-
 #Cancel command for import button
 CANCEL=False 
 import SQLLib
@@ -5936,15 +5932,10 @@ class kineticDataPlotting(masterProcessingPanel):
         self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
         self.cancel.SetToolTip("Cancel binning.")
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-        screen = Display()
-        diff_h = int(1080 - screen.screen_height)
-        ctrl_height = 750-diff_h
-        diff_w = int(1920 - screen.screen_width)
-        ctrl_width = 1350-diff_w
-
+                
         # Draw velocity map
         try:
-            self.velocityGraph = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
+            self.velocityGraph = MatplotlibPanel(parent=self, size=(1350, 750))
             self.fg2sizer.Add(self.velocityGraph)
         except Exception:
             pass
@@ -6545,7 +6536,7 @@ class kineticDataPlotting(masterProcessingPanel):
     
             # Apply log scale and other formatting options
             self.twinx.set_xscale('log', nonpositive='clip')
-            self.twinx.tick_params(labelsize=FONTSIZE2)
+            self.twinx.tick_params(labelsize=20)
       
         if newtonian_line:
             if self.combo_xy_option.GetSelection() == 0:
@@ -8862,18 +8853,18 @@ class MatplotlibPanel(wx.Panel):
     def _set_tick_params(self):
         angle = 0
         for tick in self.axes.xaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
         for tick in self.axes.yaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             
         if self.projection == 'rectilinear':
             for tick in self.axes.xaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             for tick in self.axes.yaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
 
 
