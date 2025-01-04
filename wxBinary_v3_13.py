@@ -6529,8 +6529,8 @@ class kineticDataPlotting(masterProcessingPanel):
         corrN=math.sqrt(avgMass)
         #
         print(corrN)
-        G2=float(gl_cfg.getItem('g2','RETRIEVAL'))
-        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL'))
+        G2=float(gl_cfg.getItem('g2','RETRIEVAL', 1.393e-13))
+        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL', 1.2E-10))
         r_mond=np.sqrt(G2*avgMass*2/(a_0))
             
         if prntVersion:
