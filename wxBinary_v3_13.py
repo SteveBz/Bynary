@@ -6540,7 +6540,7 @@ class kineticDataPlotting(masterProcessingPanel):
     
             # Apply log scale and other formatting options
             self.twinx.set_xscale('log', nonpositive='clip')
-            self.twinx.tick_params(labelsize=20)
+            self.twinx.tick_params(labelsize=FONTSIZE2)
       
         if newtonian_line:
             if self.combo_xy_option.GetSelection() == 0:
@@ -8857,18 +8857,18 @@ class MatplotlibPanel(wx.Panel):
     def _set_tick_params(self):
         angle = 0
         for tick in self.axes.xaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
         for tick in self.axes.yaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             
         if self.projection == 'rectilinear':
             for tick in self.axes.xaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             for tick in self.axes.yaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
 
 
