@@ -78,6 +78,10 @@ HPS_SCALE=192
 HPS_SCALE = int(gl_cfg.getItem('hps_scale','SETTINGS', 192))
 
 FONTSIZE=20
+
+FONTSIZE = gl_cfg.getItem('fontsize','SETTINGS', 20)
+FONTSIZE2 = int(FONTSIZE)-4
+
 #Cancel command for import button
 CANCEL=False 
 import SQLLib
