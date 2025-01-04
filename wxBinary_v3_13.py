@@ -77,9 +77,7 @@ CATALOG='KEB-0.50pc'
 HPS_SCALE=192
 HPS_SCALE = int(gl_cfg.getItem('hps_scale','SETTINGS', 192))
 
-FONTSIZE = gl_cfg.getItem('fontsize','SETTINGS', 20)
-FONTSIZE2 = int(FONTSIZE)-4
-
+FONTSIZE=20
 #Cancel command for import button
 CANCEL=False 
 import SQLLib
@@ -3976,14 +3974,14 @@ class dataRetrieval(masterProcessingPanel):
         
         # Calculate 2D v_Tilde using v2D/np.sqrt(G (M1 + M2)/r_sky)
         
-        G=float(gl_cfg.getItem('g','RETRIEVAL', 4.30E-03))
+        G=float(gl_cfg.getItem('g','RETRIEVAL'), 4.30E-03)
         print(self.parent.X)
         self.parent.binaryDetail['v_tilde'] = self.parent.binaryDetail['v2D'] /np.sqrt(G*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/self.parent.binaryDetail['r'])
         
         # Calculate r_mond using np.sqrt(G (M1 + M2)/a_0)
         #km_pc=float(gl_cfg.getItem('km_pc','RETRIEVAL'))
-        G2=float(gl_cfg.getItem('g2','RETRIEVAL', 1.393e-13))
-        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL', 1.2E-10))
+        G2=float(gl_cfg.getItem('g2','RETRIEVAL'), 1.393e-13)
+        a_0=float(gl_cfg.getItem('a_0','RETRIEVAL'), 1.2E-10)
         self.parent.binaryDetail['r_mond'] = np.sqrt(G2*(self.parent.X['mass_calc'] + self.parent.Y['mass_calc'])/(a_0))
         self.parent.binaryDetail['r_over_r_mond'] = self.parent.binaryDetail['r']/self.parent.binaryDetail['r_mond']
         self.parent.binaryDetail['r_over_r_mond_err'] = self.parent.binaryDetail['r_err']/self.parent.binaryDetail['r_mond']
@@ -5145,7 +5143,7 @@ class skyDataPlotting(masterProcessingPanel):
         gl_cfg.setItem('tab',self.parent.GetSelection(), 'SETTINGS') # save notebook tab setting in config file
         
         #print(self.parent.X.ra)
-
+        
         xdata1 = pd.DataFrame(self.parent.X.ra * self.parent.status['include'], columns=['ra'])
         ydata1 = pd.DataFrame(self.parent.X.dec * self.parent.status['include'], columns=['dec'])
         xdata2 = pd.DataFrame(self.parent.X.ra, columns=['ra'])
@@ -5158,8 +5156,6 @@ class skyDataPlotting(masterProcessingPanel):
             self.skyGraph.axes.set_xlabel('Right Ascension (deg)', fontsize=FONTSIZE)
         self.skyGraph.axes.set_yscale('linear')
         self.skyGraph.axes.set_xscale('linear')
-        self.skyGraph.axes.tick_params(axis='x', labelsize=FONTSIZE2) # , labelrotation=0, labelcolor='blue')
-        self.skyGraph.axes.tick_params(axis='y', labelsize=FONTSIZE2) # , labelrotation=0, labelcolor='blue')
         
         #if self.showGalacticCoordsCheckBox.GetValue():
         #    #self.skyGraph.set_limits([-180,180],[-90, 90])
@@ -5317,7 +5313,7 @@ class skyDataPlotting(masterProcessingPanel):
         self.plot_but.Enable()
         
         self.parent.StatusBarNormal('Completed OK')
-
+        
 class HRDataPlotting(masterProcessingPanel):
 
 # Plot HR diagram for chosen binaries.
@@ -5364,6 +5360,7 @@ class HRDataPlotting(masterProcessingPanel):
         self.allWhiteCheckBox.SetToolTip("Show unselected binaries in white (or black for print version). Over-rides green setting.")
         self.allWhiteCheckBox.SetValue(gl_cfg.getBoolean('allwhite', 'HRPLOT'))
         fgsizer.Add(self.allWhiteCheckBox, 0, wx.ALL, 2)
+        
         
         # Create show large data points
         largeStaticText = StaticText(self, id=wx.ID_ANY, label="Show large data points")
@@ -5428,12 +5425,8 @@ class HRDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.Reset_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Draw velocity map
-        screen = Display()
-        diff = int(1080 - screen.screen_height)
-        ctrl_height = 750-diff
-
         try:
-            self.hrGraph = MatplotlibPanel(parent=self, size=(950, ctrl_height))
+            self.hrGraph = MatplotlibPanel(parent=self, size=(950, 750))
             self.fg2sizer.Add(self.hrGraph)
         except Exception:
             pass
@@ -5939,24 +5932,13 @@ class kineticDataPlotting(masterProcessingPanel):
         self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
         self.cancel.SetToolTip("Cancel binning.")
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-
+                
         # Draw velocity map
-        screen = Display()
-        diff_w = int(1920 - screen.screen_width)
-        diff_h = int(1080 - screen.screen_height)
-
-        print ("diff_h = ", diff_h)
-        print ("diff_w = ", diff_w)
-
-        ctrl_height = 750-diff_h
-        ctrl_width = 1350-diff_w
-
-        # Draw velocity map
-        #try:
-        self.velocityGraph = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
-        self.fg2sizer.Add(self.velocityGraph)
-        #except Exception as e:
-        #    print(f"An error occurred while drawing the velocity map: {e}")
+        try:
+            self.velocityGraph = MatplotlibPanel(parent=self, size=(1350, 750))
+            self.fg2sizer.Add(self.velocityGraph)
+        except Exception:
+            pass
         
         # Create summary results list box.
         self.summaryList=ListCtrl(self, size=(400, 750)) 
@@ -6554,7 +6536,7 @@ class kineticDataPlotting(masterProcessingPanel):
     
             # Apply log scale and other formatting options
             self.twinx.set_xscale('log', nonpositive='clip')
-            self.twinx.tick_params(labelsize=FONTSIZE2)
+            self.twinx.tick_params(labelsize=20)
       
         if newtonian_line:
             if self.combo_xy_option.GetSelection() == 0:
@@ -8871,18 +8853,18 @@ class MatplotlibPanel(wx.Panel):
     def _set_tick_params(self):
         angle = 0
         for tick in self.axes.xaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
         for tick in self.axes.yaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             
         if self.projection == 'rectilinear':
             for tick in self.axes.xaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             for tick in self.axes.yaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
 
 
