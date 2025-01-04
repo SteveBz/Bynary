@@ -5936,10 +5936,15 @@ class kineticDataPlotting(masterProcessingPanel):
         self.cancel.Bind(wx.EVT_LEFT_DOWN, self.OnCancel)
         self.cancel.SetToolTip("Cancel binning.")
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
-                
+        screen = Display()
+        diff_h = int(1080 - screen.screen_height)
+        ctrl_height = 750-diff_h
+        diff_w = int(1920 - screen.screen_width)
+        ctrl_width = 1350-diff_w
+
         # Draw velocity map
         try:
-            self.velocityGraph = MatplotlibPanel(parent=self, size=(1350, 750))
+            self.velocityGraph = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
             self.fg2sizer.Add(self.velocityGraph)
         except Exception:
             pass
