@@ -7899,7 +7899,7 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.parent=parent  # Keep notebook as common parent to store '.data'
 
         self.sizer_v=wx.BoxSizer(wx.VERTICAL)
-        fgsizer = wx.FlexGridSizer(cols=4, hgap=0, rows=6, vgap=0)           # On left hand side
+        fgsizer = wx.FlexGridSizer(cols=8, hgap=0, rows=6, vgap=0)           # On left hand side
         self.sizer_v.Add(fgsizer)
         
         self.fg2sizer = wx.FlexGridSizer(cols=2, hgap=0, rows=1, vgap=0)           # On left hand side
@@ -7907,16 +7907,12 @@ class NumberDensityPlotting(masterProcessingPanel):
         
         # Headings
         
-        self.static_bins = StaticText(self, label='# bins') 
+        self.static_bins = StaticText(self, label='# bins:')
         fgsizer.Add(self.static_bins, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #self.static_xLower = StaticText(self, label='x-lower') 
         #fgsizer.Add(self.static_xLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.static_xUpper = StaticText(self, label='x-upper') 
-        fgsizer.Add(self.static_xUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #self.static_yLower = StaticText(self, label='y-lower') 
         #fgsizer.Add(self.static_yLower, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-        self.static_yUpper = StaticText(self, label='y-upper') 
-        fgsizer.Add(self.static_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         #
         
         fgsizer.AddSpacer(1)
@@ -7925,11 +7921,18 @@ class NumberDensityPlotting(masterProcessingPanel):
         fgsizer.Add(self.spin_bins, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.spin_bins.SetToolTip("Integer number of bins to divide x-scale into.")
         
+        self.static_xUpper = StaticText(self, label='x-upper:')
+        fgsizer.Add(self.static_xUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+
         self.textctrl_xUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('x_upper','NUMBERDENSITY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_xUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_xUpper.SetToolTip("Upper end of x-scale.")
         self.textctrl_xUpper.setValidRoutine(self.textctrl_xUpper.Validate_Float)
         #
+
+        self.static_yUpper = StaticText(self, label='y-upper:')
+        fgsizer.Add(self.static_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+
         self.textctrl_yUpper = TextCtrl(self, id=wx.ID_ANY, value=gl_cfg.getItem('y_upper','NUMBERDENSITY'), pos=wx.DefaultPosition,size=wx.DefaultSize, style=wx.ALIGN_RIGHT)  
         fgsizer.Add(self.textctrl_yUpper, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         self.textctrl_yUpper.SetToolTip("Upper end of y-scale.")
