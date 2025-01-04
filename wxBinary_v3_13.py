@@ -77,7 +77,8 @@ CATALOG='KEB-0.50pc'
 HPS_SCALE=192
 HPS_SCALE = int(gl_cfg.getItem('hps_scale','SETTINGS', 192))
 
-FONTSIZE=20
+FONTSIZE = int(gl_cfg.getItem('fontsize','SETTINGS', 20))
+FONTSIZE2 = int(gl_cfg.getItem('fontsize2','SETTINGS', 14))
 #Cancel command for import button
 CANCEL=False 
 import SQLLib
@@ -5425,8 +5426,14 @@ class HRDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.Reset_but, 0, wx.ALIGN_LEFT|wx.ALL, 5)
         
         # Draw velocity map
+
+        screen = Display()
+        diff_h = int(1080 - screen.screen_height)
+        diff_w = int(1920 - screen.screen_width)
+        ctrl_height = 750-diff_h
+        ctrl_width = 1350-diff_w
         try:
-            self.hrGraph = MatplotlibPanel(parent=self, size=(950, 750))
+            self.hrGraph = MatplotlibPanel(parent=self, size=(950, ctrl_height))
             self.fg2sizer.Add(self.hrGraph)
         except Exception:
             pass
@@ -5934,8 +5941,13 @@ class kineticDataPlotting(masterProcessingPanel):
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
         # Draw velocity map
+        screen = Display()
+        diff_h = int(1080 - screen.screen_height)
+        diff_w = int(1920 - screen.screen_width)
+        ctrl_height = 750-diff_h
+        ctrl_width = 1350-diff_w
         try:
-            self.velocityGraph = MatplotlibPanel(parent=self, size=(1350, 750))
+            self.velocityGraph = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
             self.fg2sizer.Add(self.velocityGraph)
         except Exception:
             pass
@@ -6915,9 +6927,15 @@ class TFDataPlotting(masterProcessingPanel):
         self.cancel.SetToolTip("Cancel binning.")
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
-        # Draw velocity map
+        # Draw TF plot
+
+        screen = Display()
+        diff_h = int(1080 - screen.screen_height)
+        diff_w = int(1920 - screen.screen_width)
+        ctrl_height = 750-diff_h
+        ctrl_width = 1350-diff_w
         try:
-            self.TulleyFPlot = MatplotlibPanel(parent=self, size=(1350, 750))
+            self.TulleyFPlot = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
             self.fg2sizer.Add(self.TulleyFPlot)
         except Exception:
             pass
@@ -7496,9 +7514,15 @@ class MassPlotting(masterProcessingPanel):
         self.cancel.SetToolTip("Cancel binning.")
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
-        # Draw velocity map
+        # Draw mass plot
+
+        screen = Display()
+        diff_h = int(1080 - screen.screen_height)
+        diff_w = int(1920 - screen.screen_width)
+        ctrl_height = 650-diff_h
+        ctrl_width = 900-diff_w
         try:
-            self.MassPlot = MatplotlibPanel(parent=self, size=(900, 650))
+            self.MassPlot = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
             self.MassPlot.axes.set_yscale('linear')
             self.MassPlot.axes.set_xscale('linear')
             self.fg2sizer.Add(self.MassPlot)
@@ -7973,9 +7997,15 @@ class NumberDensityPlotting(masterProcessingPanel):
         self.cancel.SetToolTip("Cancel binning.")
         fgsizer.Add(self.cancel, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
                 
-        # Draw velocity map
+        # Draw number density plot
+
+        screen = Display()
+        diff_h = int(1080 - screen.screen_height)
+        diff_w = int(1920 - screen.screen_width)
+        ctrl_height = 750-diff_h
+        ctrl_width = 1350-diff_w
         try:
-            self.NumberDensityPlot = MatplotlibPanel(parent=self, size=(1350, 750))
+            self.NumberDensityPlot = MatplotlibPanel(parent=self, size=(ctrl_width, ctrl_height))
             self.fg2sizer.Add(self.NumberDensityPlot)
         except Exception:
             pass
@@ -8853,18 +8883,18 @@ class MatplotlibPanel(wx.Panel):
     def _set_tick_params(self):
         angle = 0
         for tick in self.axes.xaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
         for tick in self.axes.yaxis.get_major_ticks():
-            tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+            tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
             tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             
         if self.projection == 'rectilinear':
             for tick in self.axes.xaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
             for tick in self.axes.yaxis.get_minor_ticks():
-                tick.label1.set_fontsize(FONTSIZE)  # Updated from tick.label to tick.label1
+                tick.label1.set_fontsize(FONTSIZE2)  # Updated from tick.label to tick.label1
                 tick.label1.set_rotation(angle)    # Updated from tick.label to tick.label1
 
 
