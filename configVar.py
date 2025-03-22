@@ -41,23 +41,23 @@ class configVar:
         
         return retValue
 
-    def getInt(self, configItem, section='SETTINGS'):
+    def getInt(self, configItem, section='SETTINGS', default=0):
         
         retValue = ""
         try:
             retValue=int(self.parser.get(section, configItem))
         except:
-            retValue=False
+            retValue=default
         
         return retValue
 
-    def getBoolean(self, configItem, section='SETTINGS'):
+    def getBoolean(self, configItem, section='SETTINGS', default=False):
         
         retValue = ""
         try:
             retValue=bool(self.parser.getboolean(section, configItem))
         except:
-            retValue=False
+            retValue=default
         
         return retValue
 
